@@ -3075,6 +3075,9 @@ def the_plan_paper_marks_whose_line(bridge):
         is taken back by one `take_back`.
     W9. Signed again and a day resolved: no intent N + 2 is in force; a `take_place` at H1 stands under the order with `maker` "staff";
         the page marks it THE STAFF’S, and its line has no GIVE IT BACK TO THE STAFF, no WRITE IT and no CHANGE of a landing's lines.
+        (Amended Nov 27, 2026, for pull request C: this held the whole plan's paper to no WRITE IT, which was item 26 for B. A take
+        the staff has yet to form, in a plan that waits, is offered it by C; a line of his and a take of the staff's in force are
+        still offered none, and the check reads `hisBlock`, `hisLine` and `hisLineRows`, no longer `paperNode`.)
     W10. (New, Nov 27, 2026.) Between W8's `approve` and its `take_back`, the give-back of N + 2 being queued: the line of his
         landing at Lunga, drawn by the page's own functions in node from `command_state` and `queued` as they then stand, is still
         marked YOURS and offers no GIVE IT BACK TO THE STAFF, no CHANGE and no BACK TO THE STAFF’S CHOICE; the line of his landing at
@@ -3101,8 +3104,9 @@ def the_plan_paper_marks_whose_line(bridge):
           "W4: its DRY RUN sends trial with the landing's number, and never the reading's preview")
     check("giveBackWords(hex)" in openg and "paper.kind === 'giveback'" in cut_function(text, "  function askPreview(") and "signGiveBack()" in text[text.index("$('paper').addEventListener('submit'"):][:300],
           "W4: the order paper opens as a give-back whose ORDER is giveBackWords, is asked again where the draft is, and is signed by signGiveBack")
-    nodes = "".join(cut_function(text, f"  function {h}(") for h in ("hisBlock", "paperNode", "hisLine", "hisLineRows"))
-    check("WRITE IT" not in nodes and "LEAVE IT TO THE STAFF" not in nodes, "W9: the lines of the plan's paper hold no WRITE IT, which is the order paper's")
+    nodes = "".join(cut_function(text, f"  function {h}(") for h in ("hisBlock", "hisLine", "hisLineRows"))
+    check("WRITE IT" not in nodes and "LEAVE IT TO THE STAFF" not in nodes and "LEAVE IT TO THE STAFF" not in cut_function(text, "  function paperNode("),
+          "W9: a line of his on the plan's paper holds no WRITE IT, and no line of it LEAVE IT TO THE STAFF, which is the order paper's")
     # The page's own functions in node
     helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nameText", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine",
                                                                               "whoseLine", "marksOf", "giveBackQueued", "hisLineRows", "hisLine", "giveBackWords", "hisLanding", "landingTried", "twoPlans",
@@ -3406,6 +3410,147 @@ function main(x) {
           f"R7: the page's view of the real reason ends its WHY with YOUR PLAN and the link The landing at Lunga ({seen['blocks'][-1:] })")
     check(not re.search(r"intent:\d|the commander|, your,", seen["text"]), f"R7: and shows no handle, no the commander and no , your, ({seen['text'][:200]})")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+# ---- Decision 0232, step 3, pull request C: a landing written under an order already in force ("Planned: step 3, C" of
+# docs/decisions/as-built/0232-a-plan-the-commander-writes.md, items C1 to C12). Written by the architect before any code of C, on main
+# at 100a748c and agent interface 58. The function below is empty and fails "not built"; it is not called from main() until C's first
+# commit adds its call, after `a_reason_leads_to_his_line(bridge)`. A developer fills its body to the statements in its doc comment and
+# changes no word of them, of the two functions here, or of B's five functions and their fixtures: a statement that cannot be filled
+# as written comes back to the architect.
+#
+# THE WORKED LANDINGS, each written alone under the order N in force (seize and hold island 3, signed alone and a day resolved):
+#   the landing at Tulagi: Ships and forces: use only the task force numbered 10. Not before: day 5.
+#   the landing at Lunga:  After: the landing at Tulagi (numbered K). Risk: preserve. By the end of: day 9.
+
+
+def worked_tulagi_alone(n, h4):
+    """What the worked landing at Tulagi sends to `preview`, under an order numbered `n` (item C7). The architect's: not to be changed."""
+    return {"command": "set_intent", "parent": n, "intent_kind": "take_place", "hex": list(h4),
+            "limits": [{"limit": "forces", "task_forces": [10], "ships": []}, {"limit": "not_before", "from_day": 5}]}
+
+
+def worked_lunga_alone(n, k, h1):
+    """What the worked landing at Lunga sends, his landing at Tulagi being numbered `k` (item C7). The architect's: not to be changed."""
+    return {"command": "set_intent", "parent": n, "intent_kind": "take_place", "hex": list(h1), "by_day": 9,
+            "limits": [{"limit": "after", "other_intent": k}, {"limit": "risk", "risk": "preserve"}]}
+
+
+def a_landing_written_under_an_order_in_force(bridge):
+    """Rule 22 on the table: a landing written under an order already in force, from the plan's paper (items C1 to C12).
+
+    Lunga is at (2,-4) and Tulagi at (3,-5) in the node checks; through the bridge H1 and H4 are read from `list_bases` as B's checks
+    read them. "The fixture" is this tree, as `propose` gives one for the order numbered 1 whose plan waits:
+        sub_intents: {2, take_place, hex (3,-5), parent 1, maker "commander", standing true};
+                     {3, take_place, hex (2,-4), parent 1, maker "staff"}; {4, hold, parent 1, maker "staff"};
+                     {12, ready_landing, hex (3,-5), parent 2, maker "staff"}; {13, ready_landing, hex (2,-4), parent 3, maker "staff"};
+                     {14, take_place, hex (9,9), parent 3, maker "staff"}.
+
+    In the page's text:
+    U1. The page holds the functions `writeLines(`, `writtenAlone(`, `hisOtherLandings(` and `readingOfLanding(`, and a paper of the
+        kind 'landing'. WRITE IT is put on a line of the plan's paper only for a line `writeLines` gives of the tree `propose` gave
+        (a plan that waits), and only where the seat may sign (`canSign()`): never for a plan drawn from the command state. The
+        bodies of `hisBlock`, `hisLine` and `hisLineRows` hold no "WRITE IT".
+    U2. The paper's reading is `preview` with the body `writtenAlone` gives and nothing added. Its SIGN AND SEND is one `approve` of
+        that preview, and the function that signs makes no other call. Its DRY RUN sends `trial` with `preview` and `size` and holds
+        no `compare`, `dates` or `intent`. The functions of this paper call the tools `set_intent`, `set_limit`, `form_intent` and
+        `withdraw_intent` nowhere.
+
+    The page's own functions, cut from its text and run in node:
+    U3. `writeLines(tree, order)` of the fixture and 1 gives exactly one line, the hex (2,-4): the standing landing of his gives none,
+        nor does an entry that is not a `take_place`, nor a `take_place` whose parent is not the order (14). With entry 2 made the
+        staff's and not standing it gives (3,-5) and then (2,-4), in the tree's order. Of null, of a tree with no `sub_intents` and
+        of a tree with no such entry it gives an empty list.
+    U4. `writtenAlone(1, landing)`, the landing being the model's own (`newLanding`) set as the worked landing at Tulagi, is exactly
+        `worked_tulagi_alone(1, (3, -5))`; set as the worked landing at Lunga with its After the number 2, exactly
+        `worked_lunga_alone(1, 2, (2, -4))`. Neither carries `intent`. A landing with nothing set sends `limits` empty and no
+        `by_day`. For every landing, what it gives is `writtenUnder(1, [landing])[0]` less its `intent`, with `command` and
+        `parent`: a risk never set sends none, balanced once set is sent, and no `none_of`, single ship, air group, area, target
+        or protected ship is ever sent (P5 and P6 hold of this paper).
+    U5. `hisOtherLandings(order, hex, intents, entries)`, for the order 1 and the paper's hex (2,-4), with `intents`
+        [{1, control_island, commander, parent null, in force}, {2, take_place, commander, parent 1, hex (3,-5), in force},
+         {5, take_place, commander, parent 1, hex (2,-4), in force}, {6, take_place, commander, parent 1, hex (8,8), not in force},
+         {7, take_place, staff, parent 1, hex (7,7), in force}, {8, take_place, commander, parent null, hex (6,6), in force},
+         {9, take_place, commander, parent 20, hex (4,4), in force}]
+        and `entries` holding one queued `set_intent` {intent 12, take_place, parent 1, hex (5,-5)}, one {intent 13, take_place,
+        parent 20, hex (4,5)} and one `set_limit` of intent 12, gives exactly [{number 2, hex (3,-5)}, {number 12, hex (5,-5)}]:
+        his landings under this order, in force or queued, by number, and not the one at the paper's own place, one not in force,
+        the staff's, a root, or one under another order.
+    U6. The words. THE ORDER's text for a landing at Tulagi under an order the page says as "your order to seize and hold
+        Guadalcanal and Tulagi" is exactly "Write the landing at Tulagi under your order to seize and hold Guadalcanal and
+        Tulagi." `refusalWords("intent:2 already plans the place at (3,-5)")` is exactly "It is already planned.", and
+        `refusalWords("the limit is wider than what its parent intent:1 allows")` is still "It is wider than the order above it
+        allows." A refusal at `of_batch.position` 1 is said as the reason alone; at position 4 of the worked landing at Tulagi
+        with Risk press, exactly "Risk: It is wider than the order above it allows."; at position 2 of the same, "Ships and
+        forces: " and the reason. The status line once signed is exactly "Signed: the landing at Tulagi is yours. The staff takes
+        it up at 1800."
+    U7. The page's function for SIGNED, given the queue of U14 as the engine gives it for an order numbered 1 (the `set_intent` with
+        `parent` 1 at (3,-5), which `goes_with` its two `set_limit`), the order said as in U6 and task force 10 named "Transport
+        Group Yoke", begins "The landing at Tulagi: written under your order to seize and hold Guadalcanal and Tulagi · Ships and
+        forces: Transport Group Yoke · Not before: " and then the day as the page says a day; with no limit queued it is exactly
+        "The landing at Tulagi: written under your order to seize and hold Guadalcanal and Tulagi". It holds no "Order:" and no
+        "Capture". A queued `set_intent` with no parent is said as today, and `signedOrders` still gives no entry with a parent.
+    U8. `readingOfLanding(p, known)`, for p with `intent` 3, `command` {hex (2,-4), parent 1} and the tree
+        [{4, hold, parent 1, staff}, {12, ready_landing, parent 2, staff}, {13, ready_landing, parent 3, staff}], and `known`
+        [{1, control_island, commander, parent null}, {2, take_place, commander, parent 1, hex (3,-5)},
+         {7, take_place, staff, parent 1, hex (7,7)}, {9, take_place, commander, parent 20, hex (4,4)}],
+        gives five entries numbered 3, 2, 4, 12, 13 in that order: the first {number 3, kind "take_place", hex (2,-4), parent 1,
+        maker "commander"}; the second his landing 2 with `standing` true; the rest the tree's own, unchanged. `marksOf` of it is
+        YOURS for 3 and 2 and THE STAFF’S for 4, 12 and 13. With `known` empty it gives 3, 4, 12, 13. Where the tree already lists
+        2 it is not added again. For p with no tree it gives null.
+    U9. `landingTried(j, hex)`, for an answer j with `asked.tried_intent` 9 and `beside.order` 1, intent 9 being in neither
+        `command_state` nor `queued`: with the hex (3,-5) it gives "Tulagi"; with no second argument "that place", as today; where
+        `asked.tried_intent` is `beside.order` it gives null whatever the hex. `twoPlans(j, "Tulagi")` of that answer with
+        `beside.of` "left_to_the_staff" says exactly "The staff’s plan is this order with the landing at Tulagi left to the staff."
+    U10. YOUR LIMITS (item C12), by the view of B's check of a reason (`a_reason_leads_to_his_line`, its state and names): the
+        second of `REASONS_AND_HIS_NODES`, shown under his own landing's line (3), lists its limit as exactly "its risk", one link
+        and no " on "; the fifth, shown under the order's line (1), lists exactly "the forces it may use on your landing at
+        Tulagi", whose links are "the forces it may use" and "your landing at Tulagi"; no item of either holds "your order to".
+        The fourth, a limit of the order itself shown under a task of the staff's, is said exactly as the page on main says it.
+    U11. The reading of the paper in hand (item C8): with the paper writing the landing at Tulagi and its reading numbered 2, the
+        line "intent:2, the commander's, plans the place at (3,-5): the staff forms no take beside it." is shown, but for the case
+        of its first letter, as "your landing at Tulagi stands: the staff forms no take beside it.", where "your landing at
+        Tulagi" is a link; no "intent:", no "the commander" and no ", your," is left; and its WHY has no YOUR PLAN link to the
+        landing whose paper it is.
+
+    Through the bridge: the 39 days, the person Allied against the engine; `preview` of {"command": "set_intent", "intent_kind":
+    "control_island", "island": 3} alone gives the order its number N and is approved; one day is resolved, leave to launch being
+    as the game gives it:
+    U12. In `command_state` the order N is in force, leave to launch is not given, its plan is preparing or a draft and no intent
+        stands under it. `propose` for N gives a `take_place` at H1 and at H4, each with `maker` "staff" and not `standing`, and
+        `writeLines` of that tree and N gives two lines, at H1 and H4.
+    U13. `preview` of `worked_tulagi_alone(N, H4)` is valid: its `command` has `parent` N and `hex` H4, its `intent` is a number K
+        above N, its `under` is empty. Its tree lists no entry numbered K, no `take_place` at H4, a `take_place` at H1 with `maker`
+        "staff" and `parent` N, and a `ready_landing` whose `parent` is K; among its `no_orders` is a line that begins "intent:K,
+        the commander's, plans the place at". `marksOf(readingOfLanding(p, known))`, `known` from that `command_state` and
+        `queued`, is YOURS for K and THE STAFF’S for every other entry.
+    U14. The same with {"limit": "risk", "risk": "press"} added to its limits is refused with `of_batch` {position 4, size 4}, the
+        engine's reason "the limit is wider than what its parent intent:N allows".
+    U15. `trial` of U13's preview at the size small, with no `compare`, is answered with `asked.second_trial` true,
+        `asked.tried_intent` K, `beside.of` "left_to_the_staff" and `beside.order` N; `twoPlans` of it and "Tulagi", the name the
+        page gives from the paper's own hex, says "the landing at Tulagi left to the staff". `trial` of the same preview with
+        `dates` "chosen" is refused in words that hold 'A written landing is held to a day by its "not before"'. The preview is
+        still approved after it.
+    U16. `approve` of U13's preview answers `status` "queued" and `limits_queued` 2. `queued` then holds three entries: a
+        `set_intent` with `parent` N and `hex` H4 whose `goes_with` names the other two, a `set_limit` `forces` and a `set_limit`
+        `not_before` of K. The page's function for SIGNED says the first in the words of U7 and `signedOrders` of that queue is
+        empty. `propose` for N now gives the `take_place` at H4 as number K, `maker` "commander", `standing`, and the staff's at H1:
+        `writeLines` gives H1 alone. `preview` of `worked_tulagi_alone(N, H4)` again is refused, the engine's reason "intent:K
+        already plans the place at " and H4 as the engine writes a hex, which the page says "It is already planned."
+    U17. One `take_back` of the first entry is not refused and leaves nothing queued; `propose` gives both takes as the staff's again
+        and `writeLines` both lines.
+    U18. Previewed and approved again, and a day resolved: intent K is in force under N with `maker` "commander", its plan a draft
+        or preparing while the order's plan still waits; `hisLine` of it, from `command_state` with nothing queued and the seat
+        able to sign, is marked YOURS, offers GIVE IT BACK TO THE STAFF, and shows "Ships and forces" and "Not before" each with
+        CHANGE and BACK TO THE STAFF’S CHOICE and every other line but the day with CHANGE (item C5). `hisOtherLandings` for N and
+        H1 gives K at H4 alone. `preview` of `worked_lunga_alone(N, K, H1)` is valid, with `parent` N and a number above K;
+        nothing is approved. `preview` of {"command": "withdraw_intent", "intent": K} is valid with `intent` N.
+    U19. Leave to launch given and a day resolved: a `take_place` at H1 with `maker` "staff" is in force under N and the order's plan
+        is released; `preview` of `worked_lunga_alone(N, K, H1)` is now refused, the engine's reason beginning "intent:" and
+        ending " already plans the place at " and H1; the page says "It is already planned." The page's paper for N is then
+        drawn from the command state, where no line is offered WRITE IT (U1).
+    The game is put away."""
+    check(False, "not built: decision 0232, step 3, pull request C (a landing written under an order in force)")
 
 
 # ---- Rung 1 on the table (decision 0237). The statements are the architect's, written before the code with
