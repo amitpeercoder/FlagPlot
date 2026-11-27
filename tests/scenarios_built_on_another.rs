@@ -66,7 +66,8 @@
 //! L16. Text that states `built_on`, given to `from_text` with a path, loads
 //!      as a file of that text at that path. The resolved text of an
 //!      overlay states no `built_on`, and given to `from_text` with the
-//!      overlay's path loads to the same scenario as the overlay (items 12
+//!      overlay's path loads to a scenario with the same hash at day 0,
+//!      the same script and the same commands as the overlay (items 12
 //!      and 13).
 //!
 //! The repository
