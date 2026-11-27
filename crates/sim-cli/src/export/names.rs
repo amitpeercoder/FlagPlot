@@ -1,46 +1,16 @@
 //! Stable snake_case words for the simulation's enums. Every match lists
-//! every variant, so a new one fails to compile here until it is named.
+//! every variant, so a new one fails to compile here until it is named. A
+//! word for a type that an event holds is written once, in `sim-core`'s
+//! `field_value.rs`, and the function here calls it (decision 0235, ruling 4).
 
-use sim_core::events::{
-    DamageTrack, DetachReason, EngagementEndReason, LoadingLoss, RehearsalLoss, RosterLeft, Weapon,
-};
+use sim_core::events::Weapon;
 use sim_core::map::{HexKind, Terrain};
 use sim_core::orders::{AirMission, Issuer, Mission, SpeedSetting, Stance};
 use sim_core::side_events::SideEndReason;
 use sim_core::state::{ShipSystem, Side, SystemState, TaskForceStatus};
 
-/// Why a force's loading fell (decision 0095).
-pub fn loading_loss(reason: LoadingLoss) -> &'static str {
-    match reason {
-        LoadingLoss::NewLandingPlace => "new_landing_place",
-        LoadingLoss::UnitAdded => "unit_added",
-        LoadingLoss::Spent => "spent",
-    }
-}
-
-/// Why a unit's rehearsal fell (decision 0095).
-pub fn rehearsal_loss(reason: RehearsalLoss) -> &'static str {
-    match reason {
-        RehearsalLoss::NewLandingPlace => "new_landing_place",
-        RehearsalLoss::Landed => "landed",
-        RehearsalLoss::OtherLandingPlace => "other_landing_place",
-    }
-}
-
-/// Why a unit left a roster (decision 0095).
-pub fn roster_left(reason: RosterLeft) -> &'static str {
-    match reason {
-        RosterLeft::TakenByOrder => "taken_by_another_force",
-        RosterLeft::DroppedByOrder => "dropped_by_order",
-        RosterLeft::Landed => "landed",
-    }
-}
-
 pub fn side(side: Side) -> &'static str {
-    match side {
-        Side::Allied => "allied",
-        Side::Japanese => "japanese",
-    }
+    sim_core::field_value::side_word(side)
 }
 
 pub fn hex_kind(kind: HexKind) -> &'static str {
@@ -118,28 +88,7 @@ pub fn issuer(issuer: Issuer) -> &'static str {
 }
 
 pub fn weapon(weapon: Weapon) -> &'static str {
-    match weapon {
-        Weapon::Gun => "gun",
-        Weapon::Torpedo => "torpedo",
-        Weapon::Bomb => "bomb",
-    }
-}
-
-pub fn track(track: DamageTrack) -> &'static str {
-    match track {
-        DamageTrack::Flotation => "flotation",
-        DamageTrack::Fire => "fire",
-    }
-}
-
-pub fn end_reason(reason: EngagementEndReason) -> &'static str {
-    match reason {
-        EngagementEndReason::SlippedAway => "slipped_away",
-        EngagementEndReason::ForceSunk => "force_sunk",
-        EngagementEndReason::BrokeOff => "broke_off",
-        EngagementEndReason::PassedUnseen => "passed_unseen",
-        EngagementEndReason::MaxRounds => "max_rounds",
-    }
+    sim_core::field_value::weapon_word(weapon)
 }
 
 /// A fight's ending as a side is told it (decision 0085).
@@ -154,28 +103,10 @@ pub fn side_end_reason(reason: SideEndReason) -> &'static str {
     }
 }
 
-pub fn detach_reason(reason: DetachReason) -> &'static str {
-    match reason {
-        DetachReason::SentHome => "sent_home",
-        DetachReason::LeftBehind => "left_behind",
-        DetachReason::Ordered => "ordered",
-    }
-}
-
 pub fn system(system: ShipSystem) -> &'static str {
-    match system {
-        ShipSystem::Propulsion => "propulsion",
-        ShipSystem::FireControl => "fire_control",
-        ShipSystem::MainBattery => "main_battery",
-        ShipSystem::TorpedoMounts => "torpedo_mounts",
-        ShipSystem::FlightDeck => "flight_deck",
-    }
+    sim_core::field_value::system_word(system)
 }
 
 pub fn system_state(state: SystemState) -> &'static str {
-    match state {
-        SystemState::Working => "working",
-        SystemState::Degraded => "degraded",
-        SystemState::Out => "out",
-    }
+    sim_core::field_value::system_state_word(state)
 }

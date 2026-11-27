@@ -50,3 +50,47 @@ fired kinds over the before exports: 145 of 179
 - **P3.** Changed: `crates/sim-core/src/events.rs`, `crates/sim-core/src/field_value.rs` (new), `crates/sim-core/src/lib.rs` (one line), `crates/sim-cli/src/export/events.rs`, this file. **P4:** no line of `entities()` or either `Display` differs (the diff of `events.rs` is the macros, the imports and the 179 first lines).
 - **P7.** `cargo fmt --all -- --check`: clean. `cargo clippy --workspace --all-targets -- -D warnings`: clean. `cargo test --workspace --profile checked`: 5,868 passed, 0 failed, 24 ignored, including the new test. (The main it was built on has moved since PR 1's count of 5,869 and 23; the ignored are the long ones the tests mark.) `UmpireKey` is still reachable only through `fields`'s parameter, which `sim-agent` and `sim-staff` never call.
 - **Not shown here:** P5's before-and-after list of test names and P6 (CI's `web` job); the pull request's CI does those.
+
+## Built: PR 3 (the other types, the documents)
+
+Class 2. What was done: `crates/sim-core/src/field_value.rs` gained readings for the further types that have one everywhere, and `FieldValue` four variants (`Text`, `Str`, `Hexes`, `Ids`; it is no longer `Copy`). The words that were `match`es in `sim-cli`'s `export/names.rs` moved into `sim-core` as `side_word`, `weapon_word`, `track_word`, `end_reason_word`, `detach_reason_word`, `system_word`, `system_state_word`, `loading_loss_word`, `rehearsal_loss_word`, `roster_left_word`, and, whose only user was a deleted arm, `force_fatigue_word`, `land_fatigue_word` and `entry_wait_word` (ruling 4: the same bytes; `names.rs` calls them, and the six of its functions whose only users were deleted arms are removed). `describe` has a doc comment of its own, the misplaced text that sat above `cargo_named` ("The match names every variant") is gone from it, and the section comment for decisions 0095 and 0097 that went with its first arm in PR 2 is dropped: its arms (`LoadingLost`, `RehearsalLost`, `LeftRoster`) are deleted in this pull request, so nothing is left for it to head. The marks and the deletions were made by `apply.py` from the classification of `classify.py` (both in the scratchpad beside the PR 2 scripts); the declaration was not retyped, only the mark came off 48 lines.
+
+- **Table of types and readings (ruling 3), added in this pull request.** The ids with a public number are 14, not six, and the PR 2 impl over `EntityId` already reads all of them (`ShipId`, `ShipClassId`, `AircraftTypeId`, `TaskForceId`, `AirGroupId`, `PilotId`, `BaseId`, `LandUnitId`, `SubmarineId`, `SubmarineClassId`, `SubmarineTorpedoId`, `IntentId`, `FormationId`, `InterruptId`); the as built of PR 2 said six, naming the ones then used. New: `ContactId`, `OrderId`, `EventId` (their number, read with the key, decision 0086); `PlanId` (its number); `Side` (`allied`, `japanese`); `Vec<T>` of the public ids (a list of numbers); `Vec<Hex>`; `EntityRef` (its `Display`); `Option<T>` of any type that has a reading (the value, or nothing: every field of an `Option` type in a kind that is still by hand was checked, and each writes the value or leaves the key out); thirteen enums read by their own `name()` (`AirFirer`, `AirTarget`, `CommandKind`, `ExperienceSource`, `FieldworksChange`, `FuelOrderEnd`, `GroundGrade`, `Job`, `MarchStop`, `PlanState`, `ShipKind`, `SortieKind`, `SubmarineLeftReason`); and thirteen read by a word written in `field_value.rs` (`Side`, the nine others of `names.rs` above, the two fatigue changes and `EntryWait`). Types left without a reading because they are written two ways or as an object: `Cargo` (left out for supply, `"none"` in one kind), `RejectReason`, `CommandRef`, `HoldTarget`, `SupplyUse`, `Vec<ShipSystem>`, `Issuer`, `AirGroupLocation`, `AsOf` and the objects of commands and claims.
+- **P1, exports.** 133 files before (the merge base, built first) and after; the sorted `sha256sum` lists compared, `diff` printed nothing. Hash of the sorted list, both: `4c682911b86252b60e9372ede6566b7a2f178dcd52499e9ff26e6591f90c02f7`.
+- **P2, kinds seen.** 145 of the 179 kinds appear in the "before" exports; all 48 that lost their mark are among them.
+- **Ruling 2 (c), the script.** `classify.py` over the old arms (from `git show HEAD:`) and the "before" folder. An arm goes only if it is exactly one call for each field, in the order declared, under the field's own name, with the pattern binding every field and nothing else, each call the one reading of the field's type; the only branch an arm may hold is the reading of an `Option` field (`Some` writes the field, `None` writes nothing, or `id_when_some`), which is the type's one reading and which the script recognises by its exact shape. Printed:
+
+```
+hand arms at the start of this pull request: 118
+  48  DELETED: fired, plain chain of readable types, no branch
+   7  KEPT: fired, arm has other calls
+   3  KEPT: fired, call for after_attack differs from its reading
+   3  KEPT: fired, call for base differs from its reading
+   2  KEPT: fired, call for chance differs from its reading
+   1  KEPT: fired, call for ditched differs from its reading
+   1  KEPT: fired, call for hits_on_men differs from its reading
+  13  KEPT: fired, not a plain chain
+   1  KEPT: fired, pattern differs from the fields
+   1  KEPT: fired, type CommandRef has no reading
+   1  KEPT: fired, type HoldTarget has no reading
+   1  KEPT: fired, type RejectReason has no reading
+   1  KEPT: fired, type SupplyUse has no reading
+   1  KEPT: fired, type Vec<ShipSystem> has no reading
+   7  KEPT: no export fires it (not plain)
+  27  KEPT: no export fires it (plain)
+Option fields of the deleted arms (events of the kind / events that wrote the key):
+  AirAttack              recognised     Option<AircraftTypeId>    435 /    329  both sides taken
+  MenFed                 base           Option<BaseId>       2915 /   2771  both sides taken
+  AirGroupRebased        pilots         Option<u32>             3 /      0  ONE SIDE ONLY
+  MarchArrived           base           Option<BaseId>         58 /     24  both sides taken
+  StationKept            knots          Option<Fixed>           3 /      3  ONE SIDE ONLY
+  AircraftFireFought     task_force     Option<TaskForceId>     14 /     14  ONE SIDE ONLY
+```
+
+  Three of the 48 hold an `Option` branch that the exports took one way only (`AirGroupRebased`, `StationKept`, `AircraftFireFought`). They go because the branch is exactly the type's one reading and ruling 2 (c) allows that; if the architect reads (c) as asking for both sides of every branch, those three take their mark back and their arms with them, and the numbers below are 45 and 73. The script's output is kept as `ruling2c.out` in the scratchpad.
+- **Arms: 48 more deleted, 70 left** (from 179 at the start of the record, 118 at the start of this pull request). Of the 70, 36 hold a field of a type with no reading or an arm of their own shape (an `if`, a `match` on more than a field, an object, a key whose name is not the field's, a flag left out when false), and 34 are fired in no export (27 of them plain) and keep their arms by ruling 2. `describe` is 1,138 lines, from 1,686 at the start of this pull request and 2,594 at the start of the record; `export/events.rs` is 1,612 lines.
+- **Visibility still decided.** A dummy variant `DummyProbe = "dummy_probe" { side: Side }` added locally gave E0004 at `events.rs` (`entities()`, `Display`) and at `side_events.rs` (`seen`, `first_known_round`, `fight_round`, `count_from_known_round`, `whole_may_have_hidden_causes` and `project`); removed. The new section of `traceability.md` names those.
+- **Documents.** The section "Adding a kind of event" in `docs/engineering/traceability.md` (the places as they now are, and the table of types) and a clause in the `sim-core` row of `docs/engineering/layout.md`.
+- **P3.** Changed: `crates/sim-core/src/events.rs` (marks only), `crates/sim-core/src/field_value.rs`, `crates/sim-cli/src/export/events.rs`, `crates/sim-cli/src/export/names.rs`, the two documents and this file. **P4:** no line of `entities()` or either `Display` differs; `seen` and the kind tables are untouched.
+- **P7.** `cargo fmt --all -- --check`: clean. `cargo clippy --workspace --all-targets -- -D warnings`: clean. `cargo test --workspace --profile checked`: 5,868 passed, 0 failed, 24 ignored (as PR 2; no test added), including `hand_arms_are_the_marked_kinds`. `UmpireKey` is still reachable only through `fields`'s parameter.
+- **Not shown here:** P5's before-and-after list of test names and P6 (CI's `web` job); the pull request's CI does those. PR 4 (`kind_name`) is another developer's and is not here.
