@@ -1,7 +1,8 @@
 //! A map's frame (decision 0199): where it lies on the earth. The latitude
-//! and longitude of the centre of hex (0,0), the factor for longitude (the
-//! cosine of the centre's latitude, a literal to six places), the extent,
-//! and for a map being made its title, its date and its land marks.
+//! and longitude of the centre of hex (0,0), how it is flattened (decision
+//! 0242, rule 10: of one factor, the cosine of the centre's latitude as a
+//! literal to six places, or about a centre, with a scale), the extent, and
+//! for a map being made its title, its date and its land marks.
 //!
 //! The map tool alone reads a frame file (`data/map/frames/<name>.toml`),
 //! and makes a map from it. With none it makes the present map, from
@@ -79,6 +80,22 @@ pub struct LandMark {
     pub row: String,
 }
 
+/// How a frame flattens the earth (decision 0242, rule 10).
+#[derive(Clone, Debug, PartialEq)]
+pub enum Kind {
+    /// East is the difference of longitude times 60 times this factor, the
+    /// cosine of the centre's latitude (decisions 0017 and 0199).
+    OneFactor(Degrees),
+    /// About the centre (decision 0242, rule 3); this is the scale.
+    AboutCentre(Degrees),
+}
+
+/// The words a frame file gives for each kind.
+const KIND_ONE_FACTOR: &str = "one factor";
+const KIND_ABOUT_A_CENTRE: &str = "about a centre";
+/// The miles in a radian: the literal of a frame about a centre.
+const MILES_IN_A_RADIAN_TEXT: &str = "3437.746771";
+
 /// A map's frame.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Frame {
@@ -89,8 +106,8 @@ pub struct Frame {
     pub centre_lat: Degrees,
     /// As the frame gives it, west negative.
     pub centre_lon: Degrees,
-    /// The factor for longitude, the cosine of the centre's latitude.
-    pub factor: Degrees,
+    /// The kind of frame, with its factor or its scale.
+    pub kind: Kind,
     pub north: Degrees,
     pub south: Degrees,
     /// As the frame gives them, west negative.
@@ -106,7 +123,13 @@ struct FrameFile {
     date: String,
     centre_lat: String,
     centre_lon: String,
-    factor: String,
+    /// "one factor" or "about a centre"; none is the first.
+    #[serde(default)]
+    kind: Option<String>,
+    #[serde(default)]
+    factor: Option<String>,
+    #[serde(default)]
+    scale: Option<String>,
     north: String,
     south: String,
     west: String,
@@ -134,7 +157,7 @@ impl Frame {
             date: "2026-11-10".to_string(),
             centre_lat: degrees("-12"),
             centre_lon: degrees("160"),
-            factor: degrees("0.978148"),
+            kind: Kind::OneFactor(degrees("0.978148")),
             north: degrees("-1"),
             south: degrees("-24"),
             west: degrees("145"),
@@ -167,12 +190,37 @@ impl Frame {
                 })
             })
             .collect::<Result<Vec<_>, String>>()?;
+        let kind = match (file.kind.as_deref(), &file.factor, &file.scale) {
+            (None | Some(KIND_ONE_FACTOR), Some(factor), None) => {
+                Kind::OneFactor(Degrees::parse("factor", factor)?)
+            }
+            (None | Some(KIND_ONE_FACTOR), None, None) => {
+                return Err("a frame of one factor needs a factor".to_string())
+            }
+            (None | Some(KIND_ONE_FACTOR), _, Some(_)) => {
+                return Err("a frame of one factor takes a factor, and no scale".to_string())
+            }
+            (Some(KIND_ABOUT_A_CENTRE), None, Some(scale)) => {
+                Kind::AboutCentre(Degrees::parse("scale", scale)?)
+            }
+            (Some(KIND_ABOUT_A_CENTRE), None, None) => {
+                return Err("a frame about a centre needs a scale".to_string())
+            }
+            (Some(KIND_ABOUT_A_CENTRE), Some(_), _) => {
+                return Err("a frame about a centre takes a scale, and no factor".to_string())
+            }
+            (Some(other), _, _) => {
+                return Err(format!(
+                    "kind \"{other}\" is not \"{KIND_ONE_FACTOR}\" or \"{KIND_ABOUT_A_CENTRE}\""
+                ))
+            }
+        };
         let frame = Frame {
             title: file.title,
             date: file.date,
             centre_lat: Degrees::parse("centre_lat", &file.centre_lat)?,
             centre_lon: Degrees::parse("centre_lon", &file.centre_lon)?,
-            factor: Degrees::parse("factor", &file.factor)?,
+            kind,
             north: Degrees::parse("north", &file.north)?,
             south: Degrees::parse("south", &file.south)?,
             west: Degrees::parse("west", &file.west)?,
@@ -215,7 +263,14 @@ impl Frame {
             date: String::new(),
             centre_lat: degrees("centre_lat", frame.centre_lat)?,
             centre_lon: back("centre_lon", frame.centre_lon)?,
-            factor: degrees("factor", frame.factor)?,
+            kind: match frame.projection {
+                sim_data::MapProjection::OneFactor { factor } => {
+                    Kind::OneFactor(degrees("factor", factor)?)
+                }
+                sim_data::MapProjection::AboutCentre { scale } => {
+                    Kind::AboutCentre(degrees("scale", scale)?)
+                }
+            },
             north: degrees("north", frame.north)?,
             south: degrees("south", frame.south)?,
             west: degrees("west", frame.west)?,
@@ -233,11 +288,12 @@ impl Frame {
     }
 
     fn check(&self) -> Result<(), String> {
-        if !(self.factor.value > 0.0 && self.factor.value <= 1.0) {
-            return Err(format!(
-                "factor {} is not between 0 and 1",
-                self.factor.text
-            ));
+        let (name, number) = match &self.kind {
+            Kind::OneFactor(factor) => ("factor", factor),
+            Kind::AboutCentre(scale) => ("scale", scale),
+        };
+        if !(number.value > 0.0 && number.value <= 1.0) {
+            return Err(format!("{name} {} is not between 0 and 1", number.text));
         }
         for (name, lat) in [
             ("centre_lat", &self.centre_lat),
@@ -329,12 +385,23 @@ impl Frame {
         }
     }
 
-    /// The projection of the frame: hex (0,0)'s centre and the factor.
+    /// Whether the frame is about a centre (decision 0242).
+    pub fn is_about_a_centre(&self) -> bool {
+        matches!(self.kind, Kind::AboutCentre(_))
+    }
+
+    /// The projection of the frame: hex (0,0)'s centre and the factor or the
+    /// scale.
     pub fn projection(&self) -> Projection {
+        let (factor, about_centre) = match &self.kind {
+            Kind::OneFactor(factor) => (factor.value, false),
+            Kind::AboutCentre(scale) => (scale.value, true),
+        };
         Projection {
             origin_lat: self.centre_lat.value,
             origin_lon: self.lon_in_run(self.centre_lon.value),
-            factor: self.factor.value,
+            factor,
+            about_centre,
         }
     }
 
@@ -353,6 +420,25 @@ impl Frame {
     /// (decision 0199, 17). The two lines between them, the hex centres and
     /// the nearest centre, are the same for every map and are not here.
     pub fn projection_lines(&self) -> [String; 3] {
+        let factor = match &self.kind {
+            Kind::OneFactor(factor) => factor,
+            Kind::AboutCentre(scale) => {
+                // Decision 0242, rule 12: exactly these lines, with the
+                // frame's own numbers.
+                return [
+                    format!(
+                        "Projection: about a centre. Hex (0,0) is centred at {}, {}.",
+                        self.centre_lat.latitude_words(),
+                        self.centre_lon.longitude_words()
+                    ),
+                    format!(
+                        "  distance_nm = angle from the centre in radians * {MILES_IN_A_RADIAN_TEXT} * {}, on the bearing from the centre",
+                        scale.text
+                    ),
+                    "  east_nm = distance_nm * sin(bearing), north_nm = distance_nm * cos(bearing); a sphere of 60 nm to the degree.".to_string(),
+                ];
+            }
+        };
         let lat = &self.centre_lat;
         let north_formula = if lat.value < 0.0 {
             format!("(lat + {})", lat.magnitude())
@@ -368,8 +454,8 @@ impl Frame {
             format!(
                 "  east_nm  = (lon - {}) * 60 * {}   ({} is cos {} degrees)",
                 self.centre_lon_run_text(),
-                self.factor.text,
-                self.factor.text,
+                factor.text,
+                factor.text,
                 lat.magnitude()
             ),
             format!("  north_nm = {north_formula} * 60"),
@@ -459,6 +545,64 @@ mod tests {
         );
         assert_eq!(frame.marks.len(), 1);
         assert_eq!(frame.marks[0].row, "5100");
+    }
+
+    const WIDE: &str = "title = \"A test frame.\"\n\
+        date = \"2026-11-28\"\n\
+        kind = \"about a centre\"\n\
+        centre_lat = \"4\"\n\
+        centre_lon = \"174.5\"\n\
+        scale = \"0.964\"\n\
+        north = \"38\"\n\
+        south = \"-30\"\n\
+        west = \"142\"\n\
+        east = \"-153\"\n";
+
+    /// Decision 0242, rule 12 and part 4 of the hand calculation in
+    /// `tests/about_a_centre.rs`.
+    #[test]
+    fn a_frame_about_a_centre_writes_its_own_lines() {
+        let frame = Frame::parse(WIDE).unwrap();
+        assert!(frame.is_about_a_centre());
+        assert!(frame.crosses_date_line());
+        assert_eq!((frame.west_run(), frame.east_run()), (142.0, 207.0));
+        assert_eq!(
+            frame.projection_lines(),
+            [
+                "Projection: about a centre. Hex (0,0) is centred at 4 N, 174.5 E.".to_string(),
+                "  distance_nm = angle from the centre in radians * 3437.746771 * 0.964, on the bearing from the centre".to_string(),
+                "  east_nm = distance_nm * sin(bearing), north_nm = distance_nm * cos(bearing); a sphere of 60 nm to the degree.".to_string(),
+            ]
+        );
+        assert_eq!(
+            frame.extent_line(),
+            "Extent: every hex whose centre lies from 38 N to 30 S and from 142 E to 153 W."
+        );
+        // "one factor" may be said, and a frame with no kind is of one factor.
+        let said = MIDWAY.replace("centre_lat", "kind = \"one factor\"\ncentre_lat");
+        assert_eq!(Frame::parse(&said).unwrap(), Frame::parse(MIDWAY).unwrap());
+        assert!(!Frame::parse(MIDWAY).unwrap().is_about_a_centre());
+    }
+
+    #[test]
+    fn the_two_kinds_keys_do_not_mix() {
+        let bad = [
+            // a scale in a frame of one factor, with or without a factor
+            MIDWAY.replace("factor = ", "scale = \"0.9\"\nfactor = "),
+            MIDWAY.replace("factor = ", "scale = "),
+            // a factor in a frame about a centre, with or without a scale
+            WIDE.replace("scale = ", "factor = \"0.9\"\nscale = "),
+            WIDE.replace("scale = ", "factor = "),
+            // neither, an unknown kind, an unknown key
+            WIDE.replace("scale = \"0.964\"\n", ""),
+            MIDWAY.replace("factor = \"0.878817\"\n", ""),
+            WIDE.replace("about a centre", "about a pole"),
+            format!("{WIDE}extra = \"1\"\n"),
+            WIDE.replace("\"0.964\"", "\"1.5\""),
+        ];
+        for text in bad {
+            assert!(Frame::parse(&text).is_err(), "{text}");
+        }
     }
 
     #[test]
