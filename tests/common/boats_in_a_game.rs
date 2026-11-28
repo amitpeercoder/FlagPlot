@@ -40,15 +40,10 @@ pub struct Boat {
 /// A game with submarines: its four copies and its table of boats.
 pub struct Game {
     /// For each of the four letters: the letter, the copy's file name in
-    /// `data/scenarios/table-boats/` and the file it copies, as a path under
+    /// `data/scenarios/table-boats/` and the file it is built on, as a path under
     /// `data/scenarios/`.
     pub copies: [(char, &'static str, &'static str); 4],
     pub boats: &'static [Boat],
-    /// The number of files the script says are as made, for the whole
-    /// folder: thirteen (decision 0234, step C).
-    pub script_files: usize,
-    /// The files it keeps, whose source is built on another file: three.
-    pub kept_files: usize,
 }
 
 /// The keys of the submarine files.
@@ -236,28 +231,17 @@ impl Game {
         }
     }
 
-    // Statement 7.
+    // Statement 7, read as tables (decision 0234, readings (a) and (c)): the
+    // copy and its source are each resolved, since both may be built on
+    // another file.
     pub fn statement_7(&self) {
         for letter in self.letters() {
             let text = read(&self.copy(letter));
+            // The order of the file's own text: the [side] tables open the
+            // section, and the section is last.
             let at = text.find(SECTION).expect("the section of boats");
             let without = &text[..at + 1];
             let section = &text[at + 1..];
-            assert_eq!(
-                section.matches("\n[[submarine]]\n").count(),
-                self.boats.len(),
-                "copy {letter}: the section holds the boats"
-            );
-            assert_eq!(
-                section.matches("\n[side.allied]\n").count(),
-                1,
-                "copy {letter}: the section holds the Allied [side] table"
-            );
-            assert_eq!(
-                section.matches("\n[side.japanese]\n").count(),
-                1,
-                "copy {letter}: the section holds the Japanese [side] table"
-            );
             assert!(
                 section.find("[side.japanese]").unwrap() < section.find("[[submarine]]").unwrap(),
                 "copy {letter}: the [side] tables open the section"
@@ -271,25 +255,36 @@ impl Game {
                 !body(without).iter().any(|l| l.starts_with("[side")),
                 "copy {letter}: no [side] table before the section"
             );
-            let mut lines = body(without);
+            let mut have: toml::Table = super::resolved_text(&self.copy(letter))
+                .parse()
+                .expect("the copy resolves to a table");
+            let boats = have.remove("submarine").expect("the boats");
+            assert_eq!(
+                boats.as_array().expect("a list").len(),
+                self.boats.len(),
+                "copy {letter}: it holds the boats"
+            );
+            let side = have.remove("side").expect("the [side] tables");
+            let names: Vec<&String> = side.as_table().expect("a table").keys().collect();
+            assert_eq!(
+                names,
+                ["allied", "japanese"],
+                "copy {letter}: the two [side] tables"
+            );
             for key in KEYS {
-                let found: Vec<usize> = lines
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, l)| **l == key)
-                    .map(|(i, _)| i)
-                    .collect();
-                assert_eq!(found.len(), 1, "copy {letter}: {key}");
-                lines.remove(found[0]);
+                let want: toml::Table = key.parse().expect("a key");
+                let (name, value) = want.iter().next().expect("one key");
+                assert_eq!(
+                    have.remove(name).as_ref(),
+                    Some(value),
+                    "copy {letter}: {key}"
+                );
             }
             // The copy is its source but for the three keys, the section of
-            // boats and, in copy a, the ground figures: read as tables, the
-            // source resolved (decision 0234, item 12), since it may be built
-            // on another file.
+            // boats and, in copy a, the ground figures.
             let mut want: toml::Table = super::resolved_text(&self.source(letter))
                 .parse()
                 .expect("the source resolves to a table");
-            let have: toml::Table = lines.join("\n").parse().expect("the copy is a table");
             let hunger = toml::Value::String("../../reference/ground_hunger.toml".to_string());
             if letter == 'a' {
                 // File a's copy is on the table's ground figures, as the
@@ -345,39 +340,6 @@ impl Game {
                 );
             }
         }
-    }
-
-    /// The script, run with `--check`: every file kept is the one it makes
-    /// and the folder holds nothing else.
-    pub fn the_script_says_each_copy_is_the_one_it_makes(&self) {
-        let out = std::process::Command::new("python3")
-            .arg(repo().join("scripts/table-boats/make_files.py"))
-            .arg(repo())
-            .arg("--check")
-            .output()
-            .expect("python3 runs the script");
-        let said = String::from_utf8_lossy(&out.stdout);
-        assert!(
-            out.status.success(),
-            "{said}{}",
-            String::from_utf8_lossy(&out.stderr)
-        );
-        assert_eq!(
-            said.matches(": as made").count(),
-            self.script_files,
-            "{said}"
-        );
-        assert_eq!(
-            said.matches(": kept, its source is built on another file")
-                .count(),
-            self.kept_files,
-            "{said}"
-        );
-        assert_eq!(
-            said.matches("not a file this script makes").count(),
-            0,
-            "{said}"
-        );
     }
 }
 

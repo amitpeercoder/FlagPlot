@@ -17,9 +17,10 @@
 # One line for each file: its path, then `resolve same|DIFFERS` and
 # `run same|DIFFERS`; a file that was not there at REV is `NEW`, a
 # difference. It ends with a count and exits 1 when anything differs, or when
-# COUNT is given and the number of overlays is not COUNT (27 for step C, 31
-# for step D). It writes nothing in the repository: REV's data is unpacked
-# in a folder of its own and removed.
+# COUNT is given and the number of overlays is not COUNT (27 for step C; for
+# step D, 58: every file that states `built_on`, C's 27 and D's 31). It
+# writes nothing in the repository: REV's data is unpacked in a folder of its
+# own and removed.
 #
 # SIM_CLI names the program to use (default `target/release/sim-cli`, built
 # here if it is not there). Run from the top of the repository.

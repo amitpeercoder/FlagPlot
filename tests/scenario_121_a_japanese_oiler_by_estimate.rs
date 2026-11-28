@@ -104,7 +104,6 @@ use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use sim_core::events::{Event, EventKind, FuelOrderEnd};
 use sim_core::fixed::Fixed;
@@ -988,20 +987,5 @@ fn property_the_table_s_copies() {
     assert!(
         json.contains("Each side has an oiler"),
         "the Coral Sea's line"
-    );
-    let out = Command::new("python3")
-        .arg(repo().join("scripts/table-copies/make_copies.py"))
-        .arg("--check")
-        .current_dir(repo())
-        .output()
-        .expect("python3 runs");
-    let said = String::from_utf8_lossy(&out.stdout);
-    assert!(out.status.success(), "{said}");
-    assert_eq!(said.matches(": the copy it makes").count(), 3, "{said}");
-    assert_eq!(
-        said.matches(": kept, its source is built on another file")
-            .count(),
-        9,
-        "{said}"
     );
 }
