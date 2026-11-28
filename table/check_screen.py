@@ -4776,6 +4776,242 @@ def rung_one_played_three_ways(bridge):
         check(post(bridge.table + "/new") == {"ok": True}, f"{name}: the game is put away")
 
 
+# ---- Rung 3 on the table (decision 0237). The statements are the architect's, written before the code with
+# docs/decisions/as-built/0237-the-first-three-rungs.md, "What rung 3 on the table needs beyond rung 1's (class 2)", which has the
+# entry, the two directives and the verdict's words in full. None of the five is called from main() until it is built. An expected
+# value below that the build cannot meet goes back to the architect: it is not changed to pass.
+
+RUNG_THREE = "ladder-3-men-then-food"
+RUNG_THREE_MISSION = {"measure": "held_and_fed", "last_day": 21,
+                      "places": [{"q": 3, "r": 3, "name": "Emberholt"}],
+                      "held": {"base": 2, "name": "Emberholt", "by_day": 14},
+                      "look": [{"q": 0, "r": 0}, {"q": 3, "r": 3}]}
+RUNG_THREE_MISSION_WORDS = ("Seize Emberholt, reported empty, by the end of day 14, and hold it with its men fed: it is to be ours by then, and no man "
+                            "ashore there is to go a night unfed, to the end of day 21. Men land with three nights of rations.")
+RUNG_THREE_MET = ["Mission met.", "Emberholt was taken on day 12 and held to the end of day 21.", "No man ashore there went a night unfed."]
+
+
+def rung_three_take(risk):
+    """The order to capture Emberholt as the paper sends it: base 2 (E), with task force 1, land unit 1 and base 1 (S) as its forces,
+    and its risk where that is not balanced. The engine reads the base as its hex, (3,3): the commands are the hand calculation's."""
+    limits = [{"limit": "forces", "task_forces": [1], "ships": [], "land_units": [1], "source": 1}]
+    if risk != "balanced":
+        limits.append({"limit": "risk", "risk": risk})
+    return {"command": "set_intent", "intent_kind": "take_place", "base": 2, "limits": limits}
+
+
+def rung_three_supply():
+    """The supply order as the paper sends it once Emberholt is the seat's: base 2 at a floor of 2 days and an interval of 5, with
+    ship 4 (Merrowdale) and base 1 (S) as its forces."""
+    return {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 2, "interval_days": 5,
+            "limits": [{"limit": "forces", "ships": [4], "task_forces": [], "source": 1}]}
+
+
+def rung_three_on_the_list(bridge):
+    """Rung 3 on the list, its two directives, where the game opens, and the game begun.
+
+    In the files:
+    K1. The second entry of `table/scenarios.json` has the id "ladder-3-men-then-food", the name "Rung 3: Men, then food", `dates` "An
+        invented sea", `days` 21, `placeholder` true, the map "data/map/placeholder_ladder.toml", no key `start`, `islands` empty, three
+        `lines` of which the last begins "A placeholder game", `sides` with the key `allied` alone, whose words are "Seize Emberholt and
+        keep its men fed.", `directives` with the key `allied` alone, "table/directives/ladder_3_allied.json", `mission` equal to
+        RUNG_THREE_MISSION, and one pairing: {allied "person", japanese "engine", engine "absent", file
+        "data/scenarios/ladder/140_men_then_food.toml"}. It has the twelve keys rung 1's entry has and no other. The whole entry is the
+        one written in the as-built section.
+    K2. The first entry is rung 1's and the third the Eastern Solomons'. Rung 1's `mission` is RUNG_ONE_MISSION, with no key `held` or
+        `look`. Every entry but the first two has no `mission` or `placeholder`, no pairing with the engine absent, and a start (L2,
+        restated for two rungs).
+    K3. `table/directives/ladder_3_allied.json` has two directives. Number 1: `when` "start", from "Area Commander", to "Commander,
+        Saltmere", subject "Emberholt", three parts headed "1. Situation", "2. Mission" and "3. Guidance"; its mission is one paragraph,
+        RUNG_THREE_MISSION_WORDS, letter for letter; its guidance has five paragraphs, of which the third is "Then tell the staff that
+        plans launch when ready, under YOUR ORDERS, and carry on: it sails nothing without that leave, neither the men nor the food.";
+        the guidance names "Landing force", "Saltmere" and "risk", and names no day but "day 21" (it does not give the days away).
+        Number 2: `when` {"base_is_yours": 2}, from and to as number 1, subject "Emberholt is ours", the same three headings; its
+        guidance names "Merrowdale", "Saltmere" and "two numbers". Both are the ones written in the as-built section.
+    K4. Decision 0241: scenario 140 names, in the order of its file, its bases "Saltmere" and "Emberholt", its task force "Landing
+        force", its ships "Farrowby", "Gadwell", "Hestercombe" and "Merrowdale" and its land unit "Saltmere battalion"; it is marked
+        `placeholder = true`; and none of the words Emberholt, Farrowby, Gadwell and Hestercombe is in any file of `data/oob`, whatever
+        its case.
+
+    In the page's text:
+    K5. `openOnMission`, cut from the page and run in node with `placeOf` standing as {x: q, z: r} and `clampGoal` doing nothing: a
+        mission with `places` [(3,3)] and `look` [(0,0), (3,3)] gives a goal of x 1.5, z 1.5 and zoom 0.3; RUNG_ONE_MISSION, which has
+        no `look`, gives x 2.5, z 0 and zoom 0.3, as before. So rung 3 opens looking at Saltmere and Emberholt together, and rung 1 as it
+        did.
+
+    Through the bridge:
+    K6. The screen's list has the rung second, with one pairing, and names no file and no `mission`. The game begins: `/config` has
+        `seat` "allied", `start` the empty string, `islands` empty, the two directives and `mission` equal to RUNG_THREE_MISSION. The
+        seat's `list_bases` has one base, base 1 at (0,0), and one enemy base, base 2 at (3,3); the page's `cleanName` (in node) of that
+        enemy base's name is "Emberholt", which is the mission's `held.name` and the name of its one place; `held.base` is 2.
+    K7. The seat's tools include neither `trial` nor `advance` (a day is fought whole). `get_briefing` gives `heading.last_day` 21.
+        `command_state` gives `leaves.prepare` true and `leaves.launch` false before any day is fought.
+    K8. A game of rung 1 begun after it has `mission` equal to RUNG_ONE_MISSION in its `/config`.
+    Each game is put away after it."""
+    raise AssertionError("not built: rung_three_on_the_list")
+
+
+def the_orders_of_rung_three(bridge):
+    """What the page can give on rung 3, and the mend to SIGNED. Tried by the architect on the page on Nov 28, 2026, before this was
+    written: every order below was given from the page but the hold of a place that is not yet the seat's, which the page does not offer
+    (as-built, "What was tried on the page").
+
+    In the page's text (none of this is changed by the build: it is what the rung rests on):
+    P1. `ends` offers for an enemy base 'Capture ' + its name + ' only' with {intent_kind 'take_place', base n} and 'Neutralise ' + its
+        name, and no hold and no supply; for a base of the seat's it offers 'Hold ' + its name, 'Keep it supplied' and 'Cover it from
+        the air'. `LIMITS_OFFERED.take_place` holds ships, land_units, source and risk, and `LIMITS_OFFERED.hold` holds ships and
+        source.
+
+    The page's own limits model, cut from its text and run in node:
+    P2. For the kind `take_place`, a draft whose ships are "only" task force 1, whose land units are "only" unit 1, whose source is
+        base 1 and whose risk is press sends, by `sentLimits`, exactly the two limits of `rung_three_take("press")`, in that order; at a
+        balanced risk it sends the forces limit alone. For the kind `hold`, a draft with ships "only" ship 4 and source base 1 sends
+        {limit "forces", task_forces [], ships [4], source 1}.
+
+    Through the bridge, in a game of rung 3 before any day is fought:
+    P3. A preview of `rung_three_take("press")` is valid and not refused; its `command` has `intent_kind` "take_place", `hex` [3, 3]
+        and `intent` 1 and no key `base`; its `shown_limits` has two entries. A preview of `rung_three_take("balanced")` is valid and
+        its `shown_limits` has one.
+    P4. A preview of `rung_three_supply()` is refused, with the reason "base:2 is not one of the side's bases" and `of_batch.position`
+        1: the supply order cannot be given while the place is the enemy's (case D of the hand calculation), and P1 is why the page
+        never asks.
+    P5. Nothing is signed (`queued` has no entry), and the game is put away.
+
+    The mend to SIGNED (found on rung 1 as `main` stands: a supply order signed from the page leaves SIGNED saying "NOT READ Could not
+    read what is signed.", because `queued` gives a supply order's command with no `intent_kind`, the default, and `signedLine` reads the
+    kind from that key alone):
+    P6. The page's `signedLine`, with what it reads, cut from its text and run in node with the stand-ins of NODE_PRELUDE and
+        `M.bases` holding base:2 named "Emberholt", on the entry {what "command", tool "set_intent", command {kind "set_intent", base 2,
+        floor_days 2, interval_days 5, intent 3}, goes_with []}: it does not throw, and its text begins "Order: Keep Emberholt supplied".
+        The same entry with `intent_kind` "hold" gives a text that begins "Order: Hold Emberholt", as before.
+    P7. Through the bridge, in the game of Y1 on the evening after day 12 with `rung_three_supply()` approved: the first entry of
+        `queued` has a `command` with `base` 2, `floor_days` 2 and `interval_days` 5 and no key `intent_kind` (the fact P6 rests on)."""
+    raise AssertionError("not built: the_orders_of_rung_three")
+
+
+def a_directive_stops_the_clock(bridge):
+    """The clock stops when a directive is received: how the player of rung 3 is told that the place is his (as-built, "How he is told
+    the place is his"). Seen by the architect on the page on Nov 28, 2026: with the capture ordered at press and leave to launch given,
+    Carry on runs from day 1 to the end of day 21 with no stop, and the verdict is six nights unfed.
+
+    In the page's text:
+    S1. The fold WHAT STOPS THE CLOCK holds a tick with the id `stop-directive` and the words "a directive from above", among the
+        table's own. `TICK_DEFAULT` has `directive: true`; its other eleven keys and their values are as they were.
+    S2. `directiveStop()` is asked wherever `eveningStop()` is asked (the pulse, day and watched loops), and the clock rests where it
+        answers. It answers with the directive where one was received since the clock was last started and the tick is set, and with
+        nothing where the tick is cleared. `startRun` forgets it.
+    S3. WHY THE CLOCK STOPPED then holds a slip whose head is 'FROM ' + the directive's `from` in capitals and whose words are
+        'Directive ' + its number + ': ' + its subject; it is kept and read again across a reload with the rest of WHY, as the stop for
+        reinforcements and the stop for evening are. The directive still opens of itself, and is still a paper under Staff.
+    S4. `directiveDue`, cut from the page and run in node with `M.bases` as given: for a directive whose `when` is {"base_is_yours":
+        2}, false where the bases are [base:1] and true where they are [base:1, base:2, base:3]; for one whose `when` is "start", true
+        for both.
+
+    Through the bridge, in a game of rung 3 with `rung_three_take("press")` approved and leave to launch given before day 1:
+    S5. `run` {days 1, stop_on []} twelve times: each answers `stopped` "days", `game_over` false and an empty `fired`. Nothing of the
+        engine's stops the clock on this path, which is why the page must.
+    S6. After the eleventh, `list_bases` has base 1 alone among the seat's bases and base 2 among the enemy's; `directiveDue` (in node,
+        on that answer's bases) is false for directive 2 of rung 3's file. After the twelfth, the seat's bases are base 1, base 2
+        ("Emberholt") and base 3, the last two at (3,3), there is no enemy base, and `directiveDue` is true for directive 2. The
+        seat's `events` of day 12 hold one event of kind `base_changed_side`, whose text begins "base:2 at (3,3) changed from the
+        Japanese side to the Allied side: ".
+    S7. On that evening a preview of `rung_three_supply()` is valid: the order the directive tells him to give can be given at that
+        stop. Nothing is signed, and the game is put away.
+
+    In the files:
+    S8. No directive file but rung 3's and the 39 days' Allied one has a directive whose `when` is not "start"; the 39 days' is
+        {"base_is_yours": 1}, as it was. (The stop is the page's for every game: in the 39 days the clock now stops when Lunga is
+        taken and directive 2 is received. `table/README.md` says so.)"""
+    raise AssertionError("not built: a_directive_stops_the_clock")
+
+
+def the_verdict_of_a_place_held():
+    """The verdict's words for the measure `held_and_fed`: the page's own `missionLines(mission, days, bases)`, cut from its text with
+    `commas` and run in node. It draws nothing and asks nothing. `days` is as in `the_verdict_in_words`. `bases` is the list of the
+    numbers of the seat's bases at the end, as `list_bases` gave them, or null where that was not answered. The mission is
+    RUNG_THREE_MISSION. The events are made up in the tool's shape, the texts being the engine's:
+    `fed(d, q, r, base)` is {"day": d, "event_kind": "men_fed", "pulse": "night", "text": "Allied men ashore at (q,r): 600 of 600 fed
+    from base:N, 0 unfed"}; `unfed(d, n)` is the same at (3,3) from base:2 with n of 600 unfed; `taken(d)` is {"day": d, "event_kind":
+    "base_changed_side", "pulse": null, "text": "base:2 at (3,3) changed from the Japanese side to the Allied side: 0 t of supply and 0
+    t of fuel kept, 0 t and 0 t lost"}.
+
+    `game_a` is case A as the seat is told it: fed(d, 0, 0, 1) on days 1 to 11; taken(12) on day 12 and no `men_fed`; fed(d, 3, 3, 3)
+    on days 13 and 14 and fed(d, 3, 3, 2) on days 15 to 21; `bases` [1, 2, 3].
+
+    X1. `game_a`: RUNG_THREE_MET.
+    X2. `game_a` with unfed(16, 600) in place of day 16's event: ["Mission not met.", "600 men at Emberholt went unfed on the night of
+        day 16."].
+    X3. The same on each day from 16 to 21: the second line is "600 men at Emberholt went unfed on the nights of days 16, 17, 18, 19,
+        20 and 21."
+    X4. Case F: fed(d, 0, 0, 1) on each of the 21 days, no event at (3,3), `bases` [1]: ["Mission not met.", "Emberholt was not ours
+        at the end of day 21."]. A game in which no man was ever ashore at the place is not held: never "met", never "not judged".
+    X5. Case G: fed(d, 0, 0, 1) on days 1 to 17, taken(18), fed(d, 3, 3, 3) on days 19 to 21, `bases` [1, 2, 3]: ["Mission not met.",
+        "Emberholt was taken on day 18, after the end of day 14."].
+    X6. The day itself: `game_a` with the taking on day 14 and the place's nights from day 15 gives "Mission met." and "Emberholt was
+        taken on day 14 and held to the end of day 21."; with the taking on day 15 and the nights from day 16, all fed, ["Mission not
+        met.", "Emberholt was taken on day 15, after the end of day 14."].
+    X7. Late and unfed, the place first and then the nights: the taking on day 15 and unfed(19, 200) gives ["Mission not met.",
+        "Emberholt was taken on day 15, after the end of day 14.", "200 men at Emberholt went unfed on the night of day 19."].
+    X8. The base that paid is not read: `game_a` with every night at (3,3) said "from base:3", or every one "from base:2", is
+        RUNG_THREE_MET; unfed(16, 600) and the form with no base on day 17, "Allied men ashore at (3,3): no base of the side, none of
+        600 fed, 600 unfed", are said together as "the nights of days 16 and 17". A `men_fed` at (0,0) with 600 unfed on day 5 does not
+        count: the mission's one place is (3,3).
+    X9. Taken, lost and taken again: `game_a` with, on day 15, a `base_changed_side` of base:2 "from the Allied side to the Japanese
+        side" and, on day 17, taken(17), `bases` [1, 2, 3]: the day of taking is the last, "Emberholt was taken on day 17, after the end
+        of day 14." The same with `bases` [1, 3]: "Emberholt was not ours at the end of day 21." A `base_changed_side` of another base
+        ("base:7 at (9,9) changed from ...") on any day changes nothing of `game_a`.
+    X10. Not judged, and never "met". `bases` null: ["The mission could not be judged.", "The list of our bases could not be read."].
+        Day 9 null, with `bases` null too: "Day 9 could not be read." (the days are read first, in order). A `men_fed` that does not
+        fit, as W7: "A report of the men fed on day 9 could not be read." A `base_changed_side` on day 12 whose text is "base:2
+        changed": "A report of a base changing sides on day 12 could not be read." `bases` [1, 2, 3] and no `base_changed_side` of
+        base:2 on any day: "The day Emberholt was taken could not be read." Each has "The mission could not be judged." as its first
+        line.
+    X11. Rung 1's measure is untouched: `missionLines(RUNG_ONE_MISSION, days)` and `missionLines(RUNG_ONE_MISSION, days, null)` give
+        the lines of W1 and of W2 for their days; a `base_changed_side` whose text does not fit, added to W1's days, leaves
+        RUNG_ONE_MET (the measure `every_night_fed` reads no such event and no list of bases).
+
+    In the page's text:
+    X12. `missionLines(` is still called in one place, inside `readEnd`. For a mission whose measure is `held_and_fed` what it is
+        given is read through `dayEvents` for the days 1 to the mission's `last_day` and through one call of the seat's `list_bases`,
+        made each time the paper is opened, and through no other call; for the measure `every_night_fed` no list is asked (W9,
+        restated). A call of `list_bases` that fails gives `bases` null. HOW IT ENDED stamps "MISSION MET" and "MISSION NOT MET" as it
+        does, with every other line under the stamp."""
+    raise AssertionError("not built: the_verdict_of_a_place_held")
+
+
+def rung_three_played_five_ways(bridge):
+    """Rung 3 played through the bridge to its end five times, and the verdict of each: the page's own `missionLines` in node on what
+    the seat's `events` and `list_bases` answered. The games are cases A, C, D without its refused order, F and G of the hand
+    calculation in `tests/scenario_140_men_then_food.rs` (its statements 4, 6, 7, 9 and 10), which gives both leaves on day 1; leave to
+    prepare is given when a game on the table begins, and leave to launch is given here before day 1 is fought, as the directive tells
+    the player. Case E, a hold of the place given with the landing, is not played: the page does not offer a hold of a place that is not
+    yet the seat's (as-built, "What was tried on the page").
+
+    Each game: begun from the list (rung 3, a person Allied against the engine); the first evening's orders previewed and approved, and
+    `set_leave` {leave "launch", given true}; `run` {days n} up to the evening named, again until that many days are resolved; that
+    evening's order previewed and approved; then `run` {days 21} again and again until an answer says the game is over (a stop is
+    answered by `run` again, and nothing else is ordered); then `events` {day d} for d from 1 to 21, in order, and `list_bases`.
+
+    Y1. Case A. `rung_three_take("press")` before day 1; `rung_three_supply()` on the evening after day 12 (for day 13): the lines are
+        RUNG_THREE_MET. At the end `list_bases` gives base 1 137 t of supply, base 2 9 t and base 3 3 t: the hand calculation's.
+    Y2. Case C. The same with the supply order on the evening after day 14 (for day 15): ["Mission not met.", "600 men at Emberholt
+        went unfed on the night of day 16."].
+    Y3. Press and no supply order (case D without the order the game refuses): ["Mission not met.", "600 men at Emberholt went unfed
+        on the nights of days 16, 17, 18, 19, 20 and 21."].
+    Y4. Case F. `rung_three_take("balanced")` and nothing else: ["Mission not met.", "Emberholt was not ours at the end of day 21."].
+        `list_bases` has base 1 alone among the seat's bases.
+    Y5. Case G. `rung_three_take("balanced")` before day 1; on the evening after day 16 (for day 17) a preview of {command "set_limit",
+        intent 1, limit "risk", risk "press"}, approved: ["Mission not met.", "Emberholt was taken on day 18, after the end of day
+        14."]. No night is unfed in this game: it is the game the designer's answer of Nov 28, 2026 closes.
+    Y6. In each game: the last `run` answers `game_over` true and `result` null; every one of the twenty-one `events` answers has
+        `begun` true; the check's own reading of those answers (each `men_fed` whose text does not end ", 0 unfed", by day and hex; the
+        day of the one `base_changed_side`, or none; whether `list_bases` has base 2 among the seat's) agrees with the lines; and the
+        lines are the same when the answers are asked a second time, after the end. No `run` of any of the five answers a `fired` that
+        is not empty: with leave to launch given nothing of the engine's stops the clock.
+    Each game is put away after it."""
+    raise AssertionError("not built: rung_three_played_five_ways")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--sim-cli", default="target/release/sim-cli")
