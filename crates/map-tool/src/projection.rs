@@ -1,6 +1,9 @@
 //! The projection of decision 0017, 2, for any map's frame (decision 0199):
 //! east in nm is (longitude - centre longitude) x 60 x factor; north in nm is
-//! (latitude - centre latitude) x 60. For the present map hex (0,0) is
+//! (latitude - centre latitude) x 60. A frame about a centre (decision 0242,
+//! rule 3) is projected another way: the distance from the centre along the
+//! great circle, in radians, times 3437.746771 times the scale, on the
+//! bearing the great circle leaves the centre by. For the present map hex (0,0) is
 //! centred at 12 S, 160 E and the factor is 0.978148, the cosine of 12
 //! degrees ([`crate::frame::Frame::south_pacific`]). Hexes are pointy-topped,
 //! 40 nm between centres, and north is decreasing r (decision 0012).
@@ -17,17 +20,23 @@ pub const HEX_NM: f64 = 40.0;
 /// Distance between rows of hex centres, in nm: 40 x sqrt(3) / 2.
 pub const ROW_NM: f64 = 34.641016;
 
+/// The miles in a radian: the literal of a map about a centre.
+pub const NM_PER_RADIAN: f64 = 3437.746771;
+
 /// A map's projection: the centre of hex (0,0) and the factor for
-/// longitude, from its frame.
+/// longitude, or the scale of a map about a centre, from its frame.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Projection {
     /// Latitude of hex (0,0)'s centre.
     pub origin_lat: f64,
     /// Longitude of hex (0,0)'s centre, in the frame's run.
     pub origin_lon: f64,
-    /// The factor for longitude: the cosine of the centre's latitude, as a
-    /// literal.
+    /// The factor for longitude, the cosine of the centre's latitude, as a
+    /// literal; or, when `about_centre`, the scale.
     pub factor: f64,
+    /// Whether the map is about a centre (decision 0242) and `factor` is
+    /// its scale.
+    pub about_centre: bool,
 }
 
 /// The present map's projection, from the map tool's default frame.
@@ -36,13 +45,22 @@ pub fn south_pacific() -> Projection {
 }
 
 impl Projection {
-    /// Nautical miles in a degree of longitude, at the centre's latitude.
+    /// Nautical miles in a degree of longitude, at the centre's latitude, for
+    /// a map of one factor. It is not to be asked of a map about a centre.
     pub fn nm_per_deg_lon(&self) -> f64 {
+        // A map about a centre has no such number: its meridians bow.
+        assert!(
+            !self.about_centre,
+            "a map about a centre has no miles to a degree of longitude"
+        );
         NM_PER_DEG_LAT * self.factor
     }
 
     /// East and north of a point from hex (0,0)'s centre, in nm.
     pub fn to_nm(&self, lat: f64, lon: f64) -> (f64, f64) {
+        if self.about_centre {
+            return self.position_to_plane_about_centre(lat, lon);
+        }
         (
             (lon - self.origin_lon) * self.nm_per_deg_lon(),
             (lat - self.origin_lat) * NM_PER_DEG_LAT,
@@ -51,10 +69,51 @@ impl Projection {
 
     /// Latitude and longitude of a point given its east and north in nm.
     pub fn from_nm(&self, east: f64, north: f64) -> (f64, f64) {
+        if self.about_centre {
+            return self.plane_to_position_about_centre(east, north);
+        }
         (
             self.origin_lat + north / NM_PER_DEG_LAT,
             self.origin_lon + east / self.nm_per_deg_lon(),
         )
+    }
+
+    /// Part 1 of the hand calculation in `tests/about_a_centre.rs`. The
+    /// angle from the centre is found from its sine and cosine (the same
+    /// angle as from the cosine alone, and exact near the centre).
+    fn position_to_plane_about_centre(&self, lat: f64, lon: f64) -> (f64, f64) {
+        let (lat0, lon0) = (self.origin_lat.to_radians(), self.origin_lon.to_radians());
+        let (lat, lon) = (lat.to_radians(), lon.to_radians());
+        let d_lon = lon - lon0;
+        let cos_c = lat0.sin() * lat.sin() + lat0.cos() * lat.cos() * d_lon.cos();
+        let along = d_lon.sin() * lat.cos();
+        let up = lat0.cos() * lat.sin() - lat0.sin() * lat.cos() * d_lon.cos();
+        let sin_c = along.hypot(up);
+        if sin_c == 0.0 {
+            return (0.0, 0.0);
+        }
+        let c = sin_c.atan2(cos_c);
+        let bearing = along.atan2(up);
+        let distance = c * NM_PER_RADIAN * self.factor;
+        (distance * bearing.sin(), distance * bearing.cos())
+    }
+
+    /// Part 2 of the hand calculation. The longitude that comes out is in
+    /// the frame's run.
+    fn plane_to_position_about_centre(&self, east: f64, north: f64) -> (f64, f64) {
+        let (lat0, lon0) = (self.origin_lat.to_radians(), self.origin_lon.to_radians());
+        let rho = east.hypot(north);
+        if rho == 0.0 {
+            return (self.origin_lat, self.origin_lon);
+        }
+        let c = rho / (NM_PER_RADIAN * self.factor);
+        let bearing = east.atan2(north);
+        let sin_lat =
+            (lat0.sin() * c.cos() + lat0.cos() * c.sin() * bearing.cos()).clamp(-1.0, 1.0);
+        let lat = sin_lat.asin();
+        let lon =
+            lon0 + (bearing.sin() * c.sin() * lat0.cos()).atan2(c.cos() - lat0.sin() * sin_lat);
+        (lat.to_degrees(), lon.to_degrees())
     }
 
     /// Latitude and longitude of hex (q, r)'s centre.
