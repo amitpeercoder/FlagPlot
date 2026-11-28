@@ -23,6 +23,7 @@ with `check_watch.py`.
 import argparse
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -1027,6 +1028,79 @@ function main(a) {
   return { heads, text: doc.textContent, refs, rows, buttons, hows };
 }
 """
+
+
+def the_bridge_reads_both_kinds_of_frame():
+    """The bridge's reading of a map's header (decision 0242, rules 12 and 16): `read_frame` in `table/serve.py`, imported as the site script
+    imports it. A map of one factor is served exactly the keys and values it always had (the south-west Pacific map and the Midway map); a map
+    about a centre is served `kind` "about a centre" and `scale` in place of `factor`, with the centre and the west and east edges in the run; a
+    hand-written map with no projection lines has no frame; and a map that has projection lines which cannot be read as either kind is an error
+    that names the map, not a chart with no frame."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("table_serve_for_check", os.path.join(HERE, "serve.py"))
+    bridge = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bridge)
+    root = os.path.dirname(HERE)
+    check(bridge.read_frame(os.path.join(root, "data/map/south_pacific.csv")) == {"centre_lat": -12.0, "centre_lon": 160.0, "factor": 0.978148, "west": 145.0, "east": 172.0}
+          and list(bridge.read_frame(os.path.join(root, "data/map/south_pacific.csv"))) == ["centre_lat", "centre_lon", "factor", "west", "east"],
+          "the south-west Pacific map's frame is served as it was: five keys, a factor and no kind")
+    check(bridge.read_frame(os.path.join(root, "data/map/midway.csv")) == {"centre_lat": 28.5, "centre_lon": 178.5, "factor": 0.878817, "west": 163.0, "east": 194.0},
+          "the Midway map's frame is served as it was, across the date line (163 to 194)")
+    check(bridge.read_frame(os.path.join(root, "data/map/papua_to_midway.csv")) == {"centre_lat": 4.0, "centre_lon": 174.5, "kind": "about a centre", "scale": 0.964, "west": 142.0, "east": 207.0},
+          "the map from Papua to Midway is served as of the kind about a centre, with its scale and its edges in the run (142 to 207)")
+    check(bridge.read_frame(os.path.join(root, "data/map/placeholder_ladder.toml")) is None, "a hand-written map has no frame")
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, "broken.csv")
+        with open(path, "w") as out:
+            out.write("# A map.\n# Projection: about a centre. Hex (0,0) is centred at 4 N, 174.5 E.\n# Extent: every hex whose centre lies from 38 N to 30 S and from 142 E to 153 W.\nq,r,kind,land_percent,lat,lon,water_bodies,closed_sides\n")
+        try:
+            bridge.read_frame(path)
+            named = None
+        except ValueError as error:
+            named = str(error)
+        check(named is not None and path in named, "a header with projection lines that cannot be read is an error that names the map, not a chart with no frame")
+
+
+def the_plane_agrees_with_the_shared_file():
+    """The page lays the chart out in the map's plane (decision 0242, rules 17 and 18): its own `plane(lat, lon)` and `hexOfPlane(east, north)`,
+    cut from the page's text and run in node, agree with every point of `table/chart/plane_fixture.json`, the file the map tool writes: east and
+    north to 0.01 nm, and the same hex. The file has an entry for each of the three generated maps, with the frame as the bridge serves it; the
+    longitude of a point is brought into the frame's run by the page's own `runLon`. A map with no frame (a hand-written one) has a degree of
+    latitude and of longitude of the same length, 60 miles. The page has no factor of its own for longitude left (`FX`)."""
+    text = page_text()
+    with open(os.path.join(HERE, "chart", "plane_fixture.json"), encoding="utf-8") as handle:
+        fixture = json.load(handle)
+    check([m["file"] for m in fixture["maps"]] == ["data/map/south_pacific.csv", "data/map/midway.csv", "data/map/papua_to_midway.csv"],
+          "the shared file of checked positions has an entry for each of the three generated maps")
+    kinds = [m["frame"].get("kind", "one factor") for m in fixture["maps"]]
+    check(kinds == ["one factor", "one factor", "about a centre"], "the frames in it are of the kinds the maps have")
+    code = ("var mapFrame = null;\n" + text[text.index("  var MILES_RADIAN"):text.index("\n", text.index("  var MILES_RADIAN"))] + "\n"
+            + "\n".join(cut_function(text, h) for h in ("function aboutCentre()", "function runLon(lon)", "function plane(lat, lon) {", "function hexOfPlane(east, north) {"))
+            + """
+function main(fixture) {
+  const out = [];
+  fixture.maps.forEach(function (m) {
+    mapFrame = m.frame;
+    m.points.forEach(function (p) {
+      const e = plane(parseFloat(p.lat), runLon(parseFloat(p.lon))), h = hexOfPlane(e[0], e[1]);
+      out.push([m.file, p.row, e[0] - p.east, e[1] - p.north, h[0] === p.q && h[1] === p.r]);
+    });
+  });
+  mapFrame = null; const bare = plane(-4.5, 2.5);
+  return { out: out, bare: bare };
+}
+""")
+    done = run_in_node(code, fixture)
+    rows = done["out"]
+    total = sum(len(m["points"]) for m in fixture["maps"])
+    check(len(rows) == total and total > 200, f"the page's plane is asked for every point of the file ({total})")
+    worst = max(max(abs(r[2]), abs(r[3])) for r in rows)
+    check(worst <= 0.01, f"the page's plane agrees with every point of the file to 0.01 nm (worst {worst:.4f})")
+    bad = [r[:2] for r in rows if not r[4]]
+    check(not bad, f"and the page's hexOfPlane gives the file's hex for each point {bad[:3]}")
+    check(done["bare"] == [150.0, -270.0], "a map with no frame has a degree of latitude and of longitude of the same length, 60 miles")
+    check(not re.search(r"\bFX\b", text) and "worldOff(a.lat, a.lon, d * Math.sin(rad), d * Math.cos(rad))" in text and "Math.cos(a[3] * Math.PI / 180)" not in text,
+          "no factor for longitude (FX) is left in the page, a search arc's rim is laid off in the plane, and no bearing is worked with the cosine of a latitude")
 
 
 def the_intelligence_paper():
@@ -5566,6 +5640,8 @@ def main():
     args = parser.parse_args()
     page_scripts_parse()
     outcomes_said_one_way()
+    the_bridge_reads_both_kinds_of_frame()
+    the_plane_agrees_with_the_shared_file()
     the_stop_paper()
     orders_and_signed()
     one_order_paper()

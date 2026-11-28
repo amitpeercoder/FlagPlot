@@ -9,6 +9,7 @@
 //! `powf` or other libm calls. A map's factor for longitude is a literal of
 //! its frame: 0.978148, the cosine of 12 degrees, for the present map.
 
+pub mod fixture;
 pub mod frame;
 pub mod generate;
 pub mod land;

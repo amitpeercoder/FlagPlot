@@ -9,7 +9,8 @@ ne_10m_land and ne_10m_minor_islands. Only outer rings are kept. A shapefile's
 outer rings are the clockwise ones.
 
 With --map, the box is the extent in the header of that map file (read as the
-table's bridge reads it), padded by 3 degrees on every side, and each ring is
+table's bridge reads it, either kind of frame: one factor or about a centre, decision
+0242), padded by 3 degrees on every side, and each ring is
 brought into the map's longitude run whole: where the map crosses the date line
 (its longitudes above 180), a ring lying wholly west of the map's western edge
 has 360 added to every point, and a ring written twice is written once. The output then holds longitudes in the run, and
