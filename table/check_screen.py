@@ -657,6 +657,49 @@ def the_readings_mends():
     raise NotImplementedError("the developer writes this check to the statements above")
 
 
+def the_empty_floor():
+    """Decision 0240, stage C: a supply order's days of supply start empty, and the paper says how many days the place holds. By the
+    page's text and its own functions run in node. Written by the architect before the build; the expected words here are his and
+    are changed by nobody else. NOT TO BE BUILT WITH THE MENDS: it is built after them, on its own branch.
+
+    The blank.
+    C1. `<input type="number" id="o-floor"` has `min="1"`, `max="99"` and no `value`. `openDraft` sets `$('o-floor').value = ''`. The
+        end in `ends()` is `['Keep it supplied', { intent_kind: 'keep_supplied', base: n }` with no `floor_days`, and the page's text
+        holds no `floor_days: 30`.
+    C2. `supplyFloor()`, cut and run in node with the box standing in, as `the_supply_orders_two_numbers` runs it: an empty box
+        gives null; "x" gives null; "0" gives 1; "2" gives 2; "150" gives 99.
+    C3. `addSupplyNumbers(args)` for `intent_kind` 'keep_supplied': with the floor empty the answer has no key `floor_days`; with
+        the floor 2 and the interval empty it has `floor_days` 2 and no `interval_days`; with 2 and 5 it has both. For any other
+        kind it adds nothing.
+
+    The need.
+    C4. `missing(kind, lim, floor)` takes the floor as its third argument (the answer of `supplyFloor()`). For 'keep_supplied' with
+        a new model: floor null gives ['floor', 'ships', 'source']; floor 2 gives ['ships', 'source']. With ship 1 and source 1
+        named: floor null gives ['floor']; floor 2 gives []. For every other kind it is [] whatever the floor. (Stage B's B5 is
+        restated to pass a floor of 30, and holds as it was.)
+    C5. Beside the empty blank the paper says "No days of supply given yet." (`id="need-floor"`), in the paper's plain ink; the
+        page's text holds the sentence once. While the floor is missing the staff is not asked and SIGN AND SEND and DRY RUN are
+        disabled, by the same test as stage B's B11: `askPreview` passes `supplyFloor()` to `missing`.
+    C6. On opening, the focus goes to `o-floor` where the order is a supply order (the first blank it needs).
+
+    The fact of the place.
+    C7. `holdsLine(name, dos)`, a new pure function, run in node with the page's own `dayCount` beside it; `dos` is the base's
+        days of supply as the place's card reads it (the object whose `days` the card's "Days of supply" row says):
+        holdsLine('Thornwick', {days: '5'}) is "Thornwick holds 5 days of supply."; with {days: '1'} it is "Thornwick holds 1 day of
+        supply."; with {days: null} and with no `dos` it is "".
+    C8. The line is the first thing in `o-supply` (`id="o-holds"`, before the row of `o-floor`), filled when a supply order's paper
+        opens and hidden while it is empty.
+
+    What it sends: a supply order signed with 2 and 5, Merrowdale and Saltmere sends what it sent before this stage, key for key.
+    The one change is that a paper left untouched can no longer be signed, where it sent `floor_days` 30. The interval's row still
+    says "left to the staff: 15 days" while it is empty.
+
+    Restated with it: `the_supply_orders_two_numbers`, O1 to O6, wherever they hold the 30 (the box's `value`, `supplyFloor`'s
+    answer for an empty box, the untouched paper's `floor_days`, the reset in `openDraft`, the end's own `floor_days: 30`): each
+    to what C1 to C3 say, and nothing else."""
+    raise NotImplementedError("decision 0240, stage C: the developer writes this check to the statements above")
+
+
 def the_fold_and_the_keys():
     """What stops the clock and the keys (decision 0221, stage 4), by the page's text: the fold in the foot with the
     table's ticks and the staff's standing interrupts; the ticks kept in the browser for the game, keyed as the directives
