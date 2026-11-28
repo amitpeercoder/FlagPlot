@@ -153,15 +153,22 @@ struct Frame {
 impl Frame {
     /// From a map's frame as `sim-data` reads it: `Fixed` is millionths, and
     /// a degree here is 10^8 units, so each is a hundred times its raw value.
-    fn of(frame: &sim_data::MapFrame) -> Frame {
+    ///
+    /// A map about a centre (decision 0242) is not read here: its positions
+    /// are read from the map's file of located positions (rule 15), which is
+    /// not built yet.
+    fn of(frame: &sim_data::MapFrame) -> Result<Frame, String> {
         let units = |value: sim_core::fixed::Fixed| i128::from(value.raw()) * (UNIT / MILLION);
-        Frame {
+        let sim_data::MapProjection::OneFactor { factor } = frame.projection else {
+            return Err("this map is about a centre: its positions are read from the map's file of located positions (decision 0242, rule 15), which is not built yet".to_string());
+        };
+        Ok(Frame {
             origin_lat: units(frame.centre_lat),
             origin_lon: units(frame.centre_lon),
-            factor_millionths: i128::from(frame.factor.raw()),
+            factor_millionths: i128::from(factor.raw()),
             west: units(frame.west),
             crosses: frame.crosses_date_line(),
-        }
+        })
     }
 
     /// A longitude, west negative, brought into the frame's run.
@@ -512,7 +519,7 @@ pub fn command(request: &Request) -> Result<(), String> {
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("{MAP}: the present map has no frame in its header"))?,
     };
-    let frame = Frame::of(&frame);
+    let frame = Frame::of(&frame).map_err(|e| format!("{map_path}: {e}"))?;
     let places_bytes = fs::read(places_path).map_err(|e| format!("{places_path}: {e}"))?;
     let places_hash = crate::save::hash_hex(&places_bytes);
     let places_text =
@@ -642,6 +649,7 @@ mod tests {
                 .unwrap()
                 .expect("the map has a frame"),
         )
+        .unwrap()
     }
 
     /// 50 positions and the hexes `map-tool locate` gave them, made with
@@ -765,7 +773,7 @@ mod tests {
     #[test]
     fn a_hex_centre_on_the_midway_map_is_in_its_own_hex() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/map/midway.csv");
-        let frame = Frame::of(&sim_data::read_map_frame(&path).unwrap().expect("a frame"));
+        let frame = Frame::of(&sim_data::read_map_frame(&path).unwrap().expect("a frame")).unwrap();
         assert!(frame.crosses);
         let text = fs::read_to_string(&path).unwrap();
         let mut west_of_the_line = 0;

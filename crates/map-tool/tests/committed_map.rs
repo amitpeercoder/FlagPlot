@@ -369,8 +369,12 @@ fn the_midway_frame_file_and_the_header_agree() {
     assert_eq!(frame.centre_lon.to_string(), "178.5");
     assert!(frame.crosses_date_line());
     // cos 28.5 degrees is 0.8788171...; the literal is it to six places.
+    // The check is of a map of one factor (decision 0242, rule 16).
+    let map_tool::frame::Kind::OneFactor(factor) = &file.kind else {
+        panic!("the Midway frame is of one factor");
+    };
     let cos = (28.5_f64).to_radians().cos();
-    assert!((cos - file.factor.value).abs() < 0.0000005, "{cos}");
+    assert!((cos - factor.value).abs() < 0.0000005, "{cos}");
 }
 
 /// Each land mark of the Midway frame cites its row of
