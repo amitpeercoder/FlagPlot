@@ -1,0 +1,135 @@
+# Scenario 139: two mouths, two ships. The second rung of the ladder
+# (decision 0237).
+#
+# A game for play, and no battle's. Allied base 1 at S, the source, holds
+# 500 t of supply and no fuel, and no men. Allied base 2 at T, 200 nm away,
+# holds 25 t of supply and land unit 1, 1,000 men who eat 5 t a day: five
+# days of food, as in scenario 138. Allied base 3 at U, 560 nm away, holds
+# 6 t and land unit 2, 400 men who eat 2 t a day: three days. Two ships lie
+# in port at S, each in no task force with her tanks full. Ship 1 is a
+# placeholder cargo ship (class 3: 3,000 t of cargo, 10 kn, 0.1 t of fuel a
+# mile). Ship 2 is a placeholder fast transport with cargo (class 12: 30 t
+# of cargo, 16 kn, 0.125 t a mile), the ship of scenario 138. The game is 8
+# days. There is no enemy, no aircraft and no random draw.
+#
+# The mission is to feed every man at T and at U every night to the end of
+# day 8. The decision is which ship is named to which order. A night's meal
+# is the first thing of a day, and U's food is gone after the night of day
+# 3. The fast ship, ordered on day 1, unloads at U on day 3, after that
+# night's meal and before the next; the slow one unloads there on day 4,
+# hours after the meal of the night of day 4. Either ship reaches T in time
+# with all it needs. So the cargo ship to T and the fast transport to U
+# feeds every man, and the other way round the men at U go unfed on the
+# night of day 4. The source has stock to spare and the ships have fuel to
+# spare, so the floor and the interval of rung 1's right answers decide
+# nothing here.
+#
+# The game is 8 days and not the 14 the record first gave it: the fast
+# transport's round trip to U takes six days, so over 14 days a floor of 1
+# day with an interval of 5, a right answer of rung 1, leaves U unfed on the
+# night of day 9 with the right ships. Over 8 days the ships alone decide
+# (docs/decisions/as-built/0237-the-first-three-rungs.md, rung 2).
+#
+# No command is in force: the commander gives the orders. The test adds
+# commands at the mark `orders`, the last line of this file. The hand
+# calculation is in tests/scenario_139_two_mouths.rs. The test runs this
+# file on the figures it names, the live ones, by decision 0237's exception
+# (question 8); the ground figures are the table's, with hunger that takes
+# time.
+#
+# In a folder of its own, so that no loop over data/scenarios/*.toml reads it
+# (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, units and map are invented. The game is
+# invented whole, so its things carry invented names without the word
+# (decision 0241): Saltmere is S, Thornwick is T and Merrowdale is the fast
+# transport, as in scenario 138; Dunmarrow is U; the cargo ship is Halberry.
+# None is a name in data/oob.
+
+name = "Placeholder scenario 139: Two mouths, two ships"
+placeholder = true
+seed = 1942
+days = 8
+map = "../../map/placeholder_ladder.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_hunger.toml"
+
+# S: the source. Port size 1, one berth. Supply to spare: the largest loads
+# of rung 1's right answers are 30 t to T and 18 t to U. No fuel: each ship
+# holds what the game needs. No men: the two mouths are T and U.
+[[base]]
+id = 1
+name = "Saltmere"
+side = "allied"
+q = 0
+r = 0
+supply_t = 500
+fuel_t = 0
+
+# T: the near place. Port size 0, by lighter. Five days of food.
+[[base]]
+id = 2
+name = "Thornwick"
+side = "allied"
+q = 5
+r = 0
+supply_t = 25
+
+# U: the far place. Port size 0, by lighter. Three days of food.
+[[base]]
+id = 3
+name = "Dunmarrow"
+side = "allied"
+q = 0
+r = 14
+supply_t = 6
+
+# The near garrison: 1,000 men x 0.005 t = 5 t a day at T.
+[[land_unit]]
+id = 1
+name = "Thornwick garrison"
+side = "allied"
+men = 1000
+q = 5
+r = 0
+posture = "defend"
+
+# The far garrison: 400 men x 0.005 t = 2 t a day at U.
+[[land_unit]]
+id = 2
+name = "Dunmarrow garrison"
+side = "allied"
+men = 400
+q = 0
+r = 14
+posture = "defend"
+
+# Ship 1: the cargo ship, slow and roomy, in port at S in no task force with
+# her tanks full. A round trip to U burns 112 t and one to T 40 t.
+[[ship]]
+id = 1
+name = "Halberry"
+class = 3
+side = "allied"
+fuel_t = 1000
+port = 1
+
+# Ship 2: the fast transport of scenario 138, quick and small, in port at S
+# in no task force with her tanks full. A round trip to U burns 140 t and
+# one to T 50 t.
+[[ship]]
+id = 2
+name = "Merrowdale"
+class = 12
+side = "allied"
+fuel_t = 500
+port = 1
+
+# orders
