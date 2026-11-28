@@ -632,7 +632,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     <div id="p-staff" hidden>
       <div class="frow" id="o-patrol" hidden><label class="fl" for="o-dist">Patrol these waters,</label><input type="number" id="o-dist" min="1" max="6" step="1" value="2" aria-label="Hexes round the place"><span class="sval" id="o-dist-out"></span></div>
       <div id="o-supply" hidden>
-        <div class="frow"><label class="fl" for="o-floor">Never below</label><input type="number" id="o-floor" min="1" max="99" step="1" value="30" aria-label="Days of supply never to fall below"><span class="fl">days of supply</span></div>
+        <div id="o-holds" hidden></div>
+        <div class="frow"><label class="fl" for="o-floor">Never below</label><input type="number" id="o-floor" min="1" max="99" step="1" aria-label="Days of supply never to fall below"><span class="fl">days of supply</span><span class="sval" id="need-floor">No days of supply given yet.</span></div>
         <div class="frow"><label class="fl" for="o-interval">Each run brings</label><input type="number" id="o-interval" min="1" max="99" step="1" aria-label="Days more each run brings"><span class="fl">days more</span><span class="sval" id="o-interval-out"></span></div>
       </div>
     </div>
@@ -5397,7 +5398,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     else if (kind === 'staff') { $('p-staff').hidden = false; openDraft(o.target, o.first); }
     else { var box = $('p-unit'); box.textContent = ''; box.hidden = false; var c = o.build(box); paper.draft = c.draft; paper.update = c.update; paper.onSigned = c.onSigned || null; }
     $('paper').hidden = false; document.body.classList.add('papered'); paperShow(); say('draft', 'A draft is open.');
-    setTimeout(function () { if (paper) { var f = Array.prototype.filter.call($('p-the').querySelectorAll('input, button'), function (c) { return !c.closest('[hidden]'); })[0]; if (f) f.focus({ preventScroll: true }); } }, 0);
+    setTimeout(function () { if (paper) { var f = (!$('o-supply').hidden && !$('p-staff').hidden ? $('o-floor') : null) || Array.prototype.filter.call($('p-the').querySelectorAll('input, button'), function (c) { return !c.closest('[hidden]'); })[0]; if (f) f.focus({ preventScroll: true }); } }, 0);
   }
   // A question put in the paper itself; `yes` is what TEAR UP does there.
   function paperAsk(words, yes) {
@@ -5429,7 +5430,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
       }
     }
     if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-dist') showPatrol();
-    if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-interval') showSupply();
+    if (paper.kind === 'staff' && e.type === 'input' && (e.target.id === 'o-interval' || e.target.id === 'o-floor')) showSupply();
     if (paper.kind === 'staff' && e.type === 'change' && e.target.id === 'o-dist') { showPatrol(); askPreview(); }
     else if (paper.kind === 'staff' && e.type === 'change' && (e.target.id === 'o-floor' || e.target.id === 'o-interval')) { showSupply(); askPreview(); }
     paper.dirty = true; $('p-says').textContent = ''; paperShow();
@@ -5733,10 +5734,11 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   function hasFold(kind) {
     return kind !== 'patrol' && kind !== 'stand_at';
   }
-  // What the order of that kind still needs before the staff can be asked, in the order of the face: for a supply order a ship and a source.
-  function missing(kind, lim) {
+  // What the order of that kind still needs before the staff can be asked, in the order of the face: for a supply order the days of supply it is never to fall below, a ship and a source.
+  function missing(kind, lim, floor) {
     var out = [];
     if (kind === 'keep_supplied') {
+      if (floor == null) out.push('floor');
       if (!(lim.ships.mode === 'only' && (lim.ships.task_forces.length || lim.ships.ships.length))) out.push('ships');
       if (lim.source == null) out.push('source');
     }
@@ -5916,7 +5918,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     var kind = limKind(); if (!lim || !kind) return; $('p-limits-sum').textContent = 'LIMITS · ' + foldLine(kind, lim); }
   // The staff reads the order again, a moment after the last change; the old reading may not be signed meanwhile.
   function limAsk() {
-    var wait = paper && paper.kind === 'staff' && draft && limKind() && missing(limKind(), lim).length;
+    var wait = paper && paper.kind === 'staff' && draft && limKind() && missing(limKind(), lim, supplyFloor()).length;
     previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-dry-says').textContent = ''; $('o-preview').textContent = wait ? '' : 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
     clearTimeout(limTimer); limTimer = setTimeout(function () { limTimer = 0; askPreview(); }, 300);
   }
@@ -6042,7 +6044,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // A supply order's two blanks on its face (decision 0240, rule N): the ships to tick and the base it is supplied from, each starting empty
   // and with no choice of the staff's, and beside an empty one that it is not named yet.
   function needLine(key, name, kind) {
-    var row = limRow(key, name), head = limHead(name), empty = missing(kind, lim).indexOf(key) >= 0, n = empty ? el('span', '', key === 'ships' ? 'No ship named yet.' : 'No source named yet.') : null;
+    var row = limRow(key, name), head = limHead(name), empty = missing(kind, lim, supplyFloor()).indexOf(key) >= 0, n = empty ? el('span', '', key === 'ships' ? 'No ship named yet.' : 'No source named yet.') : null;
     if (n) n.id = key === 'ships' ? 'need-ships' : 'need-source';
     row.className += ' needs';
     if (key === 'source') {
@@ -6248,7 +6250,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     var list = [], n = target.base ? num(target.base.base.handle) : null, wide = null;
     if (n != null) config.islands.forEach(function (i) { if (i.base === n || (i.places && i.places.indexOf(n) >= 0)) { if (wide == null) wide = list.length; list.push(['Seize and hold ' + i.name, { intent_kind: 'control_island', island: i.number }, null, null]); } });
     if (target.kind === 'enemy') list.push(['Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }, null, wide], ['Neutralise ' + target.name, { intent_kind: 'neutralise', target: n }, null, wide]);
-    if (target.kind === 'own') { var hold = list.length; list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, null, wide], ['Keep it supplied', { intent_kind: 'keep_supplied', base: n, floor_days: 30 }, null, wide != null ? wide : hold, hold], ['Cover it from the air', { intent_kind: 'cover', base: n }, null, wide != null ? wide : hold, hold]); }
+    if (target.kind === 'own') { var hold = list.length; list.push(['Hold ' + target.name, { intent_kind: 'hold', base: n }, null, wide], ['Keep it supplied', { intent_kind: 'keep_supplied', base: n }, null, wide != null ? wide : hold, hold], ['Cover it from the air', { intent_kind: 'cover', base: n }, null, wide != null ? wide : hold, hold]); }
     if (target.kind === 'waters') list.push(['Deny these waters, ' + round(2), { intent_kind: 'deny', hex: [target.q, target.r], distance: 2 }, null], ['Deny these waters, ' + round(4), { intent_kind: 'deny', hex: [target.q, target.r], distance: 4 }, null]);
     // Submarines patrol waters, where the side has boats: the staff gives each its station. The distance is chosen in the paper.
     if (target.kind === 'waters' && (M.boats || []).some(function (b) { return b.state !== 'sunk' && b.state !== 'home'; })) list.push(['Patrol these waters with submarines', { intent_kind: 'patrol', hex: [target.q, target.r], distance: 2 }, null]);
@@ -6269,16 +6271,20 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function showPatrol() { var d = patrolDistance(); $('o-patrol').hidden = d == null; if (d != null) $('o-dist-out').textContent = round(d); }
   // The supply order's two numbers (decision 0237), chosen in the paper where the end chosen is to keep a place supplied: the days of
-  // supply it is never to fall below (30 where the field is empty), and the days more that each run brings, which is sent only where set.
-  function supplyFloor() { var n = parseInt($('o-floor').value, 10); return isNaN(n) ? 30 : Math.max(1, Math.min(99, n)); }
+  // supply it is never to fall below (none until given: the order waits for it), and the days more that each run brings, which is sent only where set.
+  function supplyFloor() { var n = parseInt($('o-floor').value, 10); return isNaN(n) ? null : Math.max(1, Math.min(99, n)); }
   function supplyInterval() { var n = parseInt($('o-interval').value, 10); return isNaN(n) ? null : Math.max(1, Math.min(99, n)); }
-  function addSupplyNumbers(args) { if (args.intent_kind !== 'keep_supplied') return args; args.floor_days = supplyFloor(); var d = supplyInterval(); if (d != null) args.interval_days = d; return args; }
+  function addSupplyNumbers(args) { if (args.intent_kind !== 'keep_supplied') return args; var f = supplyFloor(); if (f != null) args.floor_days = f; var d = supplyInterval(); if (d != null) args.interval_days = d; return args; }
   function supplyChosen() { if (!draft || !draft.ends) return false; var e = draft.ends[draft.end]; return !!e && e[1].intent_kind === 'keep_supplied'; }
-  function showSupply() { var on = supplyChosen(); $('o-supply').hidden = !on; if (on) $('o-interval-out').textContent = supplyInterval() == null ? 'left to the staff: 15 days' : ''; }
+  function showSupply() { var on = supplyChosen(); $('o-supply').hidden = !on; if (on) { $('need-floor').hidden = supplyFloor() != null; $('o-interval-out').textContent = supplyInterval() == null ? 'left to the staff: 15 days' : ''; } }
+  // The fact of the place a supply order is written for, from the days of supply its card gives.
+  function holdsLine(name, dos) {
+    return dos && dos.days != null ? name + ' holds ' + dayCount(dos.days) + ' of supply.' : '';
+  }
   function openDraft(best, first) {
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
     draft.end = first || 0; $('p-title').textContent = draftHeading(draft.ends[draft.end], best); $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
-    $('o-dist').value = '2'; $('o-floor').value = '30'; $('o-interval').value = ''; patrolStations = null; showPatrol(); showSupply(); drawMarks(); endChanged();
+    $('o-dist').value = '2'; $('o-floor').value = ''; $('o-interval').value = ''; var hl = $('o-holds'); hl.textContent = holdsLine(best.name, best.base && best.base.days_of_supply); hl.hidden = !hl.textContent; patrolStations = null; showPatrol(); showSupply(); drawMarks(); endChanged();
   }
   // The draft as an order in force would be read, so that the plan's functions can draw its tree: its number is the next free one, and in
   // the words of the reading it is "this order".
@@ -6346,7 +6352,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (paper && paper.kind === 'landing') return askLanding();
     if (!draft) return; var again = arguments[0] === true, seq = ++previewSeq, out = $('o-preview'), e = draft.ends[draft.end], kind = e[1].intent_kind;
     previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
-    if (lim && missing(kind, lim).length) { $('o-preview').textContent = ''; return; }
+    if (lim && missing(kind, lim, supplyFloor()).length) { $('o-preview').textContent = ''; return; }
     out.textContent = 'Asking the staff.';
     var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; }); if (e[1].intent_kind === 'patrol') args.distance = patrolDistance(); addSupplyNumbers(args);
     var sent = sentLimits(kind); if (sent.length) args.limits = sent.map(function (x) { return x.body; });

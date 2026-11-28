@@ -472,7 +472,7 @@ def the_face_and_the_fold():
     B3. `faceKeys(kind)`: for 'keep_supplied' it is ['ships', 'source']; for 'patrol' ['submarines']; for 'stand_at' ['risk']; for
         'hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island' and 'destroy_force' it is [].
     B4. `hasFold(kind)`: false for 'patrol' and 'stand_at'; true for each of the other nine kinds of B3.
-    B5. `missing(kind, lim)`, what the order still needs, in the order of the face: for 'keep_supplied' with a new model (`newLim()`)
+    B5. `missing(kind, lim, 30)` (stage C's floor, given as 30 here), what the order still needs, in the order of the face: for 'keep_supplied' with a new model (`newLim()`)
         it is ['ships', 'source']; with ship 1 named (ships.mode 'only', ships [1]) and no source, ['source']; with source 1 and no
         ship, ['ships']; with a task force named and source 1, []; with ship 1 and source 1, []. With ships.mode 'only' and nothing
         named it still holds 'ships'. For every other kind of B3 with a new model it is [].
@@ -498,7 +498,7 @@ def the_face_and_the_fold():
         "None" or BACK TO THE STAFF\u2019S CHOICE. Beside an empty one the paper says "No ship named yet." or "No source named yet."
         (`id="need-ships"`, `id="need-source"`), in the paper's plain ink (not the class `bad` or `notsent`). The page's text holds
         both sentences once.
-    B11. `askPreview` asks nothing while the order needs something: before `api('preview'` it tests `missing(kind, lim).length`, and
+    B11. `askPreview` asks nothing while the order needs something: before `api('preview'` it tests `missing(kind, lim, 30).length` (stage C: `supplyFloor()` for the 30), and
         then the reading's place is empty (`$('o-preview').textContent = ''`), `p-sign` and `p-dry` are disabled, and no call is
         made. `signStaff` is not reached with a need unmet.
     B12. The change-of-limits paper draws its lines open in `p-face` and shows no fold (`$('p-limits').hidden = true` in
@@ -537,9 +537,9 @@ function main() {
   out.face = {}; ['keep_supplied', 'patrol', 'stand_at'].concat(kinds).forEach(k => out.face[k] = faceKeys(k));
   out.fold = {}; ['patrol', 'stand_at', 'keep_supplied'].concat(kinds).forEach(k => out.fold[k] = hasFold(k));
   const mk = (ships, tfs, src, mode) => { const l = newLim(); l.ships = { mode: mode || 'only', task_forces: tfs || [], ships: ships || [] }; l.source = src == null ? null : src; return l; };
-  out.missing = [missing('keep_supplied', newLim()), missing('keep_supplied', mk([1], [], null)), missing('keep_supplied', mk([], [], 1)), missing('keep_supplied', mk([], [17], 1)),
-                 missing('keep_supplied', mk([1], [], 1)), missing('keep_supplied', mk([], [], 1, 'only'))];
-  out.others = {}; ['patrol', 'stand_at'].concat(kinds).forEach(k => out.others[k] = missing(k, newLim()));
+  out.missing = [missing('keep_supplied', newLim(), 30), missing('keep_supplied', mk([1], [], null), 30), missing('keep_supplied', mk([], [], 1), 30), missing('keep_supplied', mk([], [17], 1), 30),
+                 missing('keep_supplied', mk([1], [], 1), 30), missing('keep_supplied', mk([], [], 1, 'only'), 30)];
+  out.others = {}; ['patrol', 'stand_at'].concat(kinds).forEach(k => out.others[k] = missing(k, newLim(), 30));
   const bases = [1, 2, 3].map(n => ({ base: { handle: 'base:' + n } }));
   out.sources = [sourceChoices('keep_supplied', bases, 2), sourceChoices('hold', bases, 2)];
   const press = newLim(); press.risk = 'press'; const fixed = newLim(); fixed.ships = { mode: 'only', task_forces: [], ships: [1] }; fixed.source = 1;
@@ -582,7 +582,7 @@ function main() {
     render = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "limRow", "limHead", "limSelect", "limCheck", "toggled", "needLine"]) + model + r"""
 Object.defineProperty(Node.prototype, 'dataset', { get() { return this._ds || (this._ds = {}); } }); Node.prototype.addEventListener = function () {};
 function limShips() { return [{ h: 'task_force:17', label: 'Task Force 17' }, { h: 'ship:1', label: 'Merrowdale, at Saltmere' }]; }
-function limSet() {} const limCtx = null; const draft = { base: { base: { handle: 'base:2' } } };
+function limSet() {} function supplyFloor() { return 30; } const limCtx = null; const draft = { base: { base: { handle: 'base:2' } } };
 let lim;
 function walk(n, f) { f(n); n.kids.forEach(k => walk(k, f)); }
 function main() {
@@ -609,9 +609,9 @@ function main() {
     # B11
     ask = cut_function(text, "  function askPreview() {")
     pre = ask[:ask.index("api('preview'")]
-    check("missing(kind, lim).length" in pre and "$('o-preview').textContent = ''" in pre and "$('p-sign').disabled = true" in pre and "$('p-dry').disabled = true" in pre and "return;" in pre[pre.index("missing(kind, lim).length"):],
+    check("missing(kind, lim, supplyFloor()).length" in pre and "$('o-preview').textContent = ''" in pre and "$('p-sign').disabled = true" in pre and "$('p-dry').disabled = true" in pre and "return;" in pre[pre.index("missing(kind, lim, supplyFloor()).length"):],
           "B11: the staff is not asked while the order needs something: the reading's place is empty, SIGN AND SEND and DRY RUN wait, and no call is made")
-    check("missing(limKind(), lim).length" in cut_function(text, "  function limAsk() {") and "if (previewNo == null) return;" in cut_function(text, "  function signStaff() {"),
+    check("missing(limKind(), lim, supplyFloor()).length" in cut_function(text, "  function limAsk() {") and "if (previewNo == null) return;" in cut_function(text, "  function signStaff() {"),
           "B11: a change does not show the staff being asked while a need is unmet, and signing is not reached without a reading")
     # B12
     lp = cut_function(text, "  function openLimitPaper(root, key, back) {")
@@ -729,7 +729,59 @@ def the_empty_floor():
     Restated with it: `the_supply_orders_two_numbers`, O1 to O6, wherever they hold the 30 (the box's `value`, `supplyFloor`'s
     answer for an empty box, the untouched paper's `floor_days`, the reset in `openDraft`, the end's own `floor_days: 30`): each
     to what C1 to C3 say, and nothing else."""
-    raise NotImplementedError("decision 0240, stage C: the developer writes this check to the statements above")
+    import re
+    print("-- the empty floor: days of supply start empty, the paper says what the place holds", flush=True)
+    text = page_text()
+    # C1
+    tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
+    check('min="1"' in tag and 'max="99"' in tag and "value=" not in tag and "$('o-floor').value = ''" in cut_function(text, "  function openDraft(best, first) {")
+          and "['Keep it supplied', { intent_kind: 'keep_supplied', base: n }" in cut_function(text, "  function ends(target) {") and "floor_days: 30" not in text,
+          "C1: the floor's blank is 1 to 99 with no value, openDraft empties it, the end carries no floor_days, and the page holds no floor_days: 30")
+    # C2, C3
+    code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers("))
+            + "function main(x) { made['o-floor'] = { value: x.floor }; made['o-interval'] = { value: x.interval };"
+              " return x.floorOnly ? supplyFloor() : addSupplyNumbers(Object.assign({ command: 'set_intent' }, x.end)); }")
+    keep = {"intent_kind": "keep_supplied", "base": 2}
+    floors = [run_in_node(code, {"floor": v, "interval": "", "floorOnly": True}) for v in ("", "x", "0", "2", "150")]
+    check(floors == [None, None, 1, 2, 99], f"C2: supplyFloor gives null for an empty box and for \"x\", 1 for 0, 2 for 2 and 99 for 150 ({floors})")
+    adds = [run_in_node(code, {"floor": f, "interval": i, "end": e}) for f, i, e in (("", "", keep), ("2", "", keep), ("2", "5", keep), ("2", "5", {"intent_kind": "hold", "base": 2}))]
+    base = {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2}
+    check(adds[0] == base and adds[1] == dict(base, floor_days=2) and adds[2] == dict(base, floor_days=2, interval_days=5) and adds[3] == {"command": "set_intent", "intent_kind": "hold", "base": 2},
+          f"C3: an empty floor adds no floor_days, 2 adds floor_days 2, 2 and 5 add both, and another kind adds nothing ({adds})")
+    # C4
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function main() {
+  const named = newLim(); named.ships = { mode: 'only', task_forces: [], ships: [1] }; named.source = 1;
+  const others = {}; ['patrol', 'stand_at', 'hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island', 'destroy_force'].forEach(k => others[k] = [missing(k, newLim(), null), missing(k, newLim(), 2)]);
+  return { new: [missing('keep_supplied', newLim(), null), missing('keep_supplied', newLim(), 2)], named: [missing('keep_supplied', named, null), missing('keep_supplied', named, 2)], others };
+}
+"""
+    r = run_in_node(code, None)
+    check(r["new"] == [["floor", "ships", "source"], ["ships", "source"]] and r["named"] == [["floor"], []] and all(v == [[], []] for v in r["others"].values()),
+          f"C4: a supply order needs its floor, then its ships and source; no other kind needs anything ({r['new']}, {r['named']})")
+    # C5
+    ask = cut_function(text, "  function askPreview() {")
+    need = re.search(r'<[^>]*id="need-floor"[^>]*>', text).group(0)
+    check(text.count("No days of supply given yet.") == 1 and not re.search(r'class="[^"]*\b(bad|notsent)\b', need) and "missing(kind, lim, supplyFloor()).length" in ask[:ask.index("api('preview'")]
+          and "$('p-sign').disabled = true" in ask[:ask.index("api('preview'")] and "$('p-dry').disabled = true" in ask[:ask.index("api('preview'")]
+          and "missing(limKind(), lim, supplyFloor()).length" in cut_function(text, "  function limAsk() {") and "$('need-floor').hidden = supplyFloor() != null" in cut_function(text, "  function showSupply() {"),
+          "C5: beside the empty blank the paper says \"No days of supply given yet.\" in plain ink, once; while the floor is missing the staff is not asked and signing waits")
+    # C6
+    check("$('o-floor')" in cut_function(text, "  function openPaper(kind, o) {") and "f.focus" in cut_function(text, "  function openPaper(kind, o) {"),
+          "C6: opening a supply order's paper puts the focus on the days-of-supply blank")
+    # C7
+    code = "".join(cut_function(text, h) + "\n" for h in ("  function commas(n)", "  function dayCount(", "  function holdsLine(")) + "function main() { return [holdsLine('Thornwick', { days: '5' }), holdsLine('Thornwick', { days: '1' }), holdsLine('Thornwick', { days: null }), holdsLine('Thornwick')]; }"
+    said = run_in_node(code, None)
+    check(said == ["Thornwick holds 5 days of supply.", "Thornwick holds 1 day of supply.", "", ""], f"C7: the line says what the place holds, and nothing where there is no figure ({said})")
+    check("holdsLine(best.name, best.base && best.base.days_of_supply)" in cut_function(text, "  function openDraft(best, first) {") and "dos = b.days_of_supply || {}" in text and "dos.days != null ? dayCount(dos.days)" in text,
+          "C7: the paper reads the same days_of_supply of the place that the card's \"Days of supply\" row reads")
+    # C8
+    supply = text[text.index('<div id="o-supply"'):text.index('<div id="p-face"')]
+    check(re.search(r'<div id="o-supply" hidden>\s*<div id="o-holds" hidden></div>\s*<div class="frow">', supply) is not None and supply.index('id="o-holds"') < supply.index('id="o-floor"')
+          and "hl.hidden = !hl.textContent" in cut_function(text, "  function openDraft(best, first) {"),
+          "C8: the line of what the place holds is the first thing in o-supply, before the floor's row, and hidden while empty")
 
 
 def the_fold_and_the_keys():
@@ -4471,16 +4523,16 @@ def the_supply_orders_two_numbers(bridge):
     """The floor and the interval on the order paper, for the end "keep it supplied".
 
     In the page's text:
-    O1. The paper has a row with the id `o-supply` holding two inputs of type number, `o-floor` (min 1, max 99, value 30) and
+    O1. The paper has a row with the id `o-supply` holding two inputs of type number, `o-floor` (min 1, max 99, no value: stage C) and
         `o-interval` (min 1, max 99, no value), and the words "Never below", "days of supply", "Each run brings", "days more" and "left
         to the staff: 15 days". The page does not hold "Keep it supplied, 30 days"; the end reads "Keep it supplied".
     O2. The row is shown where the end chosen is `keep_supplied` and hidden for every other, by the same path that shows `o-patrol`
         for a patrol; a change of either input asks the reading again, as a change of `o-dist` does.
 
     The page's own functions, cut from its text and run in node, with a stand-in for the two inputs:
-    O3. Nothing touched (30, empty): what the paper adds to the order is `floor_days` 30 and no key `interval_days`, so the arguments of
-        the reading are exactly {command "set_intent", intent_kind "keep_supplied", base n, floor_days 30}: what the page sent before.
-    O4. (2, 5) gives `floor_days` 2 and `interval_days` 5. An empty floor, or one that is no number, gives 30; 0 gives 1; 150 gives 99.
+    O3. Nothing touched (empty, empty): what the paper adds to the order is no key `floor_days` and no key `interval_days` (stage C), so
+        the arguments are exactly {command "set_intent", intent_kind "keep_supplied", base n}; with (2, empty) they add `floor_days` 2 only.
+    O4. (2, 5) gives `floor_days` 2 and `interval_days` 5. An empty floor, or one that is no number, gives none (stage C); 0 gives 1; 150 gives 99.
         An interval of 0 gives 1 and of 150 gives 99; an empty one gives no key. For an end of any other kind neither key is added.
     O5. What a place's card says of an order in force: {kind keep_supplied, floor_days 2, interval_days 5} gives "Kept supplied, 2
         days, each run 5 days more"; {floor_days 30} with no interval gives "Kept supplied, 30 days", as before.
@@ -4495,31 +4547,31 @@ def the_supply_orders_two_numbers(bridge):
     floor_tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
     interval_tag = re.search(r'<input type="number" id="o-interval"[^>]*>', text).group(0)
     row = text[text.index('<div id="o-supply"'):text.index('<div id="p-face"')]
-    check('min="1"' in floor_tag and 'max="99"' in floor_tag and 'value="30"' in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
+    check('min="1"' in floor_tag and 'max="99"' in floor_tag and "value=" not in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
           and all(w in row for w in ("Never below", "days of supply", "Each run brings", "days more")) and "left to the staff: 15 days" in text
           and "Keep it supplied, 30 days" not in text and "['Keep it supplied', { intent_kind: 'keep_supplied'" in text,
-          "O1: the paper has the row o-supply with o-floor (1 to 99, 30) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
+          "O1: the paper has the row o-supply with o-floor (1 to 99, empty) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
     check("$('o-supply').hidden = !on" in text and "function supplyChosen()" in text and "e[1].intent_kind === 'keep_supplied'" in text
           and "showPatrol(); showSupply(); drawMarks(); endChanged();" in text and "e.target.id === 'o-floor' || e.target.id === 'o-interval'" in text and "{ showSupply(); askPreview(); }" in text
-          and "$('o-floor').value = '30'; $('o-interval').value = '';" in text,
+          and "$('o-floor').value = ''; $('o-interval').value = '';" in text,
           "O2: the row is shown where the end chosen is keep_supplied and hidden for every other, by the path that shows o-patrol; a change of either input asks the reading again")
     code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers(", "  function commas(n)", "  function dayCount(", "  function suppliedWords("))
             + "function main(list) { return list.map(function (x) { made['o-floor'] = { value: x.floor }; made['o-interval'] = { value: x.interval };"
               " return { args: addSupplyNumbers(Object.assign({ command: 'set_intent' }, x.end)), card: x.card ? suppliedWords(x.card) : null }; }); }")
     keep = {"intent_kind": "keep_supplied", "base": 2}
     out = run_in_node(code, [
-        {"floor": "30", "interval": "", "end": keep}, {"floor": "2", "interval": "5", "end": keep}, {"floor": "", "interval": "", "end": keep},
+        {"floor": "", "interval": "", "end": keep}, {"floor": "2", "interval": "5", "end": keep}, {"floor": "2", "interval": "", "end": keep},
         {"floor": "abc", "interval": "abc", "end": keep}, {"floor": "0", "interval": "0", "end": keep}, {"floor": "150", "interval": "150", "end": keep},
         {"floor": "2", "interval": "5", "end": {"intent_kind": "hold", "base": 2}},
         {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 2, "interval_days": 5}},
         {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 30}}])
     args = [o["args"] for o in out]
-    check(args[0] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 30},
-          "O3: nothing touched (30, empty) adds floor_days 30 and no interval_days: the arguments are what the page sent before")
-    check(args[1]["floor_days"] == 2 and args[1]["interval_days"] == 5 and args[2]["floor_days"] == 30 and "interval_days" not in args[2] and args[3]["floor_days"] == 30 and "interval_days" not in args[3]
+    check(args[0] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2} and args[2] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 2},
+          "O3: nothing touched (empty, empty) adds neither floor_days nor interval_days; a floor of 2 alone adds floor_days 2")
+    check(args[1]["floor_days"] == 2 and args[1]["interval_days"] == 5 and args[2]["floor_days"] == 2 and "interval_days" not in args[2] and "floor_days" not in args[3] and "interval_days" not in args[3]
           and args[4]["floor_days"] == 1 and args[4]["interval_days"] == 1 and args[5]["floor_days"] == 99 and args[5]["interval_days"] == 99
           and args[6] == {"command": "set_intent", "intent_kind": "hold", "base": 2},
-          "O4: (2, 5) gives 2 and 5; empty or no number gives a floor of 30 and no interval; 0 gives 1; 150 gives 99; an end of another kind gets neither key")
+          "O4: (2, 5) gives 2 and 5; empty or no number gives no floor and no interval; 0 gives 1; 150 gives 99; an end of another kind gets neither key")
     check(out[7]["card"] == "Kept supplied, 2 days, each run 5 days more" and out[8]["card"] == "Kept supplied, 30 days",
           "O5: a place's card says \"Kept supplied, 2 days, each run 5 days more\", and with no interval \"Kept supplied, 30 days\"")
     check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "begun: rung 1")
@@ -4718,6 +4770,7 @@ def main():
     the_paper_reads_as_the_order()
     the_face_and_the_fold()
     the_readings_mends()
+    the_empty_floor()
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()

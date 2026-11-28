@@ -50,3 +50,16 @@ Four mends to the reading and one to the look, asked for by the designer after s
 - **A change of limits that brings no new order** reads "The staff would give no new order under it now." and not in the colour of a fault: `readingTop` takes a third argument, `own`, which `readingView` passes as `!!own`. A bare order still reads "Nothing can serve this order yet."
 - **A list in the paper** (`#paper select`) is drawn as a blank, as a number is: transparent, no border, a rule beneath.
 - **One check restated:** `the_staffs_reading`'s quoted line for the note (it names the sentence in the page and `limitsNote(kind, sent)` in `askPreview`, not the sentence in `askPreview`). Nothing was loosened or removed.
+
+## Stage C: the empty floor (Nov 28, 2026)
+
+What the pull request "order paper, stage C" makes. It changes what the table gives and no rule; a supply order signed with its days, a ship and a source sends what it sent before. The statements are C1 to C8 in `the_empty_floor` in `table/check_screen.py`, written before the build.
+
+- **The blank starts empty.** `o-floor` has no value, `openDraft` empties it, and the end "Keep it supplied" carries no `floor_days`. `supplyFloor()` gives none for an empty box or one that is no number, 1 for 0 and 99 for 150; `addSupplyNumbers` adds `floor_days` only where there is one.
+- **The need.** `missing(kind, lim, floor)` takes the floor as its third argument and, for a supply order, names it first: floor, ships, source. Every caller passes `supplyFloor()`. Beside the empty blank the paper says "No days of supply given yet." (`need-floor`), in plain ink; while it is missing the staff is not asked, the reading's place is empty and SIGN AND SEND and DRY RUN wait. A paper left untouched can no longer be signed, where it sent 30 days.
+- **The fact of the place.** `holdsLine(name, dos)` says "Thornwick holds 5 days of supply." from the same `days_of_supply` of the base that the place's card reads for its "Days of supply" row; it is the first thing in `o-supply`, in `o-holds`, filled when the paper opens and hidden while empty.
+- **Focus on opening** goes to `o-floor` for a supply order.
+- **Documents.** The manual's "Keep it supplied, 30 days" and the table README's "30 days where it is left alone" are changed.
+- **Checks restated.** `the_supply_orders_two_numbers`'s O1 to O4 (the box's value, the empty floor, the untouched paper's arguments, the reset in `openDraft`), and stage B's B5, B11 and the B10 render's stand-in for `supplyFloor` (B10 draws `needLine`, which now passes `supplyFloor()` to `missing`; the stand-in answers 30 and the statement is unchanged). Nothing was loosened or removed.
+
+Not tried by hand in a browser.
