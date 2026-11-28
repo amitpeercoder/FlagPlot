@@ -37,13 +37,13 @@ Checked against the index of decisions and the rulebook on Nov 27, 2026.
 
 ## The map
 
-**What is on it.** In the west Lae, Port Moresby, north-east Australia and Truk; in the east Pearl Harbor; in the north Midway and Wake; in the south Brisbane, Noumea, Fiji, Samoa and Tongatabu. Between them the Bismarcks, the Solomons, the New Hebrides, the Marshalls, the Gilberts and the line islands. Roughly 30 S to 32 N and 142 E to 155 W.
+**What is on it.** In the west Lae, Port Moresby, north-east Australia, Truk, Saipan and Guam; in the east the Hawaiian Islands; in the north Midway and Wake; in the south Brisbane, Noumea, Fiji, Samoa and Tongatabu. Between them the Bismarcks, the Solomons, the New Hebrides, the Marshalls, the Gilberts and the line islands. From 30 S to 38 N and from 142 E to 153 W (decision 0242, which plans the map).
 
 **What is off it.** Japan, the Aleutians, the American west coast, Sydney and Auckland, the Indies. A force from any of them comes in at an edge by decision 0195, and a force sent to one leaves the map. The Aleutians matter as a drain: what went north in June is not on the map in June.
 
-**Its size.** At today's 40 nautical miles a hex, about 10,000 hexes against 1,600 now (the architect's rough arithmetic, checked against the present map's count). Nearly all of it is open sea. The hex stays 40 miles: every range in the rules is counted in hexes of that size.
+**Its size.** At today's 40 nautical miles a hex, about 10,400 hexes against 1,600 now (worked for decision 0242). Nearly all of it is open sea. The hex stays 40 miles: every range in the rules is counted in hexes of that size.
 
-**Its scheme is a decision of its own.** Decision 0017 held the error of its flat projection to 5 in 100 across the slice, and decision 0199 gave each map one factor for longitude. Across 62 degrees of latitude one factor is not enough: set at the equator it leaves east-west distances at Midway about 12 in 100 too long, which is a carrier strike's reach in error. A projection about the map's centre does better and is still out by about 4 in 100 at Midway and Lae and 6 at Pearl Harbor and Brisbane (rough arithmetic again). The record that plans the map measures the candidates, says what error it accepts and where, and is read by a reviewer who has not seen it written. The engine reads nothing of where a map is, so this is the map tool's and the table's work and no rule's.
+**Its scheme is a decision of its own: decision 0242.** Decision 0017 held the error of its flat projection to 5 in 100 across the slice, and decision 0199 gave each map one factor for longitude. Measured for decision 0242, the best single factor for this map leaves the carrier battle off Midway 8 in 100 out east to west and the Solomons 7. A projection about the map's own centre holds every named place within 3.6 in 100, and is what that record plans; its price is a grid whose north is a few degrees off the compass away from the centre. The engine reads nothing of where a map is, so this is the map tool's and the table's work and no rule's.
 
 **The present maps and their games stay as they are.** A frozen scenario, a closed proof and a validation measure are tied to the map they were made on. The wide map is a third map, and nothing that exists is moved onto it.
 
@@ -52,7 +52,7 @@ Checked against the index of decisions and the rulebook on Nov 27, 2026.
 **What it exposes.**
 
 - Oilers. Over these distances a force without one goes nowhere. Real oilers are derived for two scenarios, and the Japanese ones rest on estimates.
-- The cost of a wide sea in a dry run: a path over 10,000 hexes, and a trial's many worlds. To be measured with `sim-cli time` before anything is changed for it.
+- The cost of a wide sea in a dry run: a path over 10,400 hexes, and a trial's many worlds. To be measured with `sim-cli time` before anything is changed for it.
 - Empty weeks. Most days in most of the map nothing happens. The table has to pass them quickly.
 
 ## What is kept from history, and what is let go
