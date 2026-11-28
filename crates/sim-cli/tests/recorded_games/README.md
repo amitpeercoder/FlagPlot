@@ -26,7 +26,7 @@ is enough. A change to the engine that alters a result makes the test fail,
 rightly; the game is then played again or the record marked as of an older
 engine. `sh scripts/regenerate.sh` plays every game again (`regame.py`) with the other
 generated files and says whether a transcript or only a save changed; the
-"Regenerated after ..." paragraph below is written by hand. The model's play is not judged here, only that it repeats.
+paragraphs "Regenerated after ..." below, up to decision 0239, are kept as written and none is added. From then on a remake is recorded in its pull request's description and its commit message: which games changed, whether a transcript or only a save, and the check made (for a version-only change, the old file with the stamp read as the new one is identical to the remade one). A player's `account.md` describes the answers as the player read them; where a remake changes an answer of a transcript beyond its version, the pull request names the game and the answer. The model's play is not judged here, only that it repeats.
 
 To put a recorded game on the viewer's map: `cargo run --release -p sim-cli -- export crates/sim-cli/tests/recorded_games/NAME/save.json --out /tmp/NAME.json`, then open `viewer/index.html` and pick the file. The replay is the umpire's view, truth and all.
 

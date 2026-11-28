@@ -14,12 +14,13 @@
 #
 #   Status: the record's own words on its standing, never rewritten here
 #
-#   Summary: the one line the index shows for it
+#   Summary: the one line about the record, required, not shown in the index
 #
 #   Standing: the short standing the index shows (Confirmed, Settled, ...)
 #
 # One row is made for each record, in the order of the file names, with the
-# number before the title's first ": ", the summary and the standing. Only
+# number before the title's first ": ", the title (the text after it) and
+# the standing. The Summary line is still checked but no longer written. Only
 # the lines between the two markers in README.md are written (the table,
 # with an empty line before and after it); the prose
 # around them is kept as it is. A record without the header is an error
@@ -65,6 +66,7 @@ for record in "$dir"/[0-9][0-9][0-9][0-9]-*.md; do
                 print file ": line 1 is not \"# NNNN: Title\"" > "/dev/stderr"; bad = 1; exit
             }
             id = substr($0, 3, index($0, ": ") - 3)
+            title = substr($0, index($0, ": ") + 2)
         }
         NR == 3 && substr($0, 1, 8) != "Status: " {
             print file ": line 3 is not \"Status: ...\"" > "/dev/stderr"; bad = 1; exit
@@ -88,10 +90,10 @@ for record in "$dir"/[0-9][0-9][0-9][0-9]-*.md; do
         END {
             if (bad) exit 1
             if (NR < 8) { print file ": the header is not complete" > "/dev/stderr"; exit 1 }
-            if (index(summary, "|") || index(standing, "|")) {
-                print file ": a summary or standing holds a \"|\"" > "/dev/stderr"; exit 1
+            if (index(title, "|") || index(summary, "|") || index(standing, "|")) {
+                print file ": a title, summary or standing holds a \"|\"" > "/dev/stderr"; exit 1
             }
-            print "| " id " | " summary " | " standing " |"
+            print "| " id " | " title " | " standing " |"
         }
     ' "$record" >> "$tmp/table"; then
         problems=$((problems + 1))
@@ -121,7 +123,8 @@ if [ "$mode" = check ]; then
         exit 0
     fi
     echo "decisions-index: $index is not what the records give. Edit the record's" >&2
-    echo "Summary or Standing line, not the table, and run sh scripts/decisions-index.sh" >&2
+    echo "title or Standing line, not the table, and run sh scripts/decisions-index.sh" >&2
+    echo "(a conflict in the table is resolved by running the script, never by hand)" >&2
     diff "$index" "$tmp/README.md" >&2 || true
     exit 1
 fi

@@ -302,7 +302,7 @@ elif [ -n "$saves" ]; then
     echo "Only saves changed, no transcript."
 fi
 if [ -n "$transcripts$saves" ]; then
-    echo "Write a \"Regenerated after ...\" paragraph by hand in $games/README.md."
+    echo "Say in the pull request and the commit which games changed, transcript or save only, and the check made (no paragraph in $games/README.md)."
 fi
 group "4 pinned hashes (both kinds of line; the run_ lines are reported at step 1)" "$pinned"
 group "5 batch fixture" "$batch_before"
