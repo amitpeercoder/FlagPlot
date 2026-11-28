@@ -26,7 +26,7 @@ is enough. A change to the engine that alters a result makes the test fail,
 rightly; the game is then played again or the record marked as of an older
 engine. `sh scripts/regenerate.sh` plays every game again (`regame.py`) with the other
 generated files and says whether a transcript or only a save changed; the
-"Regenerated after ..." paragraph below is written by hand. The model's play is not judged here, only that it repeats.
+paragraphs "Regenerated after ..." below, up to decision 0239, are kept as written and none is added. From then on a remake is recorded in its pull request's description and its commit message: which games changed, whether a transcript or only a save, and the check made (for a version-only change, the old file with the stamp read as the new one is identical to the remade one). A player's `account.md` describes the answers as the player read them; where a remake changes an answer of a transcript beyond its version, the pull request names the game and the answer. The model's play is not judged here, only that it repeats.
 
 To put a recorded game on the viewer's map: `cargo run --release -p sim-cli -- export crates/sim-cli/tests/recorded_games/NAME/save.json --out /tmp/NAME.json`, then open `viewer/index.html` and pick the file. The replay is the umpire's view, truth and all.
 
@@ -230,6 +230,7 @@ Two folders from the proof of stage 2b (decision 0138, `docs/validation/stage-2b
 
 - `legibility_stage_2b`: condition 5, the reading test of item 12: the twelve cases, the tools' answers each reader was given, the key, the answers of twelve Haiku readers with no tools and a Sonnet model's marks. 12 of 12 right.
 - `legibility_stage_3`: condition 6 of stage 3's proof (decision 0153): the 23 reasons picked from seed 1, the key, the answers of 23 Haiku readers with one reason each and a Sonnet model's marks. 23 of 23 pass both questions.
+- `legibility_stage_4`: condition 11 of stage 4's proof (decision 0161; `docs/validation/stage-4-proof.md`): six estimates as a seat's `trial` tool answers them at agent interface 57, made by the proof's harness at b9e488a, the key written from their fields, the prompt, the answers of six Haiku readers with one estimate each and a Sonnet model's marks with the architect's reading. 2 of 6 pass; the mark was 6. The estimates are as the proof read them and are not remade with the interface.
 - `stage_2b_seat_sonnet`: item 17, a Sonnet model in the seat of one Allied carrier force (`--at task_force:1`) of the Eastern Solomons with command levels on, seed 1, the staff in every other seat: its prompt, calls, transcript, saved game and account. Not judged. The replay tools carry no seat's `--at`, which is why it has no `game.jsonl`.
 
 Regenerated after decision 0147 (reconnaissance for an operation: the state layout at version 43, saved game version 18, the agent interface version 22; with decision 0148 the doctrine version `supply-29` and the rules label 19; Nov 17, 2026), with `regame.py`. Each `save.json` differs only in its versions and its day hashes. Each transcript differs in the answers' `version` (21 to 22), and in the one game that holds an estimate of the enemy ashore (`full_slice_five_days_sonnet`) in the estimate's line, which gains `came_from` (the grade of the estimate: here "men in contact").

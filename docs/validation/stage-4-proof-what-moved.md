@@ -11,7 +11,7 @@ Amended by the architect on Nov 27, 2026, before the run: step 1 of decision 023
 | State layout | `flagplot-state-v47` | `flagplot-state-v60` (`hash::STATE_VERSION`) |
 | Rules label | 19 | 35 (`world::RULES_VERSION`); 34 before step 1 of decision 0232 |
 | Doctrine | `supply-39` | `supply-63` (`sim_staff::DOCTRINE_VERSION`); `supply-62` before step 1 of decision 0232 |
-| Agent interface | 26 | 56 (`sim_agent::answer::VERSION`), and no later one: step 2 of decision 0232, which makes it 57, is held until the run (the setup page) |
+| Agent interface | 26 | 57 (`sim_agent::answer::VERSION`), by step 2 of decision 0232, merged before the run (the setup page, "Amended before the run a second time"). As first amended this row read: 56, and no later one: step 2 of decision 0232, which makes it 57, is held until the run (the setup page) |
 | Saved game | | 29 (`sim-cli`'s `save::VERSION`); 28 before step 1 of decision 0232 |
 
 ## Changes to (a), (b), (c) and to the staff's setup

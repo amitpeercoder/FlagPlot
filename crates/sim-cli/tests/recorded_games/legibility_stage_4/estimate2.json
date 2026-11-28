@@ -1,0 +1,701 @@
+{
+  "asked": {
+    "beside": "without_it",
+    "compare": true,
+    "course": [],
+    "dates": null,
+    "days": 14,
+    "for_day": 1,
+    "in_force": false,
+    "inside_day": null,
+    "intent": 1,
+    "orders_not_tried": 0,
+    "preview": null,
+    "second_trial": true,
+    "size": "standard",
+    "standing": [
+      "set intent 1: control island 1",
+      "set intent 2: control island 2",
+      "give leave to prepare",
+      "give leave to launch"
+    ],
+    "tried_intent": 1,
+    "worlds": 16
+  },
+  "assumed": [
+    {
+      "from": {
+        "kind": "map"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy's base:3 \"Espiritu Santo\" at (7,6), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:3",
+          "name": "Espiritu Santo"
+        },
+        "fuel_t": "500",
+        "kind": "enemy_base",
+        "place": {
+          "lat": "-15.4641",
+          "lon": "166.8156",
+          "name": null,
+          "q": 7,
+          "r": 6
+        },
+        "supply_t": "1000"
+      }
+    },
+    {
+      "from": {
+        "kind": "believed",
+        "name": "Placeholder Allied carrier force",
+        "standing": "unknown"
+      },
+      "made_in": [
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16
+      ],
+      "not_in": [
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15
+      ],
+      "notes": [
+        "put at a base of the enemy's, its place not known, in 8 worlds"
+      ],
+      "text": "a force of 8 ships led by a carrier, believed, standing unknown (\"Placeholder Allied carrier force\"), in 8 of 16 worlds (worlds 2, 4, 6, 8, 10, 12, 14 and 16) and not in 8 of 16 worlds (worlds 1, 3, 5, 7, 9, 11, 13 and 15); put at a base of the enemy's, its place not known, in 8 worlds",
+      "thing": {
+        "kind": "force",
+        "place": null,
+        "ship_kind": "carrier",
+        "ships": 8
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy given nothing he could know of you: no contact, no claim and no estimate, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "no_belief"
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy given no intent: he holds what he holds, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "no_intent"
+      }
+    }
+  ],
+  "beside": {
+    "cost": {
+      "aircraft_lost": {
+        "highest": 5,
+        "lowest": 0,
+        "middle": 2
+      },
+      "men_lost_to_the_enemy": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_unfed": {
+        "highest": 26,
+        "lowest": 26,
+        "middle": 26
+      },
+      "ships_out_of_action": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_sunk": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      }
+    },
+    "could_not_be_played": [],
+    "enemy_lost": {
+      "aircraft_lost": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_to_the_enemy": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_unfed": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_out_of_action": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_sunk": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      }
+    },
+    "how_it_went": null,
+    "last_day": 14,
+    "of": "without_it",
+    "world_for_world": null
+  },
+  "cost": {
+    "aircraft_lost": {
+      "highest": 5,
+      "lowest": 0,
+      "middle": 2
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_unfed": {
+      "highest": 79,
+      "lowest": 79,
+      "middle": 79
+    },
+    "ships_out_of_action": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "could_not_be_played": [],
+  "enemy_lost": {
+    "aircraft_lost": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_unfed": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_out_of_action": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "estimate": 1,
+  "first_day": 1,
+  "format": "flagplot-agent",
+  "has_end": true,
+  "how_it_went": {
+    "met_and_kept": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "met_and_lost_again": [],
+    "met_days": {
+      "earliest": 1,
+      "latest": 1,
+      "middle": 1
+    },
+    "not_met": [],
+    "worlds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ]
+  },
+  "kind": "trial",
+  "last_day": 14,
+  "leaves_given_to_the_side": [],
+  "needs": {
+    "at_the_end_of_day": 1,
+    "count": null,
+    "differs_in": [],
+    "expected_ashore": null,
+    "men": null,
+    "tasks": [
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:1",
+              "name": "Lunga"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "hold",
+        "phase": null,
+        "place": null,
+        "text": "hold base:1 \"Lunga\""
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:1",
+              "name": "Lunga"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "keep_supplied",
+        "phase": null,
+        "place": null,
+        "text": "keep base:1 \"Lunga\" at 5 days of supply"
+      },
+      {
+        "bases": [],
+        "day": null,
+        "force": null,
+        "kind": "deny",
+        "phase": null,
+        "place": {
+          "lat": "-9.6906",
+          "lon": "160",
+          "name": "Lunga",
+          "q": 2,
+          "r": -4
+        },
+        "text": "deny the waters within 3 hexes of (2,-4) Lunga"
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:2",
+              "name": "Rabaul"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "strike_ships",
+        "phase": null,
+        "place": null,
+        "text": "strike ships from base:2 \"Rabaul\""
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:2",
+              "name": "Rabaul"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "search_waters",
+        "phase": null,
+        "place": null,
+        "text": "search the waters from base:2 \"Rabaul\""
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:3",
+              "name": "Espiritu Santo"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "neutralise",
+        "phase": null,
+        "place": null,
+        "text": "neutralise base:3 \"Espiritu Santo\""
+      }
+    ],
+    "waits_for": [],
+    "world": 1
+  },
+  "other_plans": [
+    {
+      "displaced": null,
+      "intent": 2,
+      "task": {
+        "bases": [],
+        "day": null,
+        "force": null,
+        "kind": "control_island",
+        "place": null,
+        "text": "control island 2"
+      },
+      "with": {
+        "middle_day": 1,
+        "worlds": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      "without": {
+        "middle_day": 1,
+        "worlds": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      }
+    }
+  ],
+  "partings": [
+    {
+      "by": {
+        "kind": "force",
+        "place": null,
+        "ship_kind": "carrier",
+        "ships": 8
+      },
+      "from": {
+        "kind": "believed",
+        "name": "Placeholder Allied carrier force",
+        "standing": "unknown"
+      },
+      "with": {
+        "cost": {
+          "aircraft_lost": {
+            "highest": 4,
+            "lowest": 0,
+            "middle": 1
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_unfed": {
+            "highest": 79,
+            "lowest": 79,
+            "middle": 79
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "enemy_lost": {
+          "aircraft_lost": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "how_it_went": {
+          "met_and_kept": [
+            2,
+            4,
+            6,
+            8,
+            10,
+            12,
+            14,
+            16
+          ],
+          "met_and_lost_again": [],
+          "met_days": {
+            "earliest": 1,
+            "latest": 1,
+            "middle": 1
+          },
+          "not_met": [],
+          "worlds": [
+            2,
+            4,
+            6,
+            8,
+            10,
+            12,
+            14,
+            16
+          ]
+        }
+      },
+      "without": {
+        "cost": {
+          "aircraft_lost": {
+            "highest": 5,
+            "lowest": 2,
+            "middle": 3
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_unfed": {
+            "highest": 79,
+            "lowest": 79,
+            "middle": 79
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "enemy_lost": {
+          "aircraft_lost": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "how_it_went": {
+          "met_and_kept": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            15
+          ],
+          "met_and_lost_again": [],
+          "met_days": {
+            "earliest": 1,
+            "latest": 1,
+            "middle": 1
+          },
+          "not_met": [],
+          "worlds": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            15
+          ]
+        }
+      }
+    }
+  ],
+  "text": [
+    "Tried: intent 1, control island 1, as it would go from the morning of day 1, with what you have handed in for that morning, in 16 worlds of 14 days each (the size standard).",
+    "Taken in on that morning as you have it: set intent 1: control island 1; set intent 2: control island 2; give leave to prepare; give leave to launch.",
+    "How it went, over 16 worlds played: met and kept in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16), the earliest day 1, the middle day 1 and the latest day 1; met and lost again in none of the 16 worlds; not met by day 14 in none of the 16 worlds.",
+    "What it cost your side, the lowest, the middle and the highest over the worlds: men lost to the enemy 0, 0, 0; men lost unfed 79, 79, 79; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 2, 5.",
+    "What the trial's enemy lost, by the trial's own reckoning of an enemy it made from your beliefs, not a claim or a report: men lost to the enemy 0, 0, 0; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "What it needs and has, as your staff worked it in world 1 at the end of day 1: it waits for nothing; no day ashore can yet be given. Its tasks: hold base:1 \"Lunga\"; keep base:1 \"Lunga\" at 5 days of supply; deny the waters within 3 hexes of (2,-4) Lunga; strike ships from base:2 \"Rabaul\"; search the waters from base:2 \"Rabaul\"; neutralise base:3 \"Espiritu Santo\".",
+    "Beside it, your side without the order, in the same worlds: the order is not there to have gone, so only what it cost is given.",
+    "Beside it, what it cost your side, the lowest, the middle and the highest over the worlds: men lost to the enemy 0, 0, 0; men lost unfed 26, 26, 26; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 2, 5.",
+    "Beside it, what the trial's enemy lost, by the trial's own reckoning: men lost to the enemy 0, 0, 0; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "Your intent 2, control island 2: met and kept in 16 worlds with this and 16 without.",
+    "What was assumed: the enemy's base:3 \"Espiritu Santo\" at (7,6), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); a force of 8 ships led by a carrier, believed, standing unknown (\"Placeholder Allied carrier force\"), in 8 of 16 worlds (worlds 2, 4, 6, 8, 10, 12, 14 and 16) and not in 8 of 16 worlds (worlds 1, 3, 5, 7, 9, 11, 13 and 15); put at a base of the enemy's, its place not known, in 8 worlds; the enemy given nothing he could know of you: no contact, no claim and no estimate, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy given no intent: he holds what he holds, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16).",
+    "No leave was given by the trial: what it needed you had given, or have queued.",
+    "Where the worlds part, by a force of 8 ships led by a carrier, believed, standing unknown (\"Placeholder Allied carrier force\"). With them, 8 worlds (worlds 2, 4, 6, 8, 10, 12, 14 and 16): met and kept in 8 on day 1, your side's men lost to the enemy 0, 0, 0 and men lost unfed 79, 79, 79 and aircraft lost 0, 1, 4, the trial's enemy's men lost to the enemy 0, 0, 0. Without them, 8 worlds (worlds 1, 3, 5, 7, 9, 11, 13 and 15): met and kept in 8 on day 1, your side's men lost to the enemy 0, 0, 0 and men lost unfed 79, 79, 79 and aircraft lost 2, 3, 5, the trial's enemy's men lost to the enemy 0, 0, 0."
+  ],
+  "uneven": false,
+  "version": 57
+}
