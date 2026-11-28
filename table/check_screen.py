@@ -877,7 +877,7 @@ def run_in_node(code, data):
     with tempfile.TemporaryDirectory() as folder:
         path = os.path.join(folder, "run.js")
         with open(path, "w", encoding="utf-8") as out:
-            out.write(NODE_PRELUDE + code + "\nconst input = JSON.parse(require('fs').readFileSync(process.argv[2], 'utf8')); console.log(JSON.stringify(main(input)));\n")
+            out.write(NODE_PRELUDE + code + "\nconst input = JSON.parse(require('fs').readFileSync(process.argv[2], 'utf8')); Promise.resolve(main(input)).then(r => console.log(JSON.stringify(r)));\n")
         data_path = os.path.join(folder, "input.json")
         with open(data_path, "w", encoding="utf-8") as out:
             json.dump(data, out)
@@ -5448,6 +5448,190 @@ def rung_three_played_five_ways(bridge):
         check(post(bridge.table + "/new") == {"ok": True}, f"{name}: the game is put away")
 
 
+# ---- A ship in port named where an order names her (a mend to SIGNED and THE ORDERS; class 2). The statements are the architect's,
+# written on Nov 28, 2026, before the code, with docs/decisions/as-built/0237-the-first-three-rungs.md, "SIGNED and THE ORDERS name
+# a ship in port (Nov 28, 2026)", which has the cause, the plan and the brief. The function is empty and fails "not built"; it is not
+# called from main() until it is built, and then after `rung_three_played_five_ways`. An expected value below that the build cannot
+# meet goes back to the architect: it is not changed to pass.
+
+
+def a_ship_in_port_is_named(bridge):
+    """A ship an order's limits name is said by her name under SIGNED and in THE ORDERS, wherever she lies. Found by the architect on
+    pull request 790: a supply order signed from the page read "Ships and forces: ship", because a ship lying in port in no force is
+    in no answer of `list_forces`, the name the order paper learned for her is dropped when `refresh` builds `M.names` again, and `nm`
+    then has only the kind of her handle to say. `queued` and `command_state` give a ship by her number alone.
+
+    The mend reads the seat's own tools and nothing else: `get_entity` of the ship, which the seat may ask of any ship of its own.
+
+    Which ships the page must be able to name, by a new pure function of the page, cut from its text and run in node:
+    N1. `shipsNamed(state, queue)`, where `state` is the answer of `command_state` and `queue` what the page keeps of `queued` (an
+        object with `entries`), gives the handles "ship:N" of every ship a limit names: in `state.intents`, each intent's
+        `limits.forces.ships`, its `limits.protected` and its `limits_read_up.forces.ships`; in `queue.entries`, the `ships` of each
+        command of the kind `set_limit` whose `limit` is "forces" or "protected". Each handle once, in the order of the numbers. With
+          state = {intents: [{number: 1, limits: {forces: {ships: [4, 2], task_forces: [3], source: {handle: 'base:1', name:
+                   'Saltmere'}}, protected: [7]}, limits_read_up: {forces: {ships: [4, 2]}}},
+                   {number: 2, limits: {forces: null, protected: []}, limits_read_up: {forces: {ships: [11]}}}, {number: 3}]}
+          queue = {entries: [{what: 'command', command: {kind: 'set_intent', base: 2, intent: 5}},
+                   {what: 'command', command: {kind: 'set_limit', intent: 5, limit: 'forces', ships: [1, 4], task_forces: [6], source: 1}},
+                   {what: 'command', command: {kind: 'set_limit', intent: 5, limit: 'protected', ships: [9]}},
+                   {what: 'command', command: {kind: 'set_limit', intent: 5, limit: 'risk', risk: 'press'}},
+                   {what: 'order', order: {kind: 'form_task_force', ships: [20]}}]}
+        shipsNamed(state, queue) is ['ship:1', 'ship:2', 'ship:4', 'ship:7', 'ship:9', 'ship:11']; shipsNamed(state, null) is
+        ['ship:2', 'ship:4', 'ship:7', 'ship:11']; shipsNamed(null, queue) is ['ship:1', 'ship:4', 'ship:9']; shipsNamed(null, null)
+        and shipsNamed({intents: []}, {entries: []}) are []. The ships of an order to form a force are not among them (ship:20): that
+        line says a count and no name. A task force, a base, an air group, a land unit and a boat are not asked for: every list the
+        page already reads names them.
+
+    How the page learns them, by a new function of the page, cut from its text and run in node with `api` and `SHIP_NAMES` stood in:
+    N2. `learnNamed(state, queue)` gives a promise that is always kept, never broken. It asks `get_entity` with {handle: h}, once,
+        for each handle of `shipsNamed(state, queue)` that `SHIP_NAMES` does not hold, and for no other; where the answer has
+        `entity.ship.name` it keeps `cleanName` of it in `SHIP_NAMES` under the handle; a call that is refused, an answer with no
+        `entity` and an entity with no name keep nothing. With the state and the queue of N1, `SHIP_NAMES` starting as {'ship:2':
+        'Kestrel'}, and an `api` that answers ship:1 with {entity: {ship: {handle: 'ship:1', name: 'Merrowdale'}}}, ship:4 with
+        {entity: {ship: {handle: 'ship:4', name: 'Placeholder tender'}}}, ship:7 by a promise broken, ship:9 with {kind: 'not_known'}
+        and ship:11 with {entity: {ship: {handle: 'ship:11'}}}: the calls made, sorted by the ship's number, are `get_entity` of
+        ship:1, ship:4, ship:7, ship:9 and ship:11, five and no more, each with exactly {handle: h}; and `SHIP_NAMES` is then exactly
+        {'ship:1': 'Merrowdale', 'ship:2': 'Kestrel', 'ship:4': 'Tender'}. Called a second time with the same, it asks for ship:7,
+        ship:9 and ship:11 alone, and `SHIP_NAMES` is as it was.
+    N3. `nm` is not changed: with `M.names` holding no name for her, nm('ship:9') is "ship", as before. A name that could not be read
+        is said as it was; the mend is that it can be read.
+
+    In the page's text:
+    N4. `refresh` calls `learnNamed` with the command state and the queue it has just read (the answers it keeps as `M.state` and
+        `M.queue`) and waits for its promise before it builds `M.names` again; `M.names` is built from `SHIP_NAMES` there as it is
+        today. No other caller is needed: SIGNED, THE ORDERS and a plan's paper are all drawn after `refresh`.
+        `PAGE_LOAD_CALLS` is unchanged: a page with no ship named in a limit asks nothing more than it did.
+
+    Through the bridge, in a game of rung 1 (`RUNG_ONE`, a person Allied against the engine) before any day is fought:
+    N5. The facts the mend rests on. `list_forces` has no task force. `get_entity` of "ship:1" gives an entity whose `ship` is
+        {handle "ship:1", name "Merrowdale"} and whose `task_force` is null. With `rung_one_order(2, 5)` previewed and approved,
+        `queued` has two entries, and the command of the second is exactly {intent 1, kind "set_limit", limit "forces", ships [1],
+        source 1, task_forces []}: the ship is given by her number and nothing in the answer holds her name.
+    N6. SIGNED. The page's `signedLine`, `shipsNamed`, `learnNamed` and its limits model, cut from its text and run in node, with
+        `M.bases` holding base:1 "Saltmere" and base:2 "Thornwick", `M.queue` holding the entries of N5's `queued` as the bridge gave
+        them, `SHIP_NAMES` empty, and an `api` that answers `get_entity` of "ship:1" with what the bridge answered in N5 and breaks
+        its promise for anything else. Before `learnNamed`, with `M.names` as {'base:1': 'Saltmere', 'base:2': 'Thornwick'}, the
+        text of `signedLine` of the first entry is "Order: Keep Thornwick supplied · Ships and forces: ship · Supplied from:
+        Saltmere" (the defect, as `main` has it). After `learnNamed(null, M.queue)` is kept, with every entry of `SHIP_NAMES` put
+        into `M.names` as `refresh` does, it is exactly
+            "Order: Keep Thornwick supplied · Ships and forces: Merrowdale · Supplied from: Saltmere"
+        and `api` was called once, with `get_entity` and {handle: 'ship:1'}.
+    N7. THE ORDERS, the order in force. Leave to launch given (`set_leave` with {leave "launch", given true}) and one day run
+        (`run` with {days 1, stop_on []}): `queued` has no entry, `list_forces` still has no task force, and `command_state` has one
+        intent, number 1, of the kind "keep_supplied", whose `limits.forces.ships` is [1] and whose `limits.protected` is []. In
+        node as in N6, `SHIP_NAMES` empty again, with that `command_state` as the state and a queue of no entries: after
+        `learnNamed` is kept and `M.names` is built as in N6, `limitsLine('keep_supplied', limFromState(intent.limits))`, which is
+        what THE ORDERS says under the order, is exactly
+            "Ships and forces: Merrowdale · Supplied from: Saltmere"
+        and `api` was called once, with `get_entity` and {handle: 'ship:1'}.
+    N8. The game is put away.
+
+    Rung 3's supply order (ship 4 from Saltmere's port, twelve days in) rests on the same two functions and is not played here.
+
+    `run_in_node` prints what `main` gives; for N2, N6 and N7 `main` gives a promise. The one line `run_in_node` writes after the code
+    may be changed to wait for what `main` gives before it prints, so long as every check that stands gives what it gave."""
+    import re
+    print("-- a ship in port named", flush=True)
+    text = page_text()
+    # N4, in the page's text
+    refresh = cut_function(text, "  function refresh() {")
+    check("learnNamed(a[3], a[5])" in refresh and refresh.index("learnNamed(") < refresh.index("M.names = {}")
+          and refresh.index("Object.keys(SHIP_NAMES).forEach(function (h) { M.names[h] = SHIP_NAMES[h]; });") > refresh.index("M.names = {}")
+          and "learnNamed(" in refresh.split("M.forces = a[0]")[0],
+          "N4: refresh asks learnNamed of the command state and the queue it has read, and waits for it before it builds M.names from SHIP_NAMES")
+    # N1
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "shipsNamed", "learnNamed"))
+    state = {"intents": [{"number": 1, "limits": {"forces": {"ships": [4, 2], "task_forces": [3], "source": {"handle": "base:1", "name": "Saltmere"}}, "protected": [7]}, "limits_read_up": {"forces": {"ships": [4, 2]}}},
+                         {"number": 2, "limits": {"forces": None, "protected": []}, "limits_read_up": {"forces": {"ships": [11]}}}, {"number": 3}]}
+    queue = {"entries": [{"what": "command", "command": {"kind": "set_intent", "base": 2, "intent": 5}},
+                         {"what": "command", "command": {"kind": "set_limit", "intent": 5, "limit": "forces", "ships": [1, 4], "task_forces": [6], "source": 1}},
+                         {"what": "command", "command": {"kind": "set_limit", "intent": 5, "limit": "protected", "ships": [9]}},
+                         {"what": "command", "command": {"kind": "set_limit", "intent": 5, "limit": "risk", "risk": "press"}},
+                         {"what": "order", "order": {"kind": "form_task_force", "ships": [20]}}]}
+    code = helpers + r"""
+var SHIP_NAMES = {}; var calls = [], answers = {};
+function api(tool, args) { calls.push([tool, args]); var a = answers[args.handle]; if (a === 'broken') return Promise.reject(new Error('refused')); return Promise.resolve(a); }
+function main(x) {
+  var named = [shipsNamed(x.state, x.queue), shipsNamed(x.state, null), shipsNamed(null, x.queue), shipsNamed(null, null), shipsNamed({ intents: [] }, { entries: [] })];
+  SHIP_NAMES = { 'ship:2': 'Kestrel' };
+  answers = { 'ship:1': { entity: { ship: { handle: 'ship:1', name: 'Merrowdale' } } }, 'ship:4': { entity: { ship: { handle: 'ship:4', name: 'Placeholder tender' } } }, 'ship:7': 'broken', 'ship:9': { kind: 'not_known' }, 'ship:11': { entity: { ship: { handle: 'ship:11' } } } };
+  var first = learnNamed(x.state, x.queue);
+  var kept = first && typeof first.then === 'function';
+  return first.then(function () {
+    var one = calls.slice(), names = JSON.parse(JSON.stringify(SHIP_NAMES)); calls = [];
+    return learnNamed(x.state, x.queue).then(function () { return { named: named, kept: kept, one: one, names: names, two: calls, again: SHIP_NAMES }; });
+  });
+}"""
+    got = run_in_node(code, [{"state": state, "queue": queue}][0])
+    sort_calls = lambda c: sorted(c, key=lambda k: int(k[1]["handle"].split(":")[1]))
+    check(got["named"] == [["ship:1", "ship:2", "ship:4", "ship:7", "ship:9", "ship:11"], ["ship:2", "ship:4", "ship:7", "ship:11"], ["ship:1", "ship:4", "ship:9"], [], []],
+          f"N1: shipsNamed gives each ship a limit names once, in the order of the numbers, and not a ship of an order to form a force ({got['named']})")
+    check(got["kept"] is True and sort_calls(got["one"]) == [["get_entity", {"handle": h}] for h in ("ship:1", "ship:4", "ship:7", "ship:9", "ship:11")]
+          and got["names"] == {"ship:1": "Merrowdale", "ship:2": "Kestrel", "ship:4": "Tender"},
+          f"N2: learnNamed gives a promise kept, asks get_entity once for each ship not held (five) and keeps the names it can read ({got['one']}, {got['names']})")
+    check(sort_calls(got["two"]) == [["get_entity", {"handle": h}] for h in ("ship:7", "ship:9", "ship:11")] and got["again"] == got["names"],
+          f"N2: called a second time it asks for ship:7, ship:9 and ship:11 alone, and SHIP_NAMES is as it was ({got['two']})")
+    nm_text = cut_function(text, "  function nm(h) {")
+    check(nm_text == "  function nm(h) { var n = M.names[h]; return n ? cleanName(n) : String(h).split(':')[0].replace(/_/g, ' '); }" and "learnNamed" not in nm_text,
+          "N3: nm is as it was; with no name in M.names nm('ship:9') is \"ship\"")
+    said = run_in_node("".join(cut_function(text, "  function " + h + "(") + "\n" for h in ("cleanName", "num", "nm")) + "function main() { return nm('ship:9'); }", None)
+    check(said == "ship", f"N3: a name that could not be read is said as it was ({said})")
+    # N5
+    check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "begun: rung 1")
+    person = Person(bridge.table)
+    forces = person.call("list_forces")["ok"]
+    entity = person.call("get_entity", {"handle": "ship:1"})["ok"]["entity"]
+    check(forces["task_forces"] == [] and entity["ship"]["handle"] == "ship:1" and entity["ship"]["name"] == "Merrowdale" and entity["task_force"] is None,
+          f"N5: before any day list_forces has no task force, and ship:1 is Merrowdale with no task force ({forces['task_forces']}, {entity['ship']}, {entity['task_force']})")
+    shown = person.call("preview", rung_one_order(2, 5))["ok"]
+    approved = person.call("approve", {"preview": shown["preview"]})["ok"]
+    entries = person.call("queued")["ok"]["entries"]
+    check(shown["valid"] is True and approved["status"] == "queued" and len(entries) == 2
+          and entries[1]["command"] == {"intent": 1, "kind": "set_limit", "limit": "forces", "ships": [1], "source": 1, "task_forces": []},
+          f"N5: the supply order is queued as two entries, the second giving the ship by her number alone ({entries[1]['command'] if len(entries) > 1 else entries})")
+    # N6 and N7, in node
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "nm", "unitNo", "nameText", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine", "shipsNamed", "learnNamed")) \
+        + re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0) + "\n" + text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the written plan model ----")] + r"""
+const config = { islands: [] }; let hexRaw = false;
+function baseByNumber(n) { return M.bases.filter(b => num(b.base.handle) === n)[0] || null; }
+function rich(tag, cls, w) { return el(tag, cls, w); } function placeLink() { return el('span', '', '?'); } function refTo() { return el('span', '', '?'); } function plainWords(t) { return t; }
+function landingCap(h) { return 'Landing'; } function orderWordsOf() { return ''; } function orderFound() { return null; }
+var SHIP_NAMES = {}, calls = [], hexes = [];
+function api(tool, args) { calls.push([tool, args]); if (tool === 'get_entity' && args.handle === 'ship:1') return Promise.resolve(X.entity); return Promise.reject(new Error('no')); }
+function build() { M.names = { 'base:1': 'Saltmere', 'base:2': 'Thornwick' }; Object.keys(SHIP_NAMES).forEach(function (h) { M.names[h] = SHIP_NAMES[h]; }); }
+var X = null;
+function main(x) {
+  X = x; M.bases = [{ base: { handle: 'base:1', name: 'Saltmere' } }, { base: { handle: 'base:2', name: 'Thornwick' } }];
+  M.queue = { entries: x.entries }; M.state = { intents: [] }; SHIP_NAMES = {}; build();
+  var before = signedLine(x.entries[0]).textContent;
+  return learnNamed(null, M.queue).then(function () {
+    build(); var after = signedLine(x.entries[0]).textContent, used = calls.slice(); calls = []; SHIP_NAMES = {}; build();
+    return learnNamed(x.state, { entries: [] }).then(function () {
+      build(); var intent = x.state.intents[0];
+      return { before: before, after: after, used: used, orders: limitsLine('keep_supplied', limFromState(intent.limits)), used2: calls };
+    });
+  });
+}"""
+    one = run_in_node(code, {"entries": entries, "entity": {"entity": entity}, "state": {"intents": [{"number": 1, "kind": "keep_supplied", "limits": {"forces": {"ships": [1], "task_forces": [], "source": {"handle": "base:1", "name": "Saltmere"}}, "protected": []}}]}})
+    check(one["before"] == "Order: Keep Thornwick supplied \u00b7 Ships and forces: ship \u00b7 Supplied from: Saltmere", f"N6: before learnNamed SIGNED says the defect as main has it ({one['before']})")
+    check(one["after"] == "Order: Keep Thornwick supplied \u00b7 Ships and forces: Merrowdale \u00b7 Supplied from: Saltmere" and one["used"] == [["get_entity", {"handle": "ship:1"}]],
+          f"N6: after learnNamed SIGNED says \"Ships and forces: Merrowdale\", with one get_entity of ship:1 ({one['after']}, {one['used']})")
+    # N7
+    check(person.call("set_leave", {"leave": "launch", "given": True})["ok"]["status"] == "queued", "N7: leave to launch is given")
+    person.call("run", {"days": 1, "stop_on": []})
+    queued = person.call("queued")["ok"]["entries"]
+    forces = person.call("list_forces")["ok"]["task_forces"]
+    state_now = person.call("command_state")["ok"]
+    intents = state_now["intents"]
+    check(queued == [] and forces == [] and len(intents) == 1 and intents[0]["number"] == 1 and intents[0]["kind"] == "keep_supplied"
+          and intents[0]["limits"]["forces"]["ships"] == [1] and intents[0]["limits"]["protected"] == [],
+          f"N7: after one day the queue is empty, there is still no task force, and the order in force names ship 1 ({queued}, {forces}, {[i['limits'] for i in intents]})")
+    two = run_in_node(code, {"entries": entries, "entity": {"entity": entity}, "state": state_now})
+    check(two["orders"] == "Ships and forces: Merrowdale \u00b7 Supplied from: Saltmere" and two["used2"] == [["get_entity", {"handle": "ship:1"}]],
+          f"N7: THE ORDERS says \"Ships and forces: Merrowdale \u00b7 Supplied from: Saltmere\", with one get_entity of ship:1 ({two['orders']}, {two['used2']})")
+    check(post(bridge.table + "/new") == {"ok": True}, "N8: the game is put away")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--sim-cli", default="target/release/sim-cli")
@@ -5511,6 +5695,7 @@ def main():
             the_orders_of_rung_three(bridge)
             a_directive_stops_the_clock(bridge)
             rung_three_played_five_ways(bridge)
+            a_ship_in_port_is_named(bridge)
         finally:
             bridge.stop()
         check(bridge.process.returncode is not None, "the bridge has left")

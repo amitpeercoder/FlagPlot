@@ -1391,6 +1391,27 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
       }).catch(function () {});
     }));
   }
+  // A ship an order's limits name may lie in port in no force, and so be in no answer of `list_forces`; `command_state` and `queued` give her
+  // by her number alone. Her name is asked of `get_entity`, which the seat may ask of any ship of its own, and kept for the game.
+  function shipsNamed(state, queue) {
+    var seen = {}, add = function (l) { (l || []).forEach(function (x) { seen[typeof x === 'string' ? num(x) : Number(x)] = true; }); };
+    ((state && state.intents) || []).forEach(function (i) {
+      add(i.limits && i.limits.forces && i.limits.forces.ships); add(i.limits && i.limits.protected); add(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.ships);
+    });
+    ((queue && queue.entries) || []).forEach(function (e) {
+      var c = e.what === 'command' ? e.command : null;
+      if (c && c.kind === 'set_limit' && (c.limit === 'forces' || c.limit === 'protected')) add(c.ships);
+    });
+    return Object.keys(seen).map(Number).sort(function (x, y) { return x - y; }).map(function (n) { return 'ship:' + n; });
+  }
+  function learnNamed(state, queue) {
+    var ask = shipsNamed(state, queue).filter(function (h) { return !SHIP_NAMES[h]; });
+    return Promise.all(ask.map(function (h) {
+      return Promise.resolve().then(function () { return api('get_entity', { handle: h }); }).then(function (e) {
+        var n = e && e.entity && e.entity.ship && e.entity.ship.name; if (n) SHIP_NAMES[h] = cleanName(String(n));
+      }).catch(function () {});
+    })).then(function () {});
+  }
   // The air groups are read from the briefing, which is made at dusk only.
   // Inside a day each group is asked for by itself, so that a card shows what
   // a group has now, and a page opened in the middle of a day has its groups
@@ -1410,7 +1431,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function refresh() {
     return Promise.all([api('list_forces'), api('list_bases'), api('list_contacts'), api('command_state'), api('get_briefing', { text: false }).catch(function (e) { return { refused: e.message }; }), WATCH ? Promise.resolve(null) : api('queued').catch(function () { return null; })]).then(function (a) {
-      return learnShips(a[0].task_forces || []).then(function () { return airInsideDay(a); }).then(function (air) { a.air = air; return a; });
+      return learnShips(a[0].task_forces || []).then(function () { return learnNamed(a[3], a[5]); }).then(function () { return airInsideDay(a); }).then(function (air) { a.air = air; return a; });
     }).then(function (a) {
       M.forces = a[0].task_forces || []; M.units = a[0].land_units || [];
       M.bases = a[1].bases || []; M.enemyBases = a[1].enemy_bases || [];
