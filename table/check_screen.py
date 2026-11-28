@@ -301,8 +301,9 @@ def the_paper_reads_as_the_order():
     The parts.
     A1. Inside `<form class="order gives" id="paper"`, in this order: `id="p-back"`, `id="p-head"`, `id="p-title"`, `id="p-the"`,
         `id="p-hands"`, `id="p-limits"`, `id="p-plan"`, `id="o-pv"`, `id="o-dry-says"`, `id="p-says"`, `id="p-foot"`. Inside
-        `p-foot`, in this order: `id="p-acts-t"`, `id="p-sign"`, `id="p-dry"`, `id="p-cancel"`. (The reading moves above LIMITS in
-        stage B, not here.)
+        `p-foot`, in this order: `id="p-acts-t"`, `id="p-sign"`, `id="p-dry"`, `id="p-cancel"`. (Stage B moves the reading above
+        LIMITS: from then the order of `o-pv`, `o-dry-says`, `p-limits` and `p-plan` is B1's, in `the_face_and_the_fold`, and this
+        check holds the rest.)
     A2. Gone from the page's text: `id="p-to"`, `id="p-to-name"`, `id="o-ends"`, `id="o-place"`, `name = 'end'`, `chosen('end')`,
         "you are to:", `<legend>END</legend>`, the labels `<span class="pl">TO</span>`, `<span class="pl">THE ORDER</span>` and
         `<span class="pl">ACTS</span>`, and the heading `<h2>ORDER &middot;`. `id="p-acts"` is gone; `id="p-acts-t"` stays, in the foot.
@@ -450,6 +451,65 @@ def the_paper_reads_as_the_order():
     for i in ("o-floor", "o-interval", "o-dist"):
         tag = re.search(r'<input type="number" id="%s"[^>]*>' % i, form).group(0)
         check(f'<label class="fl" for="{i}">' in form and "aria-label=" in tag, f"A17: {i} has a label tied to it and keeps its aria-label")
+
+
+def the_face_and_the_fold():
+    """Decision 0240, stage B: what an order needs stands on its face, the staff's reading stands under the order, and the rest is in
+    the fold with the risk first. By the page's text and by the page's own functions run in node. Written by the architect before the
+    build; the expected words here are his and are changed by nobody else. (The page as drawn is tried in a browser, not here.)
+
+    The parts.
+    B1. Inside `<form class="order gives" id="paper"`, in this order: `id="p-back"`, `id="p-head"`, `id="p-title"`, `id="p-the"`,
+        `id="p-hands"`, `id="o-pv"`, `id="o-dry-says"`, `id="p-limits"`, `id="p-plan"`, `id="p-says"`, `id="p-foot"`. (This takes the
+        place of stage A's A1 for the order of the reading and the folds; A1's foot stands.) Inside `p-the`, `id="p-face"` comes
+        after `id="o-supply"` and before `id="p-summary"`.
+    B2. Gone from the page's text: `id="o-risk"`, `name="risk"`, `chosen('risk')`, `<legend>RISK</legend>`. The risk of a draft is
+        `lim.risk`, and `sentLimits` reads it there.
+
+    The model: five new pure functions inside the limits model (between `var LIMITS_OFFERED` and its end marker), run in node as
+    `the_limits_on_the_paper` runs the model, with the names it stands in ("Task Force 17" for task_force:17, "Merrowdale" for ship:1,
+    "Saltmere" for base:1, "Thornwick" for base:2, "Lunga" for base:3).
+    B3. `faceKeys(kind)`: for 'keep_supplied' it is ['ships', 'source']; for 'patrol' ['submarines']; for 'stand_at' ['risk']; for
+        'hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island' and 'destroy_force' it is [].
+    B4. `hasFold(kind)`: false for 'patrol' and 'stand_at'; true for each of the other nine kinds of B3.
+    B5. `missing(kind, lim)`, what the order still needs, in the order of the face: for 'keep_supplied' with a new model (`newLim()`)
+        it is ['ships', 'source']; with ship 1 named (ships.mode 'only', ships [1]) and no source, ['source']; with source 1 and no
+        ship, ['ships']; with a task force named and source 1, []; with ship 1 and source 1, []. With ships.mode 'only' and nothing
+        named it still holds 'ships'. For every other kind of B3 with a new model it is [].
+    B6. `sourceChoices(kind, bases, place)`, the bases a source may be chosen from, as [number as a string, name]: with bases 1
+        "Saltmere", 2 "Thornwick" and 3 "Lunga", for 'keep_supplied' at place 2 it is [['1', 'Saltmere'], ['3', 'Lunga']] (the place
+        itself is not offered); for 'hold' at place 2 it is all three, in that order.
+    B7. `foldLine(kind, lim)`, the fold's closed line without its label:
+        - 'keep_supplied', a new model: "Risk: balanced \u00b7 the rest the staff\u2019s choice".
+        - the same with lim.risk 'press': "Risk: press \u00b7 the rest the staff\u2019s choice".
+        - 'keep_supplied' with ship 1 and source 1 named and nothing else: "Risk: balanced \u00b7 the rest the staff\u2019s choice"
+          (what is on the face is not said in the fold's line).
+        - 'hold' with task force 17 named (ships.mode 'only', task_forces [17]) and risk 'press': "Risk: press \u00b7 Ships and
+          forces: Task Force 17".
+        - 'hold', a new model: "Risk: balanced \u00b7 the rest the staff\u2019s choice".
+        `limitsLine` itself answers as it did (the plan's paper and the change-of-limits paper use it).
+
+    The page.
+    B8. `endChanged` sets `lim.ships.mode = 'only'` where the kind is 'keep_supplied', hides the fold where the kind has none
+        (`$('p-limits').hidden = !hasFold(kind)`), and `limSummary` says `'LIMITS \u00b7 ' + foldLine(kind, lim)` for a draft.
+    B9. `drawLimits` draws each key of `faceKeys(kind)` into `p-face` and every other line into `p-limits-body`, the risk first there
+        where the kind offers it and it is not on the face. A line is drawn once.
+    B10. On a supply order's face the ships line is headed "Ships" and the source "From"; neither offers "The staff\u2019s choice",
+        "None" or BACK TO THE STAFF\u2019S CHOICE. Beside an empty one the paper says "No ship named yet." or "No source named yet."
+        (`id="need-ships"`, `id="need-source"`), in the paper's plain ink (not the class `bad` or `notsent`). The page's text holds
+        both sentences once.
+    B11. `askPreview` asks nothing while the order needs something: before `api('preview'` it tests `missing(kind, lim).length`, and
+        then the reading's place is empty (`$('o-preview').textContent = ''`), `p-sign` and `p-dry` are disabled, and no call is
+        made. `signStaff` is not reached with a need unmet.
+    B12. The change-of-limits paper draws its lines open in `p-face` and shows no fold (`$('p-limits').hidden = true` in
+        `openLimitPaper`); what it sends is as it was.
+    B13. A limit refused is still marked at its line, on the face or in the fold, and the fold opened where the line is in it;
+        a risk refused is marked at the fold's risk line (`[data-key="risk"]`).
+
+    What does not change: what any order sends, key for key (the forces limit of a supply order is the body it was: `limit:
+    "forces"`, `ships`, `task_forces`, `source`); the words of every limit line but the two headings of B10; `LIMITS_OFFERED`; the
+    reading's own words; YOUR PLAN. The floor still starts at 30: stage C empties it."""
+    raise NotImplementedError("decision 0240, stage B: the developer writes this check to the statements above")
 
 
 def the_fold_and_the_keys():
