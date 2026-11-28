@@ -118,6 +118,108 @@ data/scenarios/midway/01d_midway.toml resolve same run same
 27 overlays, 0 differing
 ```
 
+## Built: step D
+
+The 31 files of `table-hunger` (12), `table-boats` (16) and `table-rear-bases` (3) are overlays, each at its own path and name: 70,647 lines before, 4,930 after (`table-hunger` 23,678 to 168, `table-boats` 36,267 to 4,356, `table-rear-bases` 10,702 to 406). The three generators, 1,278 lines, are deleted. Nothing under `crates/` changed but the one ruled line (below), and no file outside these three folders under `data/` (but the header of `data/reference/ground_hunger.toml`, rewritten as ruled below).
+
+**Overlays.** Each is built on the file its generator copied, by a path relative to its folder: a copy of `table-hunger` on its source in `midway`, `five-days`, `coral-sea`, `staff` or `stage-3-proof` and stating `ground = "../../reference/ground_hunger.toml"` alone; a file of `table-boats` on the file of `table-hunger` it copied (its file a on `midway/01a_midway`, `coral-sea/03a_coral_sea_both_oilers`, `five-days/02a_eastern_solomons_oilers` or `stage-3-proof/07a_slice`, and that one states `ground` too) and stating the three keys of the submarine files, the two `[side]` tables and the boats, each with the comment it had; a file of `table-rear-bases` on the file of its name in `table-boats`, stating `name`, `trial`, base 3's `supply_t` with its note, for task forces 30 and 32 to 39 `available_from`, `at_base` and `home_port` with the note each had, and the islands (3, and in the full slice 1, 2 and 3). The headers say what the file is built on and what it states, and keep what the generators' headers said of the scenario (the boats' notes, the estimates, the rulings of decision 0224) less the sentences about the script and less the copied header of the file below, which the chain holds. Chains are at most four files long.
+
+**Differences from the record.**
+
+1. **Island and trial.** The overlays of `table-rear-bases` are written from the generator as it stands on `main` after decision 0232's step 3: the `trial` line, island 3 in the two slice files, and islands 1, 2 and 3 in the full slice. (The record's row, as amended, names the same; its earlier account of the 39 days has none.) R3 names an island row by its `number`, since an island has no `id`.
+2. **Base 7's note.** The generator wrote a comment before Shortland (base 7), a base no overlay row changes. It is in the header of each of the three files, in the sentence on ruling 1.
+3. **The proof's count.** `scripts/overlay-proof.sh` counts every file under `data/scenarios` that states `built_on`, so after this step it is 58 (C's 27 and D's 31), not 31; the comment of the script says so. The tests' R3 counts 58 for the same reason.
+4. **R5 is on.** The `#[ignore]` is removed: "Do not edit by hand" is in eight files and no other.
+
+**Proof,** `SIM_CLI=target/release/sim-cli sh scripts/overlay-proof.sh d6e58b15 58` (the commit the branch left `main` at), with the loader as ruled under "Ruled on step D", exit 0:
+
+```
+data/scenarios/coral-sea/01a_coral_sea.toml resolve same run same
+data/scenarios/coral-sea/01b_coral_sea.toml resolve same run same
+data/scenarios/coral-sea/01c_coral_sea.toml resolve same run same
+data/scenarios/coral-sea/01d_coral_sea.toml resolve same run same
+data/scenarios/coral-sea/02a_coral_sea_oilers.toml resolve same run same
+data/scenarios/coral-sea/02b_coral_sea_oilers.toml resolve same run same
+data/scenarios/coral-sea/02c_coral_sea_oilers.toml resolve same run same
+data/scenarios/coral-sea/02d_coral_sea_oilers.toml resolve same run same
+data/scenarios/coral-sea/03a_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/coral-sea/03b_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/coral-sea/03c_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/coral-sea/03d_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/coral-sea/base_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/coral-sea/base_coral_sea_oilers.toml resolve same run same
+data/scenarios/five-days/01a_eastern_solomons.toml resolve same run same
+data/scenarios/five-days/01b_eastern_solomons.toml resolve same run same
+data/scenarios/five-days/01c_eastern_solomons.toml resolve same run same
+data/scenarios/five-days/01d_eastern_solomons.toml resolve same run same
+data/scenarios/five-days/02a_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/five-days/02b_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/five-days/02c_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/five-days/02d_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/five-days/base_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/midway/01a_midway.toml resolve same run same
+data/scenarios/midway/01b_midway.toml resolve same run same
+data/scenarios/midway/01c_midway.toml resolve same run same
+data/scenarios/midway/01d_midway.toml resolve same run same
+data/scenarios/table-boats/01a_midway_submarines.toml resolve same run same
+data/scenarios/table-boats/01b_midway_submarines.toml resolve same run same
+data/scenarios/table-boats/01c_midway_submarines.toml resolve same run same
+data/scenarios/table-boats/01d_midway_submarines.toml resolve same run same
+data/scenarios/table-boats/02a_eastern_solomons_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/02b_eastern_solomons_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/02c_eastern_solomons_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/02d_eastern_solomons_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/03a_coral_sea_both_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/03b_coral_sea_both_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/03c_coral_sea_both_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/03d_coral_sea_both_oilers_submarines.toml resolve same run same
+data/scenarios/table-boats/07_full_slice_submarines.toml resolve same run same
+data/scenarios/table-boats/07a_slice_submarines.toml resolve same run same
+data/scenarios/table-boats/07b_slice_submarines.toml resolve same run same
+data/scenarios/table-boats/07c_slice_submarines.toml resolve same run same
+data/scenarios/table-hunger/01b_midway.toml resolve same run same
+data/scenarios/table-hunger/01c_midway.toml resolve same run same
+data/scenarios/table-hunger/01d_midway.toml resolve same run same
+data/scenarios/table-hunger/02b_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/table-hunger/02c_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/table-hunger/02d_eastern_solomons_oilers.toml resolve same run same
+data/scenarios/table-hunger/03b_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/table-hunger/03c_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/table-hunger/03d_coral_sea_both_oilers.toml resolve same run same
+data/scenarios/table-hunger/07_full_slice.toml resolve same run same
+data/scenarios/table-hunger/07b_slice.toml resolve same run same
+data/scenarios/table-hunger/07c_slice.toml resolve same run same
+data/scenarios/table-rear-bases/07_full_slice_submarines.toml resolve same run same
+data/scenarios/table-rear-bases/07b_slice_submarines.toml resolve same run same
+data/scenarios/table-rear-bases/07c_slice_submarines.toml resolve same run same
+58 overlays, 0 differing
+```
+
+**Scripts deleted:** `scripts/table-boats/make_files.py`, `scripts/table-copies/make_copies.py`, `scripts/table-rear-bases/make_files.py`. `scripts/README.md` says so; `docs/commands.md`, `table/scenarios.json`'s note (its paths stand) and `table/README.md` say the files are built on their sources.
+
+**Tests changed, by reading** (no expected number or statement text touched; the step C section above has the readings):
+
+- (d), a script's check: withdrawn in the four `boats_in_the_..._games` tests (`the_script_says_each_copy_is_the_one_it_makes`, and the fields `script_files` and `kept_files` of `tests/common/boats_in_a_game.rs`), in scenarios 119 and 121 (the call of `make_copies.py --check`), and in `table_rear_bases_files.rs` (statement 1). The doc comments of the four tests say so.
+- (a), a key, row or table: statement 7 of the boats' tests reads the copy resolved, against its source resolved, as it did the source; it also counts the boats and the `[side]` tables and finds the three keys in the resolved copy. The order checks (the `[side]` tables open the section, no boat before it) stay on the file's own text. Scenario 119's copies property reads the copy resolved. `table_rear_bases_files.rs` statement 4 reads task force 30's `available_from` from the resolved scenario.
+- (c), the same but for X: statements 2 and 2a of `table_rear_bases_files.rs` are withdrawn as statements about lines and held by R3.
+- (e), alter the text: statement 8 of `table_rear_bases_files.rs` alters the overlay's own text, taking out its `trial` line and its `[[island]]` rows, and loads it with `from_text` at the file's path, as the file's doc comment says.
+- (a), `tests/scenario_130/part_f.rs`: the staffed files and the commands of a file are read from the resolved scenario; its pins are unmoved.
+- R3 gains the 31 rows (as data), checking the keys of each row of `table-rear-bases` as ruled; R4 and R5 are on.
+
+**Under `crates/`,** the only change is the ruled one: `Chain::read` in `scenario/built_on.rs` makes a file of the chain that cannot be read the error's file.
+
+**Checks.** See the pull request: `cargo fmt --all -- --check`; `cargo clippy --workspace --all-targets -- -D warnings`; `cargo test --workspace`; `bash scripts/decisions-index.sh --check`. No golden file, pin, baseline or recorded game remade.
+
+## Ruled on step D (the architect, Nov 28, 2026, before the pull request)
+
+**(f) A file of a chain that cannot be read is the error's file.** `crates/sim-cli/tests/pack_from_source.rs`, `a_load_from_a_pack_with_a_file_taken_out_names_that_file` (decision 0229, statement 2), failed once `table-boats/01b_midway_submarines.toml` became an overlay: taking out a file it is built on gave an error whose `path` was the file asked for. The test stands and its expected values do not change; the loader was wrong. Everywhere else in `sim-data` (`source::read_text`) a file that cannot be read is the `DataError`'s `path`, and step B's "small thing 2" departed from that without a ruling. Mended in `crates/sim-data/src/scenario/built_on.rs`, `Chain::read`: the error of `source.read_text(&next)` is `DataError::in_file(&next, ...)`, its words naming the file asked for as built on it. L9 still holds (the error names both files) and its test is unchanged. The `..` in the path is not a fault: a path is spelled as it was asked for, which is the pack's key and the disk's, as for every other data file (`ground` too); striking it would name a path the pack does not hold. A chain built on itself or longer than 8 files keeps the file asked for as its `path`: no file is missing. This is the one change under `crates/` in step D.
+
+**The departures.** 1 (the island and the trial) is the row as amended (0232, item 5a), not a departure. 2 (base 7's note in the headers) is accepted: no row of the overlay changes base 7. 3 (the count 58) is accepted: the script counts every overlay, and 58 is the record's whole programme; the proof is run again with COUNT 58 and its exit 0 written here. 4 (R5 on) is what the ruling on step C asked. `tests/scenario_130/part_f.rs` read by (a), its pins unmoved, is accepted and is listed under "Tests changed".
+
+**R3 for `table-rear-bases`** holds, as 0232's item 5a says, the keys of each row and not its id alone: base 3 `id`, `supply_t`; task forces 30 and 32 to 39 `id`, `at_base`, `home_port`, `available_from`; each island `number`, `name`, `places`. Statements 2 and 2a of `table_rear_bases_files.rs` are withdrawn on that.
+
+**`data/reference/ground_hunger.toml`.** Its header's sentence naming `make_copies.py` is rewritten to say the copies are built on the files they copy (decision 0234), and no other byte changes, as for the three bases at step C. No recorded game, fixture or pin holds its bytes.
+
 ## Built: step E
 
 `parse_via`, about 2,450 lines in `scenario/build.rs`, is cut into one function for each table, in the order it had; `build.rs` is now 175 lines (reading the file, calling each stage, making the world and the `Scenario`). The stages are in `scenario/build/`: `figures` (the map and the reference, trial and submarine files, and the list of data files), `bases`, `ships` (task forces, ships, the check of the file of sides, radio silence is in `commanders`), `land`, `air` (groups, replacements, arrivals), `supply` (lines, streams of men), `orders` (orders and commands), `islands`, `submarines`, `enters` (units that enter later), `commanders` (doctrine, command levels, commanders, radio silence) and `beliefs` (contacts, estimates, waters, what each side believed). Each body is the old text moved whole; what the move forced is the parameters (`file`, `path`, `truth`, `ref_data`, `map`, `world`) and a `fail` closure at the top of each. The order of the tables built and checked is unchanged, so a file with two faults reports the same one. No public name, error text, hash or baseline moved. The misplaced doc comment above `available_day` is not mended (the record does not ask, and `mod.rs` is outside this step's files).

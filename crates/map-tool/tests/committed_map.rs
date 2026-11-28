@@ -1,6 +1,7 @@
 //! Checks on the committed generated maps: every `.csv` file of `data/map`
 //! whose header gives a frame (decision 0199), the present map
-//! `south_pacific.csv` and the Midway map `midway.csv` among them. It needs
+//! `south_pacific.csv`, the Midway map `midway.csv` and the map from Papua to
+//! Midway `papua_to_midway.csv` (decision 0242) among them. It needs
 //! nothing from references/. Each map is loaded through `sim_data::load_map`,
 //! which checks the symmetry of the closed sides; the raw text is parsed here
 //! to check the rest, in the frame its own header gives.
@@ -54,7 +55,8 @@ fn generated_maps() -> Vec<(PathBuf, Frame)> {
         .collect();
     assert!(
         names.contains(&"south_pacific.csv".to_string())
-            && names.contains(&"midway.csv".to_string()),
+            && names.contains(&"midway.csv".to_string())
+            && names.contains(&"papua_to_midway.csv".to_string()),
         "{names:?}"
     );
     maps

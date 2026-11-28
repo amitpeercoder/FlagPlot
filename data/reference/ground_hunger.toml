@@ -3,8 +3,8 @@
 # and the two of men who are slow to mend (decision 0208, 2) added at the end,
 # and nothing else changed. The live ground.toml does not
 # gain them, since its bytes are in the saves of recorded games; the table's
-# copies of its scenarios (data/scenarios/table-hunger, made by
-# scripts/table-copies/make_copies.py) name this file instead. Keep every other
+# copies of its scenarios (data/scenarios/table-hunger, built on the files
+# they copy, decision 0234) name this file instead. Keep every other
 # figure the same as ground.toml's when that file is tuned.
 #
 # Ground figures for land units carried by sea and fed from a base. PLACEHOLDER

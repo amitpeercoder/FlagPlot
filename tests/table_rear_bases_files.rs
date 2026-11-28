@@ -87,7 +87,6 @@
 use crate::common;
 
 use std::path::PathBuf;
-use std::process::Command;
 
 use sim_core::ids::{BaseId, ShipId, TaskForceId};
 
@@ -108,132 +107,7 @@ fn read(path: PathBuf) -> String {
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
-fn data_lines(text: &str) -> Vec<String> {
-    text.lines()
-        .filter(|l| !l.trim().is_empty() && !l.trim_start().starts_with('#'))
-        .map(str::to_string)
-        .collect()
-}
-
-#[test]
-fn statement_1_the_scripts_check_passes() {
-    let out = Command::new("python3")
-        .arg(repo().join("scripts/table-rear-bases/make_files.py"))
-        .arg("--check")
-        .current_dir(repo())
-        .output()
-        .expect("python3 runs");
-    assert!(
-        out.status.success(),
-        "{}",
-        String::from_utf8_lossy(&out.stdout)
-    );
-}
-
 const TRIAL_LINE: &str = "trial = \"../../reference/trial.toml\"";
-const ISLAND_3: [&str; 4] = [
-    "[[island]]",
-    "number = 3",
-    "name = \"Guadalcanal and Tulagi\"",
-    "places = [{ base = 1 }, { base = 4 }]",
-];
-
-/// The data lines of a made file, and of its source, as statement 2a reads
-/// them: the made file's with the lines 2a adds taken out (checked to be
-/// there, where and as many as 2a says), the source's as they are.
-fn made_without_added(name: &str) -> (Vec<String>, Vec<String>) {
-    let from = data_lines(&read(repo().join("data/scenarios/table-boats").join(name)));
-    let mut made = data_lines(&read(
-        repo().join("data/scenarios/table-rear-bases").join(name),
-    ));
-    let is_full = name.starts_with("07_");
-    let added = if is_full { 13 } else { 5 };
-    assert_eq!(made.len(), from.len() + added, "{name}: the lines added");
-    // the trial's line, next after the class_sides line
-    let class_sides = made
-        .iter()
-        .position(|l| l == "class_sides = \"../../reference/class_sides_full_slice.csv\"")
-        .expect("the class_sides line");
-    assert_eq!(made[class_sides + 1], TRIAL_LINE, "{name}");
-    made.remove(class_sides + 1);
-    // island 3, after islands 1 and 2; in the full-slice copy the twelve
-    // lines of the three islands are the last lines of the file
-    if is_full {
-        assert_eq!(made.len(), from.len() + 12, "{name}");
-        let at = made.len() - 12;
-        let sister = data_lines(&read(
-            repo()
-                .join("data/scenarios/table-rear-bases")
-                .join("07b_slice_submarines.toml"),
-        ));
-        let first = sister
-            .iter()
-            .position(|l| l == "[[island]]")
-            .expect("07b's islands");
-        assert_eq!(
-            made[at..at + 8],
-            sister[first..first + 8],
-            "{name}: 1 and 2"
-        );
-        assert_eq!(made[at + 8..], ISLAND_3, "{name}: island 3");
-        made.truncate(at);
-    } else {
-        let at = made
-            .iter()
-            .position(|l| l == ISLAND_3[1])
-            .expect("island 3")
-            - 1;
-        assert_eq!(made[at..at + 4], ISLAND_3, "{name}");
-        // after island 2 (a name, then its places)
-        assert_eq!(made[at - 1], "places = [{ base = 4 }]", "{name}");
-        made.drain(at..at + 4);
-    }
-    (from, made)
-}
-
-#[test]
-fn statement_2_each_file_differs_in_what_the_rulings_say_and_nothing_else() {
-    // Statement 2a, which amends statement 2: the added lines are counted and
-    // taken out, then the lines differ as statement 2 says.
-    for name in FILES {
-        let (from, made) = made_without_added(name);
-        assert_eq!(from.len(), made.len(), "{name}: the same lines");
-        let differing: Vec<(&String, &String)> =
-            from.iter().zip(&made).filter(|(a, b)| a != b).collect();
-        let mut names = 0;
-        let mut supply = 0;
-        let mut at_base = 0;
-        let mut home_port = 0;
-        let mut available = 0;
-        for (a, b) in &differing {
-            if a.starts_with("name = ") {
-                assert!(b.starts_with(&a[..a.len() - 1]), "{a} / {b}");
-                names += 1;
-            } else if **a == "supply_t = 960" {
-                assert_eq!(**b, "supply_t = 2120");
-                supply += 1;
-            } else if **a == "at_base = 7" {
-                assert_eq!(**b, "at_base = 2");
-                at_base += 1;
-            } else if **a == "home_port = 7" {
-                assert_eq!(**b, "home_port = 2");
-                home_port += 1;
-            } else if let Some(old) = a.strip_prefix("available_from = ") {
-                let old: u32 = old.parse().expect("a day");
-                assert_eq!(**b, format!("available_from = {}", old - 1));
-                available += 1;
-            } else {
-                panic!("{name}: an unruled difference: {a} / {b}");
-            }
-        }
-        assert_eq!(
-            (names, supply, at_base, home_port, available),
-            (1, 1, 9, 9, 9),
-            "{name}"
-        );
-    }
-}
-
 fn first_morning(name: &str) -> sim_core::state::TruthState {
     let path = repo().join("data/scenarios/table-rear-bases").join(name);
     common::load_live(&path)
@@ -255,12 +129,17 @@ fn statement_3_shortland_has_no_supply_and_no_fuel() {
 #[test]
 fn statement_4_task_force_30_may_be_used_on_day_9_and_lies_at_rabaul_with_7_t() {
     for name in FILES {
-        let text = read(repo().join("data/scenarios/table-rear-bases").join(name));
-        let at = text
-            .find("[[task_force]]\nid = 30\n")
+        // Read from the resolved scenario (decision 0234, reading (a)).
+        let resolved: toml::Table =
+            common::resolved_text(&repo().join("data/scenarios/table-rear-bases").join(name))
+                .parse()
+                .expect("the resolved scenario is a table");
+        let forces = resolved["task_force"].as_array().expect("task forces");
+        let force = forces
+            .iter()
+            .find(|f| f["id"].as_integer() == Some(30))
             .expect("task force 30");
-        let block = &text[at..at + text[at..].find("\n[[ship]]").expect("its ship")];
-        assert!(block.contains("\navailable_from = 9\n"), "{name}");
+        assert_eq!(force["available_from"].as_integer(), Some(9), "{name}");
         let truth = first_morning(name);
         let rabaul = truth.bases[&BaseId::new(2)].hex;
         let force = &truth.task_forces[&TaskForceId::new(30)];
@@ -358,19 +237,11 @@ fn statement_8_no_game_moves_by_the_island() {
     for name in FILES {
         let path = repo().join("data/scenarios/table-rear-bases").join(name);
         let text = read(path.clone());
+        // The overlay's own text with its `trial` line and its `[[island]]`
+        // rows (the last rows of the file) taken out.
         let mut stripped = common::replace_once(&text, &format!("{TRIAL_LINE}\n"), "");
-        if name == FILES[0] {
-            let at = stripped.find("[[island]]").expect("its islands");
-            stripped.truncate(at);
-        } else {
-            let block = format!("{}\n\n", ISLAND_3.join("\n"));
-            let block = if stripped.contains(&block) {
-                block
-            } else {
-                format!("\n{}\n", ISLAND_3.join("\n"))
-            };
-            stripped = common::replace_once(&stripped, &block, "");
-        }
+        let at = stripped.find("[[island]]").expect("its islands");
+        stripped.truncate(at);
         let without = sim_data::Scenario::from_text(&stripped, &path).expect("the text loads");
         let kept = common::load_live(&path).expect("the file loads");
         assert_eq!(start_and_day_1(without), start_and_day_1(kept), "{name}");
