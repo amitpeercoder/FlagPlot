@@ -624,6 +624,39 @@ function main() {
           "B13: a limit refused is marked at its line on the face or in the fold, the fold opened only where the line is in it, and a risk refused at the fold's risk line")
 
 
+def the_readings_mends():
+    """Four mends to the order paper's reading, found when stages A and B of decision 0240 were tried by hand and asked for by the
+    designer on Nov 28, 2026 ("Fix the flaws then start stage C"). By the page's text and its own functions run in node. Written by
+    the architect before the build; the expected words here are his and are changed by nobody else.
+
+    A force the order itself would form is not said by its handle.
+    M1. `readingUnit(h)`, a new pure function, run in node with `M.names` standing in as {'base:1': 'Saltmere', 'task_force:17':
+        'Task Force 17', 'ship:1': 'Merrowdale'}: readingUnit('base:1') is 'base:1' and readingUnit('task_force:17') is
+        'task_force:17' (each is left for the page's links to name, as now); readingUnit('task_force:1'), a force the side does not
+        have, is 'The new force'; readingUnit('ship:9') is 'ship:9' and readingUnit('air_group:4') is 'air_group:4' (only a force
+        can be new). `unitsView` builds each line from `readingUnit(u) + ' \u00b7 ' + ph`.
+    M2. `planOrderLine({kind: 'form_task_force', ships: [1]})` is "Form a force of 1 ship"; with ships [1, 2, 3] it is "Form a force
+        of 3 ships".
+
+    The note under a reading speaks of limits only where a limit of the fold is set.
+    M3. `limitsNote(kind, sent)`, a new pure function inside the limits model, where `sent` is what `sentLimits` gives (a list of
+        {body, key}): ('keep_supplied', [{key: 'ships'}]) is ""; ('keep_supplied', [{key: 'source'}]) is ""; ('keep_supplied',
+        [{key: 'ships'}, {key: 'risk'}]) is "This reading is worked with the limits you set."; ('hold', [{key: 'ships'}]) is that
+        sentence; ('patrol', [{key: 'submarines'}]) is ""; ('hold', []) is "". `askPreview` says the note from `limitsNote(kind,
+        sent)`, and the sentence is in the page's text once.
+
+    A change of limits that brings no new order is not said as an order nothing can serve.
+    M4. `readingTop(root, kind, own)`, run in node: with root {kids: [], units: []} and `own` false or left out it is {text:
+        "Nothing can serve this order yet.", bad: true}, as now; with `own` true it is {text: "The staff would give no new order
+        under it now."} and `bad` is not set. With one unit in `root.units` it is "The staff would give these orders:" whatever
+        `own` is. `readingView` passes `!!own`.
+
+    The look.
+    M5. The style sheet has a rule `#paper select` with `background: transparent`, `border: 0` and a `border-bottom`: a list in the
+        paper is drawn as a blank, as a number is (stage A, A16)."""
+    raise NotImplementedError("the developer writes this check to the statements above")
+
+
 def the_fold_and_the_keys():
     """What stops the clock and the keys (decision 0221, stage 4), by the page's text: the fold in the foot with the
     table's ticks and the staff's standing interrupts; the ticks kept in the browser for the game, keyed as the directives
