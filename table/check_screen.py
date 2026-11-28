@@ -3286,7 +3286,7 @@ def the_draft_is_read_and_signed_as_one(bridge):
     command = {"command": "set_intent", "intent_kind": "control_island", "island": 3}
     n = person.call("preview", command)["ok"]["intent"]
     # The page's own function for SIGNED, and THE ORDERS' list, in node
-    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nm", "unitNo", "nameText", "sayIntent", "signedWith", "signedOwnLimits",
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nm", "unitNo", "nameText", "queuedKind", "sayIntent", "signedWith", "signedOwnLimits",
                                                                                 "signedPlanWords", "signedLine", "signedOrders"))
     word = re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0)
     model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the written plan model ----")]
@@ -3622,7 +3622,7 @@ def the_plan_paper_marks_whose_line(bridge):
     check("WRITE IT" not in nodes and "LEAVE IT TO THE STAFF" not in nodes and "LEAVE IT TO THE STAFF" not in cut_function(text, "  function paperNode("),
           "W9: a line of his on the plan's paper holds no WRITE IT, and no line of it LEAVE IT TO THE STAFF, which is the order paper's")
     # The page's own functions in node
-    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nameText", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine",
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nameText", "queuedKind", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine",
                                                                               "whoseLine", "marksOf", "giveBackQueued", "hisLineRows", "hisLine", "giveBackWords", "hisLanding", "landingTried", "twoPlans",
                                                                               "commas", "lowerFirst", "spreadOf", "runsIn"))
     word = re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0)
@@ -4086,7 +4086,7 @@ def a_landing_written_under_an_order_in_force(bridge):
     own = "".join(cut_function(text, f"  function {h}(") for h in ("writeBlock", "openLanding", "landingHead", "drawLandingPaper", "landingFocus", "knownLandings", "askLanding", "landingDry", "signLanding"))
     check(not re.search(tool_calls, own), "U2: the functions of this paper call the tools set_intent, set_limit, form_intent and withdraw_intent nowhere")
     # The page's own functions, in node
-    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nm", "unitNo", "nameText", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine",
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "hexWords", "nm", "unitNo", "nameText", "queuedKind", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine",
                                                                               "signedOrders", "whoseLine", "marksOf", "landingTried", "twoPlans", "commas", "lowerFirst", "spreadOf", "runsIn", "orderWordsOf", "orderFound",
                                                                               "intentWords", "knownLandings", "hisLineRows", "hisLine", "giveBackQueued"))
     word = re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0)
@@ -4607,6 +4607,38 @@ def the_supply_orders_two_numbers(bridge):
     check(person.call("queued")["ok"]["entries"] == [] and post(bridge.table + "/new") == {"ok": True}, "nothing was signed, and the game is put away")
 
 
+def the_supply_order_signed(bridge):
+    """The supply order of rung 1 under SIGNED, as `queued` lists it once it is signed. `queued` writes a keep_supplied, the default,
+    with no `intent_kind` (crates/sim-cli/src/save.rs), and the page once read the kind from that key alone, so SIGNED threw and said
+    "Could not read what is signed" until the day began.
+
+    Through the bridge, in a game of rung 1: `rung_one_order(2, 5)` is previewed and approved; `queued` then lists one entry whose
+    command is a set_intent with no `intent_kind`. The page's own `signedIntentWords` (with `queuedKind`, `sayIntent` and the few
+    names they read stood in: base 2 named as `list_bases` names it) says it "Keep <that name> supplied" (rung 1 names it Thornwick). `sayIntent` given a
+    kind of null says something and does not throw. Nothing else is signed, and the game is put away."""
+    print("-- the supply order of rung 1 under SIGNED", flush=True)
+    text = page_text()
+    check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "begun: rung 1")
+    person = Person(bridge.table)
+    shown = person.call("preview", rung_one_order(2, 5))["ok"]
+    check(shown["valid"] is True and person.call("approve", {"preview": shown["preview"]})["ok"]["status"] == "queued", "the supply order at 2 and 5 is previewed and approved")
+    entries = person.call("queued")["ok"]["entries"]
+    intents = [e["command"] for e in entries if e.get("command", {}).get("kind") == "set_intent"]
+    check(len(intents) == 1 and "intent_kind" not in intents[0] and intents[0]["base"] == 2,
+          f"queued lists the order as a set_intent of base 2 with no intent_kind, the default ({intents})")
+    bases = person.call("list_bases")["ok"]
+    code = ("".join(cut_function(text, h) + "\n" for h in ("  function queuedKind(c)", "  function signedIntentWords(c)", "  function sayIntent(i, said)"))
+            + text[text.index("  var WORD = {"):text.index("\n", text.index("  var WORD = {"))] + "\n"
+            + "var config = { islands: [] }, BASES = []; function num(h) { return parseInt(String(h).split(':')[1], 10); }\n"
+              "function baseByNumber(n) { return BASES.filter(function (b) { return num(b.base.handle) === n; })[0] || null; }\n"
+              "function main(x) { BASES = x.bases; M.forces = []; return { signed: signedIntentWords(x.command), bare: sayIntent({ kind: null, base: { name: 'X' } }, {}) }; }")
+    said = run_in_node(code, {"command": intents[0], "bases": bases["bases"]})
+    name = [b["base"]["name"] for b in bases["bases"] if b["base"]["handle"] == "base:2"][0]
+    check(said["signed"] == f"Keep {name} supplied", f"SIGNED says the order \"Keep {name} supplied\" ({said['signed']!r})")
+    check(isinstance(said["bare"], str) and said["bare"], f"an order of no kind is still said, not thrown on ({said['bare']!r})")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
 def the_verdict_in_words():
     """The verdict's words: the page's own `missionLines(mission, days)`, cut from its text with `commas` and run in node. It draws
     nothing and asks nothing. `days` is a list, day 1 first, each the list of that day's events as the tool `events` gives them, or
@@ -4995,7 +5027,7 @@ function main(x) {
     check(refused["status"] == "refused" and refused["reason"] == "base:2 is not one of the side's bases" and refused["of_batch"]["position"] == 1,
           "P4: the supply order is refused while the place is the enemy's, as the first of its batch")
     check(person.call("queued")["ok"]["entries"] == [] and post(bridge.table + "/new") == {"ok": True}, "P5: nothing was signed, and the game is put away")
-    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "nm", "unitNo", "nameText", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine")) + re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0) + "\n" + model + r"""
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "nm", "unitNo", "nameText", "queuedKind", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine")) + re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0) + "\n" + model + r"""
 const config = { islands: [] }; let hexRaw = false;
 function baseByNumber(n) { return M.bases.filter(b => num(b.base.handle) === n)[0] || null; }
 function rich(tag, cls, w) { return el(tag, cls, w); } function placeLink() { return el('span', '', '?'); } function refTo() { return el('span', '', '?'); } function plainWords(t) { return t; }
@@ -5430,6 +5462,7 @@ def main():
             a_landing_written_under_an_order_in_force(bridge)
             rung_one_on_the_list(bridge)
             the_supply_orders_two_numbers(bridge)
+            the_supply_order_signed(bridge)
             rung_one_played_three_ways(bridge)
             rung_three_on_the_list(bridge)
             the_orders_of_rung_three(bridge)

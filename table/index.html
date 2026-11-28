@@ -1618,11 +1618,11 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
           if (own.length) { var told = limitsLine('written_landing', limFromBodies(own)); if (told !== STAFF_ALL) text(' · ' + told); }
           break;
         }
-        text('Order: ' + sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind || 'keep_supplied', contact: c.contact, distance: c.distance, search_only: c.search_only, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {}).replace(/^./, function (x) { return x; }));
+        text('Order: ' + sayIntent({ number: 'signed ' + c.intent, kind: queuedKind(c), contact: c.contact, distance: c.distance, search_only: c.search_only, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {}).replace(/^./, function (x) { return x; }));
         // The limits signed with it (the engine's `goes_with`) are said in the same line, the order's own and no landing's, and then the
         // landings he wrote under it.
         var lims = signedOwnLimits(e, (M.queue && M.queue.entries) || []);
-        if (lims.length) { var said = limitsLine(c.intent_kind || 'keep_supplied', limFromBodies(lims)); if (said !== STAFF_ALL) text(' · ' + said); }
+        if (lims.length) { var said = limitsLine(queuedKind(c), limFromBodies(lims)); if (said !== STAFF_ALL) text(' · ' + said); }
         var yours = signedPlanWords(e, (M.queue && M.queue.entries) || []); if (yours) text(' · ' + yours);
         break;
       }
@@ -1753,9 +1753,12 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (plans.some(function (p) { return p.state === 'preparing' || p.state === 'draft'; })) return 'Preparing';
     return 'In force';
   }
+  // The kind of a set_intent as `queued` lists it: a keep_supplied, the default, is written with no
+  // intent_kind (crates/sim-cli/src/save.rs), so a command with none is a keep_supplied.
+  function queuedKind(c) { return c.intent_kind || 'keep_supplied'; }
   function signedIntentWords(c) {
     var at = function (n) { var b = baseByNumber(n); return b ? { name: b.base.name } : null; };
-    return sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind, contact: c.contact, distance: c.distance, search_only: c.search_only, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {});
+    return sayIntent({ number: 'signed ' + c.intent, kind: queuedKind(c), contact: c.contact, distance: c.distance, search_only: c.search_only, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {});
   }
   function drawOrders(focus) {
     var doc = $('sheet-doc'), st = M.state, can = canSign(), pend = signedRanks(), by = {}, mine = ordersOfCommander(), sign = signedOrders();
@@ -1806,7 +1809,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
         var link = el('button', 'ref', words); link.type = 'button'; link.title = 'Show it under SIGNED'; link.addEventListener('click', function () { openOrder(c.intent); }); row.appendChild(link);
         row.appendChild(el('span', 'state', 'Signed · ' + actsWords(e)));
         var lims = signedOwnLimits(e, (M.queue && M.queue.entries) || []);
-        if (lims.length) { var said = limitsLine(c.intent_kind, limFromBodies(lims)); if (said !== STAFF_ALL) row.appendChild(el('div', 'work', said)); }
+        if (lims.length) { var said = limitsLine(queuedKind(c), limFromBodies(lims)); if (said !== STAFF_ALL) row.appendChild(el('div', 'work', said)); }
         if (can) { var tb = el('button', 'quiet', 'TAKE BACK'); tb.type = 'button'; tb.setAttribute('aria-label', 'Take back: ' + lowerFirst(words)); tb.addEventListener('click', function () { tb.disabled = true; takeBackEntries([e]).then(function () { ro.lines = []; return signedRefresh(); }, function (err) { ro.lines = [{ ok: false, label: words, why: refusalWords(err.message) }]; return signedRefresh(); }).then(function () { drawOrders(); var f = doc.querySelector('button'); if (f) f.focus(); }); }); row.appendChild(tb); }
         doc.appendChild(row);
       });
@@ -3563,7 +3566,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (where && i.kind === 'bombard') return 'Bombard ' + where;
     if (where && i.kind === 'search_waters') return 'Search the waters from ' + where;
     if (where && i.kind === 'stand_at') return 'Station ' + (tfn || 'the force') + ' at ' + where;
-    var w = (WORD[i.kind] || i.kind.replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
+    var w = (WORD[i.kind] || String(i.kind || 'order').replace(/_/g, ' ')).toLowerCase(); return (w.charAt(0).toUpperCase() + w.slice(1) + ' ' + where).trim();
   }
   // What a plan that waits would order, a line to an order, in the words the table already uses
   // for an order of that kind (the force's order form, the plot); each line opens its reason.
