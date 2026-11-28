@@ -131,7 +131,7 @@ Data: no figure of its own. It reads `aircraft_types*.csv: search_range_nm` and 
 
 ### The order of the limits
 
-Search, strike launch and the split of fighters into patrol and escorts all use one number, the aircraft the group is able to fly. It is worked out, for a group, in this order. [0026, 0036, 0038, 0039, 0091]
+Search, strike launch and the split of fighters into patrol and escorts all use one number, the aircraft the group is able to fly. It is worked out, for a group, in this order. [0026, 0036, 0038, 0039, 0091, 0236]
 
 1. A group at a base that is out of supply at the start of the pulse flies none. A group aboard a ship is never limited this way.
 2. A group that moved to another base by order that day flies none (see "Rebasing an air group").
