@@ -1,0 +1,67 @@
+{
+  "note": "The directives for the Allied seat of rung 3 of the ladder (decision 0237). A placeholder: the command, the places, the ships and the men are invented, and every name in it is invented (decision 0241). Written for the game in its own words. The mission is the record's with the day the designer gave it on Nov 28, 2026. The second is received when Emberholt is the seat's.",
+  "directives": [
+    {
+      "number": 1,
+      "when": "start",
+      "from": "Area Commander",
+      "to": "Commander, Saltmere",
+      "subject": "Emberholt",
+      "parts": [
+        {
+          "heading": "1. Situation",
+          "text": [
+            "You command at Saltmere. Emberholt, about 200 miles away, is the enemy's on our chart and is reported empty. You have the Saltmere battalion, 600 men, who eat 3 t a day; the Landing force, three fast transports that carry the battalion between them and no cargo; and the supply ship Merrowdale, which carries 30 t, ten days of the battalion's food. Saltmere has stock to spare, and every ship has the fuel she needs. There is no enemy within reach."
+          ]
+        },
+        {
+          "heading": "2. Mission",
+          "text": [
+            "Seize Emberholt, reported empty, by the end of day 14, and hold it with its men fed: it is to be ours by then, and no man ashore there is to go a night unfed, to the end of day 21. Men land with three nights of rations."
+          ]
+        },
+        {
+          "heading": "3. Guidance",
+          "text": [
+            "Two things are yours to decide: the risk of the landing, and the food that follows it.",
+            "Order your staff to capture Emberholt. Under LIMITS name the Landing force, the Saltmere battalion, and Saltmere as its source, and set the risk. At a balanced risk the staff rehearses the landing for longer, and wants a count of the enemy before it goes; pressed, it goes sooner and on what it knows. Once a day has been fought the order's plan, under YOUR ORDERS, says when it expects the men ashore, and you may change the risk there.",
+            "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it sails nothing without that leave, neither the men nor the food.",
+            "The staff lands the men with their rations and sends no food after them unless you order it, and it takes no order to supply a place that is still the enemy's. You will have word from me when Emberholt is ours.",
+            "When day 21 is fought you are told whether the mission was met and, if it was not, why. If it goes badly, begin again. Good luck."
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "when": {
+        "base_is_yours": 2
+      },
+      "from": "Area Commander",
+      "to": "Commander, Saltmere",
+      "subject": "Emberholt is ours",
+      "parts": [
+        {
+          "heading": "1. Situation",
+          "text": [
+            "Emberholt is ours. The battalion is ashore with its three nights of rations, which lie at its landing place: the chart shows that as a base of its own beside Emberholt. No food follows the men unless you order it."
+          ]
+        },
+        {
+          "heading": "2. Mission",
+          "text": [
+            "As before: no man ashore at Emberholt is to go a night unfed, to the end of day 21."
+          ]
+        },
+        {
+          "heading": "3. Guidance",
+          "text": [
+            "Order Emberholt kept supplied: name Merrowdale, and Saltmere as her source, and set the two numbers, the days of food it is never to fall below and the days more that each run brings. The card of Emberholt and the card of the landing place both take the order, and it feeds the same men.",
+            "A run ordered this evening is loaded tomorrow and lands the morning after, when that night's meal is already eaten. Count the rations, and do not leave it late.",
+            "An order only to hold Emberholt sends no food, unless its limits name a ship and a source."
+          ]
+        }
+      ]
+    }
+  ]
+}
