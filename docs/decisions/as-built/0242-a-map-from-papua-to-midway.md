@@ -344,3 +344,16 @@ None. The check gave the two hexes and 1,005 miles the doc comment of `passages_
 - `python3.12 table/check_screen.py`, with `sim-cli` built in release: "all held (1468 checks)".
 - `sh scripts/regenerate.sh --check`: "every generated file is what the engine gives".
 - Not run: the web build (`wasm-bindgen-cli` is not installed here), and CI itself, so the new step of the workflow has not run as a step.
+
+## The architect's reading of step 4
+
+Made on Nov 28, 2026 on reading the build.
+
+1. **The hand calculation holds as written.** Midway to Wake is read as (31,-41) to (2,-26) and charged 1,005 miles. The architect ran the tests of the check again and exported the wide sea himself: its frame is the kind, the scale 0.964, the centre 4 and 174.5, west 142 and east 207, with no factor, and the viewer's check passes on it and on a game of the south-west Pacific, the 222 points of the shared file among its checks.
+2. **The reader of the located file is in `sim-cli`.** Confirmed, and `docs/engineering/layout.md` says so: the check of passages is the umpire's tool and reads the place positions the same way; the file is a tool's record under `data/map` and no game reads it.
+3. **Labels on the present maps are where they were;** a label exactly midway between two hexes may now fall to the other. The developer's proof compares the real labels of both present maps and some twenty thousand made positions, and they are the same. A point exactly midway between two hex centres was decided by the last bits of the old arithmetic and is decided by the last bits of the new. No label on file is such a point, and a label is drawn, never counted, so nothing a rule or a pinned file reads can turn on it. Accepted.
+4. **The script of the plan's rule 16 that laid placeholder starts off flat no longer exists.** Decision 0234 removed it before this was built. That row of rule 16 asks nothing.
+5. **The clipping script has no formula,** only the extent's box. So of the "three outside Rust" of the plan's rule 18 there are two, the table's page and the viewer, and both are held to the shared file.
+6. **CI now exports one game on the map about a centre** and the viewer's check reads it. That step of the workflow has not run until this pull request's own CI runs it.
+7. **The rulebook's chapter 2** says how the check of passages finds a hex on such a map, by the architect, in the same pull request.
+
