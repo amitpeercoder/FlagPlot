@@ -663,7 +663,7 @@ Built as planned, read at commit cc43426a: `shipsNamed` and `learnNamed` beside 
 
 ### The designer's account of rung 1
 
-The record's step 4 reads "The designer plays rung 1. His account decides whether 5 and 6 go on as planned", and rung 2's figures waited for it ("Rung 3 before rung 2", above). On Nov 28, 2026 the manager asked him "Did playing rung 1 show anything that should change rung 2?" and his words in reply were "No, go on". That is his account, and the gate is open for rung 2. What is the architect's own is written here: the figures, the scenario file and the hand calculation. Three things found in settling them are his to answer ("Three questions for the designer", below), and the first is in the mission's words; until he answers, the 8 days are at risk. The section was amended on an independent review the same day ("Amended on review", below). No developer is briefed, nothing is merged and nothing goes on the table's list by this section: the manager does those after reading it.
+The record's step 4 reads "The designer plays rung 1. His account decides whether 5 and 6 go on as planned", and rung 2's figures waited for it ("Rung 3 before rung 2", above). On Nov 28, 2026 the manager asked him "Did playing rung 1 show anything that should change rung 2?" and his words in reply were "No, go on". That is his account, and the gate is open for rung 2. What is the architect's own is written here: the figures, the scenario file and the hand calculation. Three things found in settling them are his to answer ("Three questions for the designer", below), and the first is in the mission's words. The section was amended on an independent review the same day ("Amended on review", below), and he answered all three that day, each as recommended ("Answered", under the questions): the figures are settled and no longer at risk, and the game may be briefed to a developer. Nothing is merged and nothing goes on the table's list by this section: the manager briefs the developer and opens the pull request.
 
 ### The problem, and the choice
 
@@ -772,9 +772,17 @@ They are the record's with the day, the names and the two loads in days. For the
 
 **The architect recommends (a),** and asks that the path through the stop be tried through the seat's tools before the table is built (finding 4): if approving at the stop loses the game, (b) is the mend.
 
+**Answered on Nov 28, 2026, each as the architect recommended.** The manager put the three to the designer with the recommended course first, and he chose it each time.
+
+1. **The length:** "8 days (Recommended)". Course (a): the game is 8 days and the mission reads "to the end of day 8".
+2. **Naming ships:** "Directive says it (Recommended)". Course (a): the directive tells him to name one ship to each order and not the same ship to both, and nothing is built.
+3. **No day to spare:** "Directive says it (Recommended)". Course (a): the directive says plainly that both orders and the leave are given this evening, and nothing else changes. If the trial through the seat's tools shows that approving at the stop loses the game, the scenario giving leave to launch itself, course (b), is the mend.
+
+So the figures, the file and the hand calculation stand as written, and rung 2's game goes to a developer on the brief below. The trial through the seat's tools stays a condition of the table's pull request (finding 4).
+
 ### The brief for rung 2's game (class 3)
 
-For one developer, briefed by the manager once he has read this section. Work in a worktree on a branch from `main` with the architect's commit merged; one pull request.
+For one developer, briefed by the manager. The designer's answers are in: the file, the thirteen statements and the ten pins are final. Work in a worktree on a branch from `main` with the architect's commit merged; one pull request.
 
 - **Read first:** `docs/engineering/roles-and-tests.md`; `tests/scenario_139_two_mouths.rs`, whole; `tests/scenario_138_one_ship.rs`, which is the model for every helper, and `tests/scenario_140_men_then_food.rs` for a test with more than two bases; `data/scenarios/ladder/139_two_mouths.toml`; this section.
 - **Fill the thirteen tests** of `tests/scenario_139_two_mouths.rs`, each asserting its statement exactly, and remove each `#[ignore]` as it is filled. Load as scenario 138's test does: the file's text with the case's commands added at the mark `# orders`, through `common::from_text_with` and `LoadOptions::default()`, played by `common::played::play`. Read runs, their days, their plans and the ships committed from what the staff handed in (`AddRun`, `CommitShips`), stocks and fuel from the truth after each day, the men fed from `MenFed` by hex, intents formed from `FormIntent`, notices from the hand-ins. The two hexes whose nights are read are T's, (5,0), and U's, (0,14): scenario 138's helper `fed` reads S and T and is not to be copied as it stands.
@@ -785,11 +793,11 @@ For one developer, briefed by the manager once he has read this section. Work in
 - **Not to be changed:** any expected number, statement or case; the scenario file; the map; any crate's `src`; any figure; any other test; `docs/rules/` and the glossary (no rule changes). Nothing under `table/` or `web/`, and no entry on the list: that is the table's pull request.
 - **If a number does not come out,** stop and send the architect the case, the day, what the engine gave and the events of that day. Do not change the number, the file or the commands to pass.
 - **Before the commit:** `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`.
-- **The architect is shown:** the diff; the output of `cargo test --test all scenario_139`; the ten pins; and `git diff --stat` against `main`, which names the test file and the pins file and nothing else.
+- **The architect is shown:** the diff; the output of `cargo test -p scenario-tests -- scenario_139`; the ten pins; and `git diff --stat` against `main`, which names the test file and the pins file and nothing else.
 
 ### Not written
 
-Rung 2 on the table (class 2): the entry, the directive, the screen check, the pin of offered files, the browser's check and the pack. It is planned in a section of its own once the designer has answered the three questions.
+Rung 2 on the table (class 2): the entry, the directive, the screen check, the pin of offered files, the browser's check and the pack. It is planned in a section of its own, to the designer's three answers and to the list of what the directive must carry under "The mission's words"; its first step is the trial of the stop through the seat's tools.
 
 ### Amended on review (Nov 28, 2026)
 
