@@ -32,3 +32,10 @@ What the pull request "order paper, stage B" makes. It changes what the table gi
 - **Checks restated.** `the_paper_reads_as_the_order`'s A1 (the order of the reading and the folds is B1's) and `the_supply_orders_two_numbers`'s O1 (its row is cut at `p-face`, not at the risk's fieldset). Nothing was loosened or removed.
 
 Not tried by hand in a browser; the check reads the page's text and runs its functions in node.
+
+### Stage B, tried by hand
+
+On a local table, on rung 1, by the architect: the supply order at Thornwick opens with "Ships" and "From" on its face, each with its sentence beside it, the reading's place empty and SIGN AND SEND disabled; with Merrowdale ticked and Saltmere chosen the reading comes directly under them; the fold reads "LIMITS · Risk: balanced · the rest the staff's choice" and opens with the risk first; the foot stays in view while the paper scrolls. Not tried by hand: a patrol, a station order, the change-of-limits paper and the 39 days.
+
+Seen and not mended in this stage: the reading names a force by its handle ("Task_force:1 · load 30 t of supply"), which is older than this work; "This reading is worked with the limits you set." still follows the reading of a supply order whose only limits are its ships and its source; and the list for "From" is still drawn as a dark box.
+
