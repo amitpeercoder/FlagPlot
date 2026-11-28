@@ -1016,8 +1016,10 @@ mod tests {
             "command_levels = true\nreports = \"{}/data/reference/reports.toml\"\n{text}",
             root.display()
         );
+        static COUNT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+        let n = COUNT.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let file = std::env::temp_dir().join(format!(
-            "flag_plot_events_levels_{}_{}",
+            "flag_plot_events_levels_{}_{n}_{}",
             std::process::id(),
             name
         ));
