@@ -780,6 +780,7 @@ fn supply_ordered_on_day_fourteen() {
     assert_eq!(g.stock_of(14, S), n(149));
     assert_eq!(g.stock_of(19, S), n(134));
     assert!(g.unfed_days(e_hex()).is_empty());
+    assert!(g.unfed_days(s_hex()).is_empty());
     assert_eq!(g.fed(e_hex()), all_fed(13..=21));
     assert_eq!(g.stock_of(21, 2), n(15));
     assert_eq!(g.stock_of(21, E), n(0));
@@ -867,6 +868,7 @@ fn a_hold_given_with_the_landing() {
     assert_eq!(g.stock_of(14, S), n(137));
     assert_eq!(g.stock_of(20, S), n(107));
     assert!(g.unfed_days(e_hex()).is_empty());
+    assert!(g.unfed_days(s_hex()).is_empty());
     assert_eq!(g.fed(e_hex()), all_fed(13..=21));
     assert_eq!(g.stock_of(21, S), n(107));
 }
