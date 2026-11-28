@@ -301,8 +301,9 @@ def the_paper_reads_as_the_order():
     The parts.
     A1. Inside `<form class="order gives" id="paper"`, in this order: `id="p-back"`, `id="p-head"`, `id="p-title"`, `id="p-the"`,
         `id="p-hands"`, `id="p-limits"`, `id="p-plan"`, `id="o-pv"`, `id="o-dry-says"`, `id="p-says"`, `id="p-foot"`. Inside
-        `p-foot`, in this order: `id="p-acts-t"`, `id="p-sign"`, `id="p-dry"`, `id="p-cancel"`. (The reading moves above LIMITS in
-        stage B, not here.)
+        `p-foot`, in this order: `id="p-acts-t"`, `id="p-sign"`, `id="p-dry"`, `id="p-cancel"`. (Stage B moves the reading above
+        LIMITS: from then the order of `o-pv`, `o-dry-says`, `p-limits` and `p-plan` is B1's, in `the_face_and_the_fold`, and this
+        check holds the rest.)
     A2. Gone from the page's text: `id="p-to"`, `id="p-to-name"`, `id="o-ends"`, `id="o-place"`, `name = 'end'`, `chosen('end')`,
         "you are to:", `<legend>END</legend>`, the labels `<span class="pl">TO</span>`, `<span class="pl">THE ORDER</span>` and
         `<span class="pl">ACTS</span>`, and the heading `<h2>ORDER &middot;`. `id="p-acts"` is gone; `id="p-acts-t"` stays, in the foot.
@@ -365,9 +366,9 @@ def the_paper_reads_as_the_order():
     start = text.index('<form class="order gives" id="paper"')
     form = text[start:text.index("</form>", start)]
     # A1
-    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="p-limits"', 'id="p-plan"', 'id="o-pv"', 'id="o-dry-says"', 'id="p-says"', 'id="p-foot"']
+    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="p-says"', 'id="p-foot"']
     at = [form.find(p) for p in parts]
-    check(all(a >= 0 for a in at) and at == sorted(at), "A1: the paper's parts are in order: the way back, the head line, the heading, the order, in whose hands, LIMITS, YOUR PLAN, the reading, the dry run's line, what was sent, the foot")
+    check(all(a >= 0 for a in at) and at == sorted(at), "A1: the paper's parts are in order: the way back, the head line, the heading, the order, in whose hands, what was sent, the foot (the reading and the folds between are B1's)")
     foot = form[form.index('id="p-foot"'):]
     fat = [foot.find(p) for p in ('id="p-acts-t"', 'id="p-sign"', 'id="p-dry"', 'id="p-cancel"')]
     check(all(a >= 0 for a in fat) and fat == sorted(fat), "A1: the foot holds, in order, when the order acts, SIGN AND SEND, DRY RUN and TEAR UP")
@@ -450,6 +451,357 @@ def the_paper_reads_as_the_order():
     for i in ("o-floor", "o-interval", "o-dist"):
         tag = re.search(r'<input type="number" id="%s"[^>]*>' % i, form).group(0)
         check(f'<label class="fl" for="{i}">' in form and "aria-label=" in tag, f"A17: {i} has a label tied to it and keeps its aria-label")
+
+
+def the_face_and_the_fold():
+    """Decision 0240, stage B: what an order needs stands on its face, the staff's reading stands under the order, and the rest is in
+    the fold with the risk first. By the page's text and by the page's own functions run in node. Written by the architect before the
+    build; the expected words here are his and are changed by nobody else. (The page as drawn is tried in a browser, not here.)
+
+    The parts.
+    B1. Inside `<form class="order gives" id="paper"`, in this order: `id="p-back"`, `id="p-head"`, `id="p-title"`, `id="p-the"`,
+        `id="p-hands"`, `id="o-pv"`, `id="o-dry-says"`, `id="p-limits"`, `id="p-plan"`, `id="p-says"`, `id="p-foot"`. (This takes the
+        place of stage A's A1 for the order of the reading and the folds; A1's foot stands.) Inside `p-the`, `id="p-face"` comes
+        after `id="o-supply"` and before `id="p-summary"`.
+    B2. Gone from the page's text: `id="o-risk"`, `name="risk"`, `chosen('risk')`, `<legend>RISK</legend>`. The risk of a draft is
+        `lim.risk`, and `sentLimits` reads it there.
+
+    The model: five new pure functions inside the limits model (between `var LIMITS_OFFERED` and its end marker), run in node as
+    `the_limits_on_the_paper` runs the model, with the names it stands in ("Task Force 17" for task_force:17, "Merrowdale" for ship:1,
+    "Saltmere" for base:1, "Thornwick" for base:2, "Lunga" for base:3).
+    B3. `faceKeys(kind)`: for 'keep_supplied' it is ['ships', 'source']; for 'patrol' ['submarines']; for 'stand_at' ['risk']; for
+        'hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island' and 'destroy_force' it is [].
+    B4. `hasFold(kind)`: false for 'patrol' and 'stand_at'; true for each of the other nine kinds of B3.
+    B5. `missing(kind, lim, 30)` (stage C's floor, given as 30 here), what the order still needs, in the order of the face: for 'keep_supplied' with a new model (`newLim()`)
+        it is ['ships', 'source']; with ship 1 named (ships.mode 'only', ships [1]) and no source, ['source']; with source 1 and no
+        ship, ['ships']; with a task force named and source 1, []; with ship 1 and source 1, []. With ships.mode 'only' and nothing
+        named it still holds 'ships'. For every other kind of B3 with a new model it is [].
+    B6. `sourceChoices(kind, bases, place)`, the bases a source may be chosen from, as [number as a string, name]: with bases 1
+        "Saltmere", 2 "Thornwick" and 3 "Lunga", for 'keep_supplied' at place 2 it is [['1', 'Saltmere'], ['3', 'Lunga']] (the place
+        itself is not offered); for 'hold' at place 2 it is all three, in that order.
+    B7. `foldLine(kind, lim)`, the fold's closed line without its label:
+        - 'keep_supplied', a new model: "Risk: balanced \u00b7 the rest the staff\u2019s choice".
+        - the same with lim.risk 'press': "Risk: press \u00b7 the rest the staff\u2019s choice".
+        - 'keep_supplied' with ship 1 and source 1 named and nothing else: "Risk: balanced \u00b7 the rest the staff\u2019s choice"
+          (what is on the face is not said in the fold's line).
+        - 'hold' with task force 17 named (ships.mode 'only', task_forces [17]) and risk 'press': "Risk: press \u00b7 Ships and
+          forces: Task Force 17".
+        - 'hold', a new model: "Risk: balanced \u00b7 the rest the staff\u2019s choice".
+        `limitsLine` itself answers as it did (the plan's paper and the change-of-limits paper use it).
+
+    The page.
+    B8. `endChanged` sets `lim.ships.mode = 'only'` where the kind is 'keep_supplied', hides the fold where the kind has none
+        (`$('p-limits').hidden = !hasFold(kind)`), and `limSummary` says `'LIMITS \u00b7 ' + foldLine(kind, lim)` for a draft.
+    B9. `drawLimits` draws each key of `faceKeys(kind)` into `p-face` and every other line into `p-limits-body`, the risk first there
+        where the kind offers it and it is not on the face. A line is drawn once.
+    B10. On a supply order's face the ships line is headed "Ships" and the source "From"; neither offers "The staff\u2019s choice",
+        "None" or BACK TO THE STAFF\u2019S CHOICE. Beside an empty one the paper says "No ship named yet." or "No source named yet."
+        (`id="need-ships"`, `id="need-source"`), in the paper's plain ink (not the class `bad` or `notsent`). The page's text holds
+        both sentences once.
+    B11. `askPreview` asks nothing while the order needs something: before `api('preview'` it tests `missing(kind, lim, 30).length` (stage C: `supplyFloor()` for the 30), and
+        then the reading's place is empty (`$('o-preview').textContent = ''`), `p-sign` and `p-dry` are disabled, and no call is
+        made. `signStaff` is not reached with a need unmet.
+    B12. The change-of-limits paper draws its lines open in `p-face` and shows no fold (`$('p-limits').hidden = true` in
+        `openLimitPaper`); what it sends is as it was.
+    B13. A limit refused is still marked at its line, on the face or in the fold, and the fold opened where the line is in it;
+        a risk refused is marked at the fold's risk line (`[data-key="risk"]`).
+
+    What does not change: what any order sends, key for key (the forces limit of a supply order is the body it was: `limit:
+    "forces"`, `ships`, `task_forces`, `source`); the words of every limit line but the two headings of B10; `LIMITS_OFFERED`; the
+    reading's own words; YOUR PLAN. The floor still starts at 30: stage C empties it."""
+    import re
+    print("-- the face and the fold: what an order needs on its face, the reading under the order, the risk first in the fold", flush=True)
+    text = page_text()
+    start = text.index('<form class="order gives" id="paper"')
+    form = text[start:text.index("</form>", start)]
+    # B1
+    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="o-pv"', 'id="o-dry-says"', 'id="p-limits"', 'id="p-plan"', 'id="p-says"', 'id="p-foot"']
+    at = [form.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at), "B1: the paper's parts are in order: the order, in whose hands, the staff's reading, the dry run's line, LIMITS, YOUR PLAN, what was sent, the foot")
+    the = form[form.index('id="p-the"'):form.index('id="p-hands"')]
+    check(the.index('id="o-supply"') < the.index('id="p-face"') < the.index('id="p-summary"'), "B1: the face of the order, p-face, is in the order's part after the supply order's blanks and before its summary")
+    # B2
+    gone = ['id="o-risk"', 'name="risk"', "chosen('risk')", "<legend>RISK</legend>"]
+    check(not [g for g in gone if g in text] and "risk = lim.risk" in cut_function(text, "  function sentLimits(kind) {"),
+          "B2: the risk's fieldset and the radios that read it are gone; the risk of a draft is lim.risk and sentLimits reads it there")
+    # B3 to B7, and what is sent
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    for f in ("faceKeys", "hasFold", "missing", "sourceChoices", "foldLine"):
+        check(f"  function {f}(" in model and f"\n  }}\n" in cut_function(model, f"  function {f}(") + "\n",
+              f"B3 to B7: {f} is inside the limits model and closes with its lone brace")
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function main() {
+  M.names['task_force:17'] = 'Task Force 17'; M.names['ship:1'] = 'Merrowdale'; M.names['base:1'] = 'Saltmere'; M.names['base:2'] = 'Thornwick'; M.names['base:3'] = 'Lunga';
+  const out = {}, kinds = ['hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island', 'destroy_force'];
+  out.face = {}; ['keep_supplied', 'patrol', 'stand_at'].concat(kinds).forEach(k => out.face[k] = faceKeys(k));
+  out.fold = {}; ['patrol', 'stand_at', 'keep_supplied'].concat(kinds).forEach(k => out.fold[k] = hasFold(k));
+  const mk = (ships, tfs, src, mode) => { const l = newLim(); l.ships = { mode: mode || 'only', task_forces: tfs || [], ships: ships || [] }; l.source = src == null ? null : src; return l; };
+  out.missing = [missing('keep_supplied', newLim(), 30), missing('keep_supplied', mk([1], [], null), 30), missing('keep_supplied', mk([], [], 1), 30), missing('keep_supplied', mk([], [17], 1), 30),
+                 missing('keep_supplied', mk([1], [], 1), 30), missing('keep_supplied', mk([], [], 1, 'only'), 30)];
+  out.others = {}; ['patrol', 'stand_at'].concat(kinds).forEach(k => out.others[k] = missing(k, newLim(), 30));
+  const bases = [1, 2, 3].map(n => ({ base: { handle: 'base:' + n } }));
+  out.sources = [sourceChoices('keep_supplied', bases, 2), sourceChoices('hold', bases, 2)];
+  const press = newLim(); press.risk = 'press'; const fixed = newLim(); fixed.ships = { mode: 'only', task_forces: [], ships: [1] }; fixed.source = 1;
+  const hp = newLim(); hp.ships = { mode: 'only', task_forces: [17], ships: [] }; hp.risk = 'press';
+  out.lines = [foldLine('keep_supplied', newLim()), foldLine('keep_supplied', press), foldLine('keep_supplied', fixed), foldLine('hold', hp), foldLine('hold', newLim())];
+  out.limitsLine = limitsLine('hold', newLim());
+  out.bodies = [limitBodies('keep_supplied', mk([1], [], 1)), limitBodies('keep_supplied', mk([], [17], 1))];
+  return out;
+}
+"""
+    said = run_in_node(code, None)
+    check(said["face"]["keep_supplied"] == ["ships", "source"] and said["face"]["patrol"] == ["submarines"] and said["face"]["stand_at"] == ["risk"]
+          and all(v == [] for k, v in said["face"].items() if k not in ("keep_supplied", "patrol", "stand_at")), f"B3: faceKeys of each kind ({said['face']})")
+    check(said["fold"]["patrol"] is False and said["fold"]["stand_at"] is False and all(v is True for k, v in said["fold"].items() if k not in ("patrol", "stand_at")), f"B4: hasFold is false for a patrol and a stand_at and true for the other nine kinds ({said['fold']})")
+    check(said["missing"] == [["ships", "source"], ["source"], ["ships"], [], [], ["ships"]] and all(v == [] for v in said["others"].values()),
+          f"B5: what a supply order still needs, in the order of its face, and nothing for any other kind ({said['missing']})")
+    check(said["sources"] == [[["1", "Saltmere"], ["3", "Lunga"]], [["1", "Saltmere"], ["2", "Thornwick"], ["3", "Lunga"]]], f"B6: a supply order's source is not offered its own place ({said['sources']})")
+    rest = "the rest the staff’s choice"
+    check(said["lines"] == ["Risk: balanced · " + rest, "Risk: press · " + rest, "Risk: balanced · " + rest, "Risk: press · Ships and forces: Task Force 17", "Risk: balanced · " + rest],
+          f"B7: the fold's closed line says the risk first and what is set in the fold, and not what is on the face ({said['lines']})")
+    check(said["limitsLine"] == "The staff’s choice in all.", "B7: limitsLine answers as it did")
+    check(said["bodies"] == [[{"limit": "forces", "task_forces": [], "ships": [1], "source": 1}], [{"limit": "forces", "task_forces": [17], "ships": [], "source": 1}]],
+          f"what a supply order sends is the forces limit it was: ships, task forces and source ({said['bodies']})")
+    # B8
+    end = cut_function(text, "  function endChanged() {")
+    summary = cut_function(text, "  function limSummary() {")
+    check("if (kind === 'keep_supplied') lim.ships.mode = 'only';" in end and "$('p-limits').hidden = !hasFold(kind)" in end and "'LIMITS · ' + foldLine(kind, lim)" in summary,
+          "B8: a supply order's ships are 'use only these' from the start, the fold is hidden where the kind has none, and the fold's closed line is LIMITS and foldLine")
+    # B9
+    draw = cut_function(text, "  function drawLimits(focusId) {")
+    check("faceKeys(kind)" in draw and "$('p-face')" in draw and "$('p-limits-body')" in draw and "(offers(kind, 'risk') ? ['risk'] : []).concat(LINES)" in draw and draw.count("appendChild(row)") == 1
+          and "'risk'" not in re.search(r"var LINES = \[[^\]]*\]", text).group(0),
+          "B9: drawLimits draws the kind's face keys into p-face and every other line into the fold, the risk first, each line once")
+    # B10, by rendering the two lines with the page's own functions
+    need = cut_function(text, "  function needLine(key, name, kind) {")
+    check("The staff’s choice" not in need and "STAFFS" not in need and "'None'" not in need and "limBack" not in need and "BACK TO" not in need and "'bad'" not in need and "notsent" not in need
+          and "!limCtx && kind === 'keep_supplied' && (key === 'ships' || key === 'source')) return needLine(key, key === 'ships' ? 'Ships' : 'From', kind)" in text,
+          "B10: a supply order's ships line is headed Ships and its source From, with no choice of the staff's, no None and no way back to it")
+    check(text.count("No ship named yet.") == 1 and text.count("No source named yet.") == 1 and "'need-ships'" in need and "'need-source'" in need, "B10: the page holds each sentence once, with the ids need-ships and need-source")
+    render = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "limRow", "limHead", "limSelect", "limCheck", "toggled", "needLine"]) + model + r"""
+Object.defineProperty(Node.prototype, 'dataset', { get() { return this._ds || (this._ds = {}); } }); Node.prototype.addEventListener = function () {};
+function limShips() { return [{ h: 'task_force:17', label: 'Task Force 17' }, { h: 'ship:1', label: 'Merrowdale, at Saltmere' }]; }
+function limSet() {} function supplyFloor() { return 30; } const limCtx = null; const draft = { base: { base: { handle: 'base:2' } } };
+let lim;
+function walk(n, f) { f(n); n.kids.forEach(k => walk(k, f)); }
+function main() {
+  M.names['ship:1'] = 'Merrowdale'; M.names['base:1'] = 'Saltmere'; M.names['base:2'] = 'Thornwick'; M.names['base:3'] = 'Lunga';
+  M.bases = [1, 2, 3].map(n => ({ base: { handle: 'base:' + n } }));
+  const out = {}, draw = (key, name) => { const row = needLine(key, name, 'keep_supplied'); const ids = []; let sel = null, cls = []; walk(row, n => { if (n.id) ids.push(n.id); if (n.tag === 'select') sel = n.kids.map(o => o.own); cls.push(n.className); }); return { text: row.textContent, ids, sel, cls }; };
+  lim = newLim(); lim.ships.mode = 'only';
+  out.shipsEmpty = draw('ships', 'Ships'); out.sourceEmpty = draw('source', 'From');
+  lim.ships.ships = [1]; lim.source = 1;
+  out.shipsGiven = draw('ships', 'Ships'); out.sourceGiven = draw('source', 'From');
+  return out;
+}
+"""
+    r = run_in_node(render, None)
+    se, so = r["shipsEmpty"], r["sourceEmpty"]
+    check("Ships" in se["text"] and "No ship named yet." in se["text"] and "need-ships" in se["ids"] and "Task Force 17" in se["text"] and "Merrowdale, at Saltmere" in se["text"]
+          and not any(w in se["text"] for w in ("The staff’s choice", "None", "BACK TO")) and not any("bad" in c.split() or "notsent" in c.split() for c in se["cls"]),
+          f"B10: an empty ships line says Ships, ticks for each ship and force, and \"No ship named yet.\" in plain ink ({se['text']})")
+    check("From" in so["text"] and "No source named yet." in so["text"] and "need-source" in so["ids"] and so["sel"] == ["", "Saltmere", "Lunga"]
+          and not any(w in so["text"] for w in ("The staff’s choice", "None", "BACK TO", "Thornwick")),
+          f"B10: an empty source line says From, an empty first choice and the other bases, and \"No source named yet.\" ({so['sel']})")
+    check("No ship named yet." not in r["shipsGiven"]["text"] and "need-ships" not in r["shipsGiven"]["ids"] and "No source named yet." not in r["sourceGiven"]["text"] and "need-source" not in r["sourceGiven"]["ids"],
+          "B10: once a ship and a source are given, the sentences beside them are gone")
+    # B11
+    ask = cut_function(text, "  function askPreview() {")
+    pre = ask[:ask.index("api('preview'")]
+    check("missing(kind, lim, supplyFloor()).length" in pre and "$('o-preview').textContent = ''" in pre and "$('p-sign').disabled = true" in pre and "$('p-dry').disabled = true" in pre and "return;" in pre[pre.index("missing(kind, lim, supplyFloor()).length"):],
+          "B11: the staff is not asked while the order needs something: the reading's place is empty, SIGN AND SEND and DRY RUN wait, and no call is made")
+    check("missing(limKind(), lim, supplyFloor()).length" in cut_function(text, "  function limAsk() {") and "if (previewNo == null) return;" in cut_function(text, "  function signStaff() {"),
+          "B11: a change does not show the staff being asked while a need is unmet, and signing is not reached without a reading")
+    # B12
+    lp = cut_function(text, "  function openLimitPaper(root, key, back) {")
+    check("$('p-limits').hidden = true" in lp and "$('p-limits').open" not in lp and "$('p-face')" in lp and "limitPlan(" not in lp and "limCtx = { root: root, top: top, kind: top.kind, key: key, group: group, keys: keys }" in lp,
+          "B12: the change-of-limits paper draws its lines in p-face and shows no fold; what it sends is as it was")
+    # B13
+    refused = cut_function(text, "  function limitRefused(key) {")
+    check("faceKeys(limKind()).indexOf(key) >= 0" in refused and "if (!face) part.open = true" in refused and "(face ? $('p-face') : $('p-limits-body'))" in refused and "limMarked === key" in draw
+          and "limRow('risk', name)" in cut_function(text, "  function riskLine() {"),
+          "B13: a limit refused is marked at its line on the face or in the fold, the fold opened only where the line is in it, and a risk refused at the fold's risk line")
+
+
+def the_readings_mends():
+    """Four mends to the order paper's reading, found when stages A and B of decision 0240 were tried by hand and asked for by the
+    designer on Nov 28, 2026 ("Fix the flaws then start stage C"). By the page's text and its own functions run in node. Written by
+    the architect before the build; the expected words here are his and are changed by nobody else.
+
+    A force the order itself would form is not said by its handle.
+    M1. `readingUnit(h)`, a new pure function, run in node with `M.names` standing in as {'base:1': 'Saltmere', 'task_force:17':
+        'Task Force 17', 'ship:1': 'Merrowdale'}: readingUnit('base:1') is 'base:1' and readingUnit('task_force:17') is
+        'task_force:17' (each is left for the page's links to name, as now); readingUnit('task_force:1'), a force the side does not
+        have, is 'The new force'; readingUnit('ship:9') is 'ship:9' and readingUnit('air_group:4') is 'air_group:4' (only a force
+        can be new). `unitsView` builds each line from `readingUnit(u) + ' \u00b7 ' + ph`.
+    M2. `planOrderLine({kind: 'form_task_force', ships: [1]})` is "Form a force of 1 ship"; with ships [1, 2, 3] it is "Form a force
+        of 3 ships".
+
+    The note under a reading speaks of limits only where a limit of the fold is set.
+    M3. `limitsNote(kind, sent)`, a new pure function inside the limits model, where `sent` is what `sentLimits` gives (a list of
+        {body, key}): ('keep_supplied', [{key: 'ships'}]) is ""; ('keep_supplied', [{key: 'source'}]) is ""; ('keep_supplied',
+        [{key: 'ships'}, {key: 'risk'}]) is "This reading is worked with the limits you set."; ('hold', [{key: 'ships'}]) is that
+        sentence; ('patrol', [{key: 'submarines'}]) is ""; ('hold', []) is "". `askPreview` says the note from `limitsNote(kind,
+        sent)`, and the sentence is in the page's text once.
+
+    A change of limits that brings no new order is not said as an order nothing can serve.
+    M4. `readingTop(root, kind, own)`, run in node: with root {kids: [], units: []} and `own` false or left out it is {text:
+        "Nothing can serve this order yet.", bad: true}, as now; with `own` true it is {text: "The staff would give no new order
+        under it now."} and `bad` is not set. With one unit in `root.units` it is "The staff would give these orders:" whatever
+        `own` is. `readingView` passes `!!own`.
+
+    A supply order that needs no run yet is not said as an order nothing can serve.
+    M6. `runsLine(w, dayWords)`, a new pure function, where `w` is the reading's `with_change` and `dayWords(n)` says a day of the
+        game: with w.next_run = {days: {load: 3, sail: 4, arrive: 4, free: 7}, load_t: '25', ships: [1]} and dayWords giving "day
+        3" and "day 4" it is "No run is needed yet. The first, of 25 t, would load on day 3 and be due on day 4."; with load_t
+        '1250' the weight is said "1,250 t"; with no `next_run` it is "". Found on Nov 28, 2026, when stage C was tried by hand:
+        rung 1's right answer (2 and 5, Merrowdale, Saltmere) read "Nothing can serve this order yet." in the warning ink, since
+        the staff gives no order on day 1 for a place that holds five days against a floor of two.
+    M7. `readingView`, for a draft (not a change of limits): where the tree has no task and no unit and `runsLine` of the reading is
+        not empty, the head line is that sentence, in the paper's plain ink and not bold-red (`bad` not set); "Nothing can serve
+        this order yet." is kept for a reading with no task, no unit and no next run. The page passes as `dayWords` the words it
+        uses for a day elsewhere on the paper (a date where the game has dates, else "day N").
+
+    The look.
+    M5. The style sheet has a rule `#paper select` with `background: transparent`, `border: 0` and a `border-bottom`: a list in the
+        paper is drawn as a blank, as a number is (stage A, A16)."""
+    import re
+    print("-- the reading's mends: a new force, a force formed, the note under a reading, a change that brings no order, the select", flush=True)
+    text = page_text()
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords", "readingUnit", "planOrderLine", "readingTop", "runsLine"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function main() {
+  M.names['base:1'] = 'Saltmere'; M.names['task_force:17'] = 'Task Force 17'; M.names['ship:1'] = 'Merrowdale';
+  const out = {};
+  out.unit = ['base:1', 'task_force:17', 'task_force:1', 'ship:9', 'air_group:4'].map(readingUnit);
+  out.form = [planOrderLine({ kind: 'form_task_force', ships: [1] }), planOrderLine({ kind: 'form_task_force', ships: [1, 2, 3] })];
+  out.note = [limitsNote('keep_supplied', [{ key: 'ships' }]), limitsNote('keep_supplied', [{ key: 'source' }]), limitsNote('keep_supplied', [{ key: 'ships' }, { key: 'risk' }]),
+              limitsNote('hold', [{ key: 'ships' }]), limitsNote('patrol', [{ key: 'submarines' }]), limitsNote('hold', [])];
+  const bare = () => ({ kids: [], units: [] }), one = { kids: [], units: [{}] };
+  out.top = [readingTop(bare(), 'hold', false), readingTop(bare(), 'hold'), readingTop(bare(), 'hold', true), readingTop(one, 'hold', true), readingTop(one, 'hold', false), readingTop(one, 'hold')];
+  const dw = n => 'day ' + n, nr = load_t => ({ next_run: { days: { load: 3, sail: 4, arrive: 4, free: 7 }, load_t: load_t, ships: [1] } });
+  out.runs = [runsLine(nr('25'), dw), runsLine(nr('1250'), dw), runsLine({}, dw), runsLine(null, dw)];
+  return out;
+}
+"""
+    r = run_in_node(code, None)
+    check(r["unit"] == ["base:1", "task_force:17", "The new force", "ship:9", "air_group:4"], f"M1: a force the side does not have is \"The new force\"; every other handle is left for the links ({r['unit']})")
+    units = cut_function(text, "  function unitsView(items) {")
+    check("paperLine('punit', readingUnit(u) + ' \u00b7 ' + ph)" in units.replace("' · '", "' \u00b7 '"), "M1: unitsView builds each line from readingUnit(u) and the phrase")
+    check(r["form"] == ["Form a force of 1 ship", "Form a force of 3 ships"], f"M2: a force the order forms is said as \"Form a force of N ships\" ({r['form']})")
+    sentence = "This reading is worked with the limits you set."
+    check(r["note"] == ["", "", sentence, sentence, "", ""], f"M3: the note under a reading speaks only where a limit outside the face is set ({r['note']})")
+    ask = cut_function(text, "  function askPreview() {")
+    check(text.count(sentence) == 1 and "limitsNote(kind, sent)" in ask and "function limitsNote(" in model, "M3: askPreview says the note from limitsNote(kind, sent) and the sentence is in the page's text once")
+    nothing = "Nothing can serve this order yet."
+    check(r["top"][0] == {"text": nothing, "bad": True} and r["top"][1] == {"text": nothing, "bad": True} and r["top"][2] == {"text": "The staff would give no new order under it now."}
+          and all(t == {"text": "The staff would give these orders:"} for t in r["top"][3:]), f"M4: a bare reading of a change brings no new order, a bare reading of an order serves nothing yet ({r['top']})")
+    check("readingTop(root, top.kind, !!own)" in cut_function(text, "  function readingView(out, p, e, own) {"), "M4: readingView passes !!own")
+    check(r["runs"] == ["No run is needed yet. The first, of 25 t, would load on day 3 and be due on day 4.", "No run is needed yet. The first, of 1,250 t, would load on day 3 and be due on day 4.", "", ""],
+          f"M6: runsLine says the first run's weight, load day and due day, and nothing where there is no next run ({r['runs']})")
+    view = cut_function(text, "  function readingView(out, p, e, own) {")
+    check("runsLine(w, " in view and "if (runs) lead = { text: runs }" in view and "lead.bad" in view and "dateOf(n - 1)" in view and "'day ' + n" in view and "bad" not in view[view.index("if (runs) lead"):view.index("if (runs) lead") + 30],
+          "M7: a draft whose tree has no task and no unit but a next run is headed by runsLine in plain ink, with the date where the game has dates, else day N; otherwise \"Nothing can serve\" stays")
+    css = re.search(r"#paper select \{([^}]*)\}", text)
+    check(css is not None and "background: transparent" in css.group(1) and "border: 0" in css.group(1) and "border-bottom:" in css.group(1), "M5: a list in the paper is drawn as a blank: transparent, no border but one beneath")
+
+
+def the_empty_floor():
+    """Decision 0240, stage C: a supply order's days of supply start empty, and the paper says how many days the place holds. By the
+    page's text and its own functions run in node. Written by the architect before the build; the expected words here are his and
+    are changed by nobody else. NOT TO BE BUILT WITH THE MENDS: it is built after them, on its own branch.
+
+    The blank.
+    C1. `<input type="number" id="o-floor"` has `min="1"`, `max="99"` and no `value`. `openDraft` sets `$('o-floor').value = ''`. The
+        end in `ends()` is `['Keep it supplied', { intent_kind: 'keep_supplied', base: n }` with no `floor_days`, and the page's text
+        holds no `floor_days: 30`.
+    C2. `supplyFloor()`, cut and run in node with the box standing in, as `the_supply_orders_two_numbers` runs it: an empty box
+        gives null; "x" gives null; "0" gives 1; "2" gives 2; "150" gives 99.
+    C3. `addSupplyNumbers(args)` for `intent_kind` 'keep_supplied': with the floor empty the answer has no key `floor_days`; with
+        the floor 2 and the interval empty it has `floor_days` 2 and no `interval_days`; with 2 and 5 it has both. For any other
+        kind it adds nothing.
+
+    The need.
+    C4. `missing(kind, lim, floor)` takes the floor as its third argument (the answer of `supplyFloor()`). For 'keep_supplied' with
+        a new model: floor null gives ['floor', 'ships', 'source']; floor 2 gives ['ships', 'source']. With ship 1 and source 1
+        named: floor null gives ['floor']; floor 2 gives []. For every other kind it is [] whatever the floor. (Stage B's B5 is
+        restated to pass a floor of 30, and holds as it was.)
+    C5. Beside the empty blank the paper says "No days of supply given yet." (`id="need-floor"`), in the paper's plain ink; the
+        page's text holds the sentence once. While the floor is missing the staff is not asked and SIGN AND SEND and DRY RUN are
+        disabled, by the same test as stage B's B11: `askPreview` passes `supplyFloor()` to `missing`.
+    C6. On opening, the focus goes to `o-floor` where the order is a supply order (the first blank it needs).
+
+    The fact of the place.
+    C7. `holdsLine(name, dos)`, a new pure function, run in node with the page's own `dayCount` beside it; `dos` is the base's
+        days of supply as the place's card reads it (the object whose `days` the card's "Days of supply" row says):
+        holdsLine('Thornwick', {days: '5'}) is "Thornwick holds 5 days of supply."; with {days: '1'} it is "Thornwick holds 1 day of
+        supply."; with {days: null} and with no `dos` it is "".
+    C8. The line is the first thing in `o-supply` (`id="o-holds"`, before the row of `o-floor`), filled when a supply order's paper
+        opens and hidden while it is empty.
+
+    What it sends: a supply order signed with 2 and 5, Merrowdale and Saltmere sends what it sent before this stage, key for key.
+    The one change is that a paper left untouched can no longer be signed, where it sent `floor_days` 30. The interval's row still
+    says "left to the staff: 15 days" while it is empty.
+
+    Restated with it: `the_supply_orders_two_numbers`, O1 to O6, wherever they hold the 30 (the box's `value`, `supplyFloor`'s
+    answer for an empty box, the untouched paper's `floor_days`, the reset in `openDraft`, the end's own `floor_days: 30`): each
+    to what C1 to C3 say, and nothing else."""
+    import re
+    print("-- the empty floor: days of supply start empty, the paper says what the place holds", flush=True)
+    text = page_text()
+    # C1
+    tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
+    check('min="1"' in tag and 'max="99"' in tag and "value=" not in tag and "$('o-floor').value = ''" in cut_function(text, "  function openDraft(best, first) {")
+          and "['Keep it supplied', { intent_kind: 'keep_supplied', base: n }" in cut_function(text, "  function ends(target) {") and "floor_days: 30" not in text,
+          "C1: the floor's blank is 1 to 99 with no value, openDraft empties it, the end carries no floor_days, and the page holds no floor_days: 30")
+    # C2, C3
+    code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers("))
+            + "function main(x) { made['o-floor'] = { value: x.floor }; made['o-interval'] = { value: x.interval };"
+              " return x.floorOnly ? supplyFloor() : addSupplyNumbers(Object.assign({ command: 'set_intent' }, x.end)); }")
+    keep = {"intent_kind": "keep_supplied", "base": 2}
+    floors = [run_in_node(code, {"floor": v, "interval": "", "floorOnly": True}) for v in ("", "x", "0", "2", "150")]
+    check(floors == [None, None, 1, 2, 99], f"C2: supplyFloor gives null for an empty box and for \"x\", 1 for 0, 2 for 2 and 99 for 150 ({floors})")
+    adds = [run_in_node(code, {"floor": f, "interval": i, "end": e}) for f, i, e in (("", "", keep), ("2", "", keep), ("2", "5", keep), ("2", "5", {"intent_kind": "hold", "base": 2}))]
+    base = {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2}
+    check(adds[0] == base and adds[1] == dict(base, floor_days=2) and adds[2] == dict(base, floor_days=2, interval_days=5) and adds[3] == {"command": "set_intent", "intent_kind": "hold", "base": 2},
+          f"C3: an empty floor adds no floor_days, 2 adds floor_days 2, 2 and 5 add both, and another kind adds nothing ({adds})")
+    # C4
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function main() {
+  const named = newLim(); named.ships = { mode: 'only', task_forces: [], ships: [1] }; named.source = 1;
+  const others = {}; ['patrol', 'stand_at', 'hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island', 'destroy_force'].forEach(k => others[k] = [missing(k, newLim(), null), missing(k, newLim(), 2)]);
+  return { new: [missing('keep_supplied', newLim(), null), missing('keep_supplied', newLim(), 2)], named: [missing('keep_supplied', named, null), missing('keep_supplied', named, 2)], others };
+}
+"""
+    r = run_in_node(code, None)
+    check(r["new"] == [["floor", "ships", "source"], ["ships", "source"]] and r["named"] == [["floor"], []] and all(v == [[], []] for v in r["others"].values()),
+          f"C4: a supply order needs its floor, then its ships and source; no other kind needs anything ({r['new']}, {r['named']})")
+    # C5
+    ask = cut_function(text, "  function askPreview() {")
+    need = re.search(r'<[^>]*id="need-floor"[^>]*>', text).group(0)
+    check(text.count("No days of supply given yet.") == 1 and not re.search(r'class="[^"]*\b(bad|notsent)\b', need) and "missing(kind, lim, supplyFloor()).length" in ask[:ask.index("api('preview'")]
+          and "$('p-sign').disabled = true" in ask[:ask.index("api('preview'")] and "$('p-dry').disabled = true" in ask[:ask.index("api('preview'")]
+          and "missing(limKind(), lim, supplyFloor()).length" in cut_function(text, "  function limAsk() {") and "$('need-floor').hidden = supplyFloor() != null" in cut_function(text, "  function showSupply() {"),
+          "C5: beside the empty blank the paper says \"No days of supply given yet.\" in plain ink, once; while the floor is missing the staff is not asked and signing waits")
+    # C6
+    check("$('o-floor')" in cut_function(text, "  function openPaper(kind, o) {") and "f.focus" in cut_function(text, "  function openPaper(kind, o) {"),
+          "C6: opening a supply order's paper puts the focus on the days-of-supply blank")
+    # C7
+    code = "".join(cut_function(text, h) + "\n" for h in ("  function commas(n)", "  function dayCount(", "  function holdsLine(")) + "function main() { return [holdsLine('Thornwick', { days: '5' }), holdsLine('Thornwick', { days: '1' }), holdsLine('Thornwick', { days: null }), holdsLine('Thornwick')]; }"
+    said = run_in_node(code, None)
+    check(said == ["Thornwick holds 5 days of supply.", "Thornwick holds 1 day of supply.", "", ""], f"C7: the line says what the place holds, and nothing where there is no figure ({said})")
+    check("holdsLine(best.name, best.base && best.base.days_of_supply)" in cut_function(text, "  function openDraft(best, first) {") and "dos = b.days_of_supply || {}" in text and "dos.days != null ? dayCount(dos.days)" in text,
+          "C7: the paper reads the same days_of_supply of the place that the card's \"Days of supply\" row reads")
+    # C8
+    supply = text[text.index('<div id="o-supply"'):text.index('<div id="p-face"')]
+    check(re.search(r'<div id="o-supply" hidden>\s*<div id="o-holds" hidden></div>\s*<div class="frow">', supply) is not None and supply.index('id="o-holds"') < supply.index('id="o-floor"')
+          and "hl.hidden = !hl.textContent" in cut_function(text, "  function openDraft(best, first) {"),
+          "C8: the line of what the place holds is the first thing in o-supply, before the floor's row, and hidden while empty")
 
 
 def the_fold_and_the_keys():
@@ -1837,7 +2189,7 @@ def the_staffs_reading(bridge):
           "the page no longer words the engine's paragraph: no \"It cannot yet\", no count of orders and commands of its own")
     check("readingView(out, p, e);" in ask and "proposedTree(top, {}, pr)" in text and "paperNode(root, true)" in text,
           "the reading is drawn by readingView from proposedTree and paperNode, the plan paper's own functions")
-    check("This reading is worked with the limits you set." in ask and "args.limits" in ask and "limit: 'risk', risk: risk" in text and "Played at balanced risk" not in text and "worked at balanced risk" not in text,
+    check("This reading is worked with the limits you set." in text and "limitsNote(kind, sent)" in ask and "args.limits" in ask and "limit: 'risk', risk: risk" in text and "Played at balanced risk" not in text and "worked at balanced risk" not in text,
           "the reading is worked with the limits and the risk chosen, and says so where any is sent; nothing says it is worked at balanced risk")
     check("'THE STAFF\\'S WORKING IN FULL'" in text[text.index("  function readingView"):text.index("  function askPreview() {")], "the staff's working in full is the reading's last fold")
     heads = ["commas", "cleanName", "orderWords", "plainCounts", "plainWords", "nameText", "intentWords", "reasonWords", "tidyWorked", "paperPre", "shareWords", "tiredBit",
@@ -2225,10 +2577,12 @@ def reason_limits_as_links(bridge):
     text = page_text()
     words = text[text.index("  var LIMIT_LINK ="):text.index("  function limitLinkWords(")] + cut_function(text, "  function limitLinkWords(") + "\n" + cut_function(text, "  function limitInState(")
     blocks = [cut_function(text, h) for h in ("  function limitLinks(", "  function openLimit(", "  function limitSetOn(")]
-    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT))" in cut_function(text, "  function whyView("),
-          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY")
-    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null)" in cut_function(text, "  function reasonView("),
-          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block")
+    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT, t.n))" in cut_function(text, "  function whyView("),
+          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY, which gives limitLinks the task's own number")
+    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null, null)" in cut_function(text, "  function reasonView("),
+          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block, under no task's line")
+    check("  function limitLinks(reasons, intoRoot, own) {" in text and "WHY_OWN" not in text,
+          "limitLinks is given the number of the line it is drawn under as its third argument: the page keeps no variable for it")
     check(not any(re.search(r"\.exec\(|\.test\(|\.match\(|\.replace\(", b) for b in blocks) and all("worked" not in b and "binding" not in b and "would_change" not in b for b in blocks),
           "the code that makes the links reads the engine's `limits` list: no pattern is run on a reason's words")
     check("readPlan(found.root, found.task !== found.root ? found.task : null, { kind: l.kind })" in blocks[1] and "readOrders({ n: l.intent" in blocks[1] and "see(" in blocks[1]
@@ -4189,16 +4543,16 @@ def the_supply_orders_two_numbers(bridge):
     """The floor and the interval on the order paper, for the end "keep it supplied".
 
     In the page's text:
-    O1. The paper has a row with the id `o-supply` holding two inputs of type number, `o-floor` (min 1, max 99, value 30) and
+    O1. The paper has a row with the id `o-supply` holding two inputs of type number, `o-floor` (min 1, max 99, no value: stage C) and
         `o-interval` (min 1, max 99, no value), and the words "Never below", "days of supply", "Each run brings", "days more" and "left
         to the staff: 15 days". The page does not hold "Keep it supplied, 30 days"; the end reads "Keep it supplied".
     O2. The row is shown where the end chosen is `keep_supplied` and hidden for every other, by the same path that shows `o-patrol`
         for a patrol; a change of either input asks the reading again, as a change of `o-dist` does.
 
     The page's own functions, cut from its text and run in node, with a stand-in for the two inputs:
-    O3. Nothing touched (30, empty): what the paper adds to the order is `floor_days` 30 and no key `interval_days`, so the arguments of
-        the reading are exactly {command "set_intent", intent_kind "keep_supplied", base n, floor_days 30}: what the page sent before.
-    O4. (2, 5) gives `floor_days` 2 and `interval_days` 5. An empty floor, or one that is no number, gives 30; 0 gives 1; 150 gives 99.
+    O3. Nothing touched (empty, empty): what the paper adds to the order is no key `floor_days` and no key `interval_days` (stage C), so
+        the arguments are exactly {command "set_intent", intent_kind "keep_supplied", base n}; with (2, empty) they add `floor_days` 2 only.
+    O4. (2, 5) gives `floor_days` 2 and `interval_days` 5. An empty floor, or one that is no number, gives none (stage C); 0 gives 1; 150 gives 99.
         An interval of 0 gives 1 and of 150 gives 99; an empty one gives no key. For an end of any other kind neither key is added.
     O5. What a place's card says of an order in force: {kind keep_supplied, floor_days 2, interval_days 5} gives "Kept supplied, 2
         days, each run 5 days more"; {floor_days 30} with no interval gives "Kept supplied, 30 days", as before.
@@ -4212,32 +4566,32 @@ def the_supply_orders_two_numbers(bridge):
     text = page_text()
     floor_tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
     interval_tag = re.search(r'<input type="number" id="o-interval"[^>]*>', text).group(0)
-    row = text[text.index('<div id="o-supply"'):text.index('<fieldset id="o-risk">')]
-    check('min="1"' in floor_tag and 'max="99"' in floor_tag and 'value="30"' in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
+    row = text[text.index('<div id="o-supply"'):text.index('<div id="p-face"')]
+    check('min="1"' in floor_tag and 'max="99"' in floor_tag and "value=" not in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
           and all(w in row for w in ("Never below", "days of supply", "Each run brings", "days more")) and "left to the staff: 15 days" in text
           and "Keep it supplied, 30 days" not in text and "['Keep it supplied', { intent_kind: 'keep_supplied'" in text,
-          "O1: the paper has the row o-supply with o-floor (1 to 99, 30) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
+          "O1: the paper has the row o-supply with o-floor (1 to 99, empty) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
     check("$('o-supply').hidden = !on" in text and "function supplyChosen()" in text and "e[1].intent_kind === 'keep_supplied'" in text
           and "showPatrol(); showSupply(); drawMarks(); endChanged();" in text and "e.target.id === 'o-floor' || e.target.id === 'o-interval'" in text and "{ showSupply(); askPreview(); }" in text
-          and "$('o-floor').value = '30'; $('o-interval').value = '';" in text,
+          and "$('o-floor').value = ''; $('o-interval').value = '';" in text,
           "O2: the row is shown where the end chosen is keep_supplied and hidden for every other, by the path that shows o-patrol; a change of either input asks the reading again")
     code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers(", "  function commas(n)", "  function dayCount(", "  function suppliedWords("))
             + "function main(list) { return list.map(function (x) { made['o-floor'] = { value: x.floor }; made['o-interval'] = { value: x.interval };"
               " return { args: addSupplyNumbers(Object.assign({ command: 'set_intent' }, x.end)), card: x.card ? suppliedWords(x.card) : null }; }); }")
     keep = {"intent_kind": "keep_supplied", "base": 2}
     out = run_in_node(code, [
-        {"floor": "30", "interval": "", "end": keep}, {"floor": "2", "interval": "5", "end": keep}, {"floor": "", "interval": "", "end": keep},
+        {"floor": "", "interval": "", "end": keep}, {"floor": "2", "interval": "5", "end": keep}, {"floor": "2", "interval": "", "end": keep},
         {"floor": "abc", "interval": "abc", "end": keep}, {"floor": "0", "interval": "0", "end": keep}, {"floor": "150", "interval": "150", "end": keep},
         {"floor": "2", "interval": "5", "end": {"intent_kind": "hold", "base": 2}},
         {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 2, "interval_days": 5}},
         {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 30}}])
     args = [o["args"] for o in out]
-    check(args[0] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 30},
-          "O3: nothing touched (30, empty) adds floor_days 30 and no interval_days: the arguments are what the page sent before")
-    check(args[1]["floor_days"] == 2 and args[1]["interval_days"] == 5 and args[2]["floor_days"] == 30 and "interval_days" not in args[2] and args[3]["floor_days"] == 30 and "interval_days" not in args[3]
+    check(args[0] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2} and args[2] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 2},
+          "O3: nothing touched (empty, empty) adds neither floor_days nor interval_days; a floor of 2 alone adds floor_days 2")
+    check(args[1]["floor_days"] == 2 and args[1]["interval_days"] == 5 and args[2]["floor_days"] == 2 and "interval_days" not in args[2] and "floor_days" not in args[3] and "interval_days" not in args[3]
           and args[4]["floor_days"] == 1 and args[4]["interval_days"] == 1 and args[5]["floor_days"] == 99 and args[5]["interval_days"] == 99
           and args[6] == {"command": "set_intent", "intent_kind": "hold", "base": 2},
-          "O4: (2, 5) gives 2 and 5; empty or no number gives a floor of 30 and no interval; 0 gives 1; 150 gives 99; an end of another kind gets neither key")
+          "O4: (2, 5) gives 2 and 5; empty or no number gives no floor and no interval; 0 gives 1; 150 gives 99; an end of another kind gets neither key")
     check(out[7]["card"] == "Kept supplied, 2 days, each run 5 days more" and out[8]["card"] == "Kept supplied, 30 days",
           "O5: a place's card says \"Kept supplied, 2 days, each run 5 days more\", and with no interval \"Kept supplied, 30 days\"")
     check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "begun: rung 1")
@@ -4434,6 +4788,9 @@ def main():
     orders_and_signed()
     one_order_paper()
     the_paper_reads_as_the_order()
+    the_face_and_the_fold()
+    the_readings_mends()
+    the_empty_floor()
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()
