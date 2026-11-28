@@ -130,6 +130,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::millionths;
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -145,10 +146,6 @@ const B_SHIPS: [u32; 3] = [4, 5, 6];
 
 fn fx(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 fn pulse_index(pulse: Pulse) -> usize {

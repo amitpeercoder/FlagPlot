@@ -165,6 +165,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::OnceLock;
 
+use crate::common::values::{fx, n};
 use serde_json::{json, Value};
 use sim_agent::Session;
 use sim_core::events::EventKind;
@@ -185,14 +186,6 @@ const A: Side = Side::Allied;
 const J: Side = Side::Japanese;
 
 // ------------------------------------------------------------------ helpers
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
 
 /// Base B, Taivu's number in scenario 103.
 fn b() -> BaseId {

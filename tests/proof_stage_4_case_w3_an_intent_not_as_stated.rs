@@ -120,9 +120,9 @@
 
 use crate::common;
 
+use crate::common::values::n;
 use sim_core::command::NoticeKind;
 use sim_core::events::EventKind;
-use sim_core::fixed::Fixed;
 use sim_core::ids::{BaseId, IntentId, LandUnitId};
 use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
@@ -136,10 +136,6 @@ use common::stage_4::{
 const NAME: &str = "case_w3_an_intent_not_as_stated";
 const ALLIED: Side = Side::Allied;
 const JAPANESE: Side = Side::Japanese;
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
 
 /// The course: scenario 95's four commands of day 1, as scenario text.
 const COURSE: &str = r#"

@@ -124,6 +124,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::fx;
 use sim_core::events::{Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::ids::TaskForceId;
@@ -142,10 +143,6 @@ const FACTOR: &str = "unready_torpedo_share";
 
 fn scenario_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/18_torpedo_sides.toml")
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
 }
 
 /// The frozen figures with the gun and torpedo shares at 0.5.

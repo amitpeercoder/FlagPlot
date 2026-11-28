@@ -427,13 +427,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{base, fx, group, hex, n, ship, unit};
 use serde_json::{json, Value};
 use sim_agent::SeatKind;
 use sim_core::choices::Moment;
 use sim_core::command::{CommandState, IntentKind, Maker};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, LandUnitId, ShipClassId, ShipId, TaskForceId};
+use sim_core::ids::{IntentId, ShipClassId, TaskForceId};
 use sim_core::map::HexKind;
 use sim_core::objectives::{score, Level, Objective, Outcome, Tally};
 use sim_core::orders::{Issuer, Mission};
@@ -474,36 +475,8 @@ fn start(letter: char) -> TruthState {
     load(letter).world.umpire().clone()
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
-}
-
 fn tf(raw: u32) -> TaskForceId {
     TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
 }
 
 /// The rows of a generated csv with the comment lines taken away.

@@ -170,6 +170,8 @@ use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{at, n, unit};
 
 const Q: Hex = Hex::new(10, 0);
 
@@ -182,22 +184,8 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-/// Adds `what` at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    changed(text, &mark, &format!("{what}{mark}"))
-}
-
 fn fx(text: &str) -> Fixed {
     text.parse::<Fixed>().expect("a decimal figure")
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
 }
 
 const V: u32 = 1;
@@ -480,10 +468,6 @@ fn factor(event: &Event, name: &str) -> Fixed {
         .find(|f| f.name == name)
         .unwrap_or_else(|| panic!("a factor {name} in {event:?}"))
         .value
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
 }
 
 /// V's reading on the morning of `day` is (count, condition, meal share,

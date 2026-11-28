@@ -249,14 +249,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{base, fx, group, hex, n, ship, unit};
 use serde_json::{json, Value};
 use sim_agent::SeatKind;
 use sim_core::command::{CommandState, IntentKind};
 use sim_core::fixed::Fixed;
-use sim_core::hex::Hex;
-use sim_core::ids::{
-    AirGroupId, BaseId, EntityRef, IntentId, LandUnitId, ShipClassId, ShipId, TaskForceId,
-};
+use sim_core::ids::{EntityRef, IntentId, ShipClassId, TaskForceId};
 use sim_core::orders::{Issuer, Mission, Order, Posture};
 use sim_core::state::{AirGroupLocation, ShipLocation, Side, TruthState};
 use sim_data::Scenario;
@@ -294,36 +292,8 @@ fn start(letter: char) -> TruthState {
     load(letter).world.umpire().clone()
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
-}
-
 fn tf(raw: u32) -> TaskForceId {
     TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
 }
 
 /// A game played to its end with the doctrine's staffs, as `run` and `batch`

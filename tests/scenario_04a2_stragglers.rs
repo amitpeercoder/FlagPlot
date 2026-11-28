@@ -119,6 +119,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
 
+use crate::common::values::{hex, n, ship};
 use sim_core::events::{Cause, DetachReason, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -134,24 +135,12 @@ const TF1: TaskForceId = TaskForceId::new(1);
 const TF2: TaskForceId = TaskForceId::new(1_000_001);
 const TF3: TaskForceId = TaskForceId::new(1_000_002);
 
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
 fn ships(raw: &[u32]) -> Vec<ShipId> {
     raw.iter().map(|id| ShipId::new(*id)).collect()
 }
 
 fn set(raw: &[u32]) -> BTreeSet<ShipId> {
     raw.iter().map(|id| ShipId::new(*id)).collect()
-}
-
-fn n(value: i64) -> Fixed {
-    Fixed::from_int(value)
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
 }
 
 // ---------------------------------------------------------------------

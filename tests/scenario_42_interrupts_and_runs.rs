@@ -221,13 +221,13 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::common::values::{base, force, n, ship};
 use serde_json::{json, Value};
 use sim_agent::{Seat, Session};
 use sim_core::choices::Moment;
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, ShipId, TaskForceId};
 use sim_core::orders::OrderRequest;
 use sim_core::state::{ShipLocation, Side, TaskForceStatus, TruthState};
 use sim_core::World;
@@ -261,22 +261,6 @@ fn path_d() -> PathBuf {
 
 fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
 }
 
 /// A session of the Allied seat (a player's) with the doctrine's staffs, the

@@ -209,6 +209,7 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::values::hex;
 
 // ---------------------------------------------------------------------
 // The games, each a file of `data/scenarios/the-pattern-of-a-patrol/`.
@@ -277,10 +278,6 @@ impl Game {
     fn play(self) -> Played {
         play(self.scenario(), self.side())
     }
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
 }
 
 fn of(rows: &[(i32, i32)]) -> Vec<(u32, Hex)> {

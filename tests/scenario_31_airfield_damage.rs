@@ -155,12 +155,13 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{base, fx, group, n, unit};
 use sim_core::choices::air::{AirAnswer, AirQuestion};
 use sim_core::choices::{Answer, Moment, PulsePhase, Question};
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, EntityRef, LandUnitId};
+use sim_core::ids::EntityRef;
 use sim_core::orders::{Job, RejectReason};
 use sim_core::state::{AirGroupLocation, Side, TruthState};
 use sim_core::time::Pulse;
@@ -183,26 +184,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
 }
 
 /// The scenario on the frozen step 1 figures with `[base_hit] airfield` set

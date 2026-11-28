@@ -159,12 +159,13 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{base, force, fx, n, unit};
 use sim_core::events::{
     Cause, Event, EventKind, LandFatigueChange, LoadingLoss, RehearsalLoss, RosterLeft,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, EntityRef, EventId, LandUnitId, OrderId, ShipId, TaskForceId};
+use sim_core::ids::{EntityRef, EventId, OrderId, ShipId};
 use sim_core::orders::RejectReason;
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, TruthState};
@@ -212,26 +213,6 @@ fn working() -> LoadOptions {
 
 fn from(source: &str) -> Scenario {
     common::from_text_with(source, &path(), &working()).expect("the variant loads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 /// What the Japanese side may see, as text: its own numbers, so equal in two

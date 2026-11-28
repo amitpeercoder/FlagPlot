@@ -252,6 +252,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::millionths;
 use sim_core::events::{
     Cause, DamageTrack, DetachReason, EngagementEndReason, Event, EventKind, Weapon,
 };
@@ -270,10 +271,6 @@ const SOUTHERN_SHIPS: [u32; 4] = [9, 10, 11, 12];
 
 fn fx(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 /// A decimal string from the hand calculation, with no floats.

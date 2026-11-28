@@ -151,6 +151,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{hundredths, millionths, within_four_sigma};
 use sim_core::events::{AirFirer, AirTarget, Cause, DamageTrack, Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -248,16 +249,8 @@ fn load() -> Scenario {
     common::load(&scenario_path()).expect("scenario 5d loads")
 }
 
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
-}
-
 fn tenths(value: i64) -> Fixed {
     Fixed::from_ratio(value, 10)
-}
-
-fn hundredths(value: i64) -> Fixed {
-    Fixed::from_ratio(value, 100)
 }
 
 fn int(value: u32) -> Fixed {
@@ -266,15 +259,6 @@ fn int(value: u32) -> Fixed {
 
 fn count(value: usize) -> i64 {
     i64::try_from(value).expect("small")
-}
-
-/// Whether k out of n is within four standard deviations of probability
-/// `p` (in millionths), in exact integer arithmetic.
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 /// Flyable aircraft of a group aboard a carrier by the state of its deck:

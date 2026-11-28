@@ -133,7 +133,7 @@ use sim_core::command::{
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, IntentId, TaskForceId};
+use sim_core::ids::{IntentId, TaskForceId};
 use sim_core::orders::{
     AirGroupOrder, AirMission, Cargo, LandUnitOrder, OrderKind, Posture, TaskForceOrder,
 };
@@ -143,6 +143,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{assert_says, group, intent, n, text_of};
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const KNOWLEDGE_MARKER: &str = "# The knowledge limit\n";
@@ -154,22 +156,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 fn load(text: &str) -> Scenario {
@@ -466,26 +452,6 @@ impl Played {
             "one need on the morning of day {day}: {all:?}"
         );
         &all[0]
-    }
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
-}
-
-fn assert_says(all: &str, parts: &[&str]) {
-    for part in parts {
-        assert!(all.contains(part), "the reason says {part:?}: {all}");
     }
 }
 

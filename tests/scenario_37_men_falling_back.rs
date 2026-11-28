@@ -159,10 +159,11 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{base, fx, n, unit};
 use sim_core::events::{Cause, Event, EventKind, LandFatigueChange};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, LandUnitId};
+use sim_core::ids::BaseId;
 use sim_core::orders::Posture;
 use sim_core::state::{LandUnit, Side, TruthState};
 use sim_data::{LoadOptions, Scenario};
@@ -196,25 +197,9 @@ fn from(source: &str) -> Scenario {
     common::from_text_with(source, &path(), &figures("s37")).expect("the scenario loads")
 }
 
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
 /// `men` over 100: the shots of that many firing men, with no limit.
 fn shots_of(men: u32) -> Fixed {
     Fixed::from_ratio(i64::from(men), 100)
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 /// Whole men: `men` times the share `num` over `den`, cut.

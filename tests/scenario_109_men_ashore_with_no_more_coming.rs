@@ -135,9 +135,7 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use sim_core::command::{
-    InterruptRef, NoticeBasis, NoticeKind, Reason, StaffDecisions, StandingKind,
-};
+use sim_core::command::{InterruptRef, NoticeBasis, NoticeKind, StaffDecisions, StandingKind};
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{LandUnitId, TaskForceId};
@@ -147,6 +145,8 @@ use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{assert_says, at, text_of};
 
 /// The morning of the first judgement ashore.
 const M: u32 = 4;
@@ -158,16 +158,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-/// Adds `what` at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    changed(text, &mark, &format!("{what}{mark}"))
 }
 
 fn load_with(text: &str, options: &LoadOptions) -> Scenario {
@@ -212,26 +202,6 @@ fn play_with(text: &str, options: &LoadOptions) -> Played {
         handed,
         truth,
         events: scenario.world.events().iter().cloned().collect(),
-    }
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
-}
-
-fn assert_says(all: &str, parts: &[&str]) {
-    for part in parts {
-        assert!(all.contains(part), "the reason says {part:?}: {all}");
     }
 }
 

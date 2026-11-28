@@ -156,6 +156,7 @@ use sim_staff::station::{margin_of, order_by_risk, reach_for, Candidate};
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
 use crate::common;
+use crate::common::values::hex;
 
 const COMMANDS_MARKER: &str = "# The Japanese commander's commands";
 
@@ -165,10 +166,6 @@ fn path() -> PathBuf {
 
 fn file_text() -> String {
     fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
 }
 
 fn boat(raw: u32) -> SubmarineId {

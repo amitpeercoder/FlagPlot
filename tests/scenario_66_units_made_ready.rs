@@ -145,13 +145,15 @@ use sim_core::command::{NoticeKind, Reason, StaffDecisions, StaffOrder};
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, LandUnitId, TaskForceId};
+use sim_core::ids::{BaseId, LandUnitId, TaskForceId};
 use sim_core::orders::{Activity, Job, LandUnitOrder, OrderKind, TaskForceOrder};
 use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{intent, n, text_of, unit};
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 
@@ -163,23 +165,7 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
 const LANDING: Hex = Hex { q: 6, r: 0 };
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
 
 /// The frozen step 1 figures. The scenario names its own ground figures,
 /// `data/reference/ground_placeholder_scenario_66.toml`, frozen beside the
@@ -362,20 +348,6 @@ impl Played {
             })
             .collect()
     }
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
 }
 
 fn assert_says(reason: &Reason, parts: &[&str]) {

@@ -130,6 +130,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{fx, n};
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AirGroupId, BaseId, ShipId};
@@ -181,14 +182,6 @@ fn run_text(source: &str, name: &str) -> World {
 
 fn run(name: &str) -> World {
     run_text(&text(name), name)
-}
-
-fn fx(value: &str) -> Fixed {
-    value.parse().expect("a decimal")
-}
-
-fn n(value: i64) -> Fixed {
-    Fixed::from_int(value)
 }
 
 fn result_of(world: &World) -> GameResult {

@@ -170,10 +170,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{group, hundredths, within_four_sigma};
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind, SortieKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, EntityRef, EventId, OrderId};
+use sim_core::ids::{BaseId, EntityRef, EventId, OrderId};
 use sim_core::orders::AirMission;
 use sim_core::rng::{Draw, RngKey, RngStream, Subsystem};
 use sim_core::state::{AirGroupLocation, Side};
@@ -208,16 +209,8 @@ fn tenths(value: i64) -> Fixed {
     Fixed::from_ratio(value, 10)
 }
 
-fn hundredths(value: i64) -> Fixed {
-    Fixed::from_ratio(value, 100)
-}
-
 fn int(value: u32) -> Fixed {
     Fixed::from_int(i64::from(value))
-}
-
-fn group(id: u32) -> AirGroupId {
-    AirGroupId::new(id)
 }
 
 /// The index of a group number in the arrays of five.
@@ -227,15 +220,6 @@ fn of(group: u32) -> usize {
 
 fn count(value: usize) -> i64 {
     i64::try_from(value).expect("small")
-}
-
-/// Whether k out of n is within four standard deviations of probability
-/// `p` (in millionths), in exact integer arithmetic.
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 // ---------------------------------------------------------------------

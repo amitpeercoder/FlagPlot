@@ -203,6 +203,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{base, force, fx, n, ship, unit};
 use sim_core::events::{Cause, Event, EventKind, SupplyUse};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -238,30 +239,6 @@ fn run_text(source: &str) -> Scenario {
     let mut scenario = common::from_text(source, &path()).expect("the variant loads");
     scenario.run_to_end().expect("the variant runs");
     scenario
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn unit(id: u32) -> LandUnitId {
-    LandUnitId::new(id)
-}
-
-fn ship(id: u32) -> ShipId {
-    ShipId::new(id)
-}
-
-fn force(id: u32) -> TaskForceId {
-    TaskForceId::new(id)
-}
-
-fn base(id: u32) -> BaseId {
-    BaseId::new(id)
 }
 
 const SHORE: Hex = Hex::new(8, 0);

@@ -119,6 +119,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::n;
 use sim_core::events::{Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{BaseId, ShipId};
@@ -135,10 +136,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
 }
 
 struct Run {

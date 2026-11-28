@@ -154,10 +154,11 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{base, fx, n, unit};
 use sim_core::events::{Event, EventKind, SupplyUse};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, LandUnitId, TaskForceId};
+use sim_core::ids::TaskForceId;
 use sim_core::state::{Side, TruthState};
 use sim_data::{LoadOptions, Scenario};
 
@@ -208,22 +209,6 @@ fn from(source: &str) -> Scenario {
 
 fn from_frozen(source: &str) -> Scenario {
     common::from_text(source, &path()).expect("the variant loads on the frozen figures")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 /// The scenario text with every `skills = ...` line removed: every unit is

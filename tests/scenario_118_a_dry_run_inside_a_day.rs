@@ -116,6 +116,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::at;
 use serde_json::{json, Value};
 use sim_agent::{CallError, Seat, Session};
 use sim_core::fixed::Fixed;
@@ -145,12 +146,6 @@ fn text() -> String {
 
 fn load(text: &str) -> Scenario {
     common::from_text(text, &path()).expect("the scenario loads")
-}
-
-/// Adds `what` at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    common::replace_once(text, &mark, &format!("{what}{mark}"))
 }
 
 /// The scenario with a land unit of A's ashore at H: its ground figures, and

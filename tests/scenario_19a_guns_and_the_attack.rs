@@ -169,6 +169,7 @@ use crate::common;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::common::values::hundredths;
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AirGroupId, EntityRef, EventId, ShipId};
@@ -196,10 +197,6 @@ const ALLOWED_ATTACK_SHOTS: [(u64, u64); 4] = [
 
 fn fx(n: i64) -> Fixed {
     Fixed::from_int(n)
-}
-
-fn hundredths(n: i64) -> Fixed {
-    Fixed::from_ratio(n, 100)
 }
 
 fn scenario_path() -> PathBuf {

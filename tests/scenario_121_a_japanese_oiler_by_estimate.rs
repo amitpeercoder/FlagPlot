@@ -105,10 +105,11 @@ use crate::common;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+use crate::common::values::{force, fx, ship};
 use sim_core::events::{Event, EventKind, FuelOrderEnd};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{ShipClassId, ShipId, TaskForceId};
+use sim_core::ids::{ShipClassId, TaskForceId};
 use sim_core::orders::{Mission, OrderKind, TaskForceOrder};
 use sim_core::refdata::{ShipClass, ShipKind};
 use sim_core::state::{ShipLocation, Side};
@@ -131,10 +132,6 @@ fn reference(file: &str) -> PathBuf {
 
 fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{} reads: {e}", path.display()))
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
 }
 
 fn t(n: i64) -> Fixed {
@@ -736,14 +733,6 @@ fn statement_13_neosho_s_cargo_is_marked_too() {
 }
 
 // ------------------------------------- Statements 14 to 16: the Coral Sea
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
 
 fn events(scenario: &Scenario) -> Vec<Event> {
     scenario.world.events().iter().cloned().collect()

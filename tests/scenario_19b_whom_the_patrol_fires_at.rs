@@ -179,6 +179,7 @@ use crate::common;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::common::values::hundredths;
 use sim_core::events::{AirFirer, AirTarget, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::time::Pulse;
@@ -193,10 +194,6 @@ const SHARES: [&str; 3] = ["1", "0.5", "0"];
 
 fn fx(n: i64) -> Fixed {
     Fixed::from_int(n)
-}
-
-fn hundredths(n: i64) -> Fixed {
-    Fixed::from_ratio(n, 100)
 }
 
 fn scenario_path() -> PathBuf {

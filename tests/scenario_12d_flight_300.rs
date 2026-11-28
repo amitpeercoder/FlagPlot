@@ -98,9 +98,10 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::common::values::group;
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, AircraftTypeId, BaseId, ShipId};
+use sim_core::ids::{AircraftTypeId, BaseId, ShipId};
 use sim_core::state::{AirGroupLocation, ShipSystem, Side, SystemState};
 use sim_core::time::Pulse;
 use sim_data::Scenario;
@@ -124,10 +125,6 @@ fn run(seed: u64) -> Scenario {
     let mut scenario = load(seed);
     scenario.run_to_end().expect("the run resolves");
     scenario
-}
-
-fn group(n: u32) -> AirGroupId {
-    AirGroupId::new(n)
 }
 
 fn is_afternoon(day: u32, event: &Event) -> bool {

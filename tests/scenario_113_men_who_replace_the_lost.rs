@@ -102,6 +102,8 @@ use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::at;
 
 const A: Side = Side::Allied;
 const J: Side = Side::Japanese;
@@ -119,16 +121,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-/// Adds `what` at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    changed(text, &mark, &format!("{what}{mark}"))
 }
 
 fn load(text: &str) -> Scenario {

@@ -189,7 +189,6 @@ use sim_core::command::{
 };
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
-use sim_core::ids::{AirGroupId, BaseId, IntentId};
 use sim_core::orders::{AirGroupOrder, AirMission, OrderKind};
 use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
@@ -200,6 +199,8 @@ use sim_staff::raid::{
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{base, command_table, fx, group, intent, n};
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 
@@ -211,28 +212,8 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
 fn plan(raw: u32) -> PlanId {
     PlanId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 /// The commands of the file itself: the marker line and what follows it.
@@ -242,18 +223,9 @@ fn commands() -> String {
     text[at..].to_string()
 }
 
-/// A command table of the Allied side as the scenario states it.
-fn command_table(day: u32, body: &str) -> String {
-    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
-}
-
 /// The scenario's text with `extra` after its commands.
 fn with(extra: &str) -> String {
     format!("{}{}", text(), extra)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 /// The commander's one command of day 1 that states the end.

@@ -215,10 +215,11 @@ use crate::common;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+use crate::common::values::{force, group, ship};
 use sim_core::command::{IntentKind, Maker};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, AircraftTypeId, BaseId, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{AircraftTypeId, BaseId, LandUnitId, TaskForceId};
 use sim_core::orders::{AirMission, Mission, Posture, Readiness, SpeedSetting};
 use sim_core::refdata::{ShipKind, TrialFigures, TrialSize};
 use sim_core::state::{AirGroupLocation, ShipLocation, Side, TaskForceStatus};
@@ -233,18 +234,6 @@ use sim_trial::{
 
 const ALLIED: Side = Side::Allied;
 const JAPANESE: Side = Side::Japanese;
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
 
 fn kn(n: i64) -> Fixed {
     Fixed::from_int(n)

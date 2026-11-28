@@ -115,6 +115,7 @@ use sim_staff::search::{base_turn, least_tired, once_a_day, TurnCandidate};
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::values::{fx, group, n};
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const FATIGUE_FILE: &str = "fatigue_placeholder_search_kept_up.toml";
@@ -125,18 +126,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
 }
 
 /// The scenario's text with `extra` after its commands.

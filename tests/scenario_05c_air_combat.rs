@@ -165,6 +165,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{hundredths, millionths, within_four_sigma};
 use sim_core::events::{AirFirer, AirTarget, Cause, DamageTrack, Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -194,25 +195,8 @@ fn load() -> Scenario {
     common::load(&scenario_path()).expect("scenario 5c loads")
 }
 
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
-}
-
 fn tenths(value: i64) -> Fixed {
     Fixed::from_ratio(value, 10)
-}
-
-fn hundredths(value: i64) -> Fixed {
-    Fixed::from_ratio(value, 100)
-}
-
-/// Whether k out of n is within four standard deviations of probability
-/// `p` (in millionths), in exact integer arithmetic.
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 fn pulse_of(event: &Event) -> Pulse {

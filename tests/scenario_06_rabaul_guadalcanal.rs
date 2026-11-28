@@ -306,12 +306,13 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{group, hundredths, n, within_four_sigma};
 use sim_core::events::{
     AirFirer, AirTarget, Cause, Event, EventKind, FatigueChange, SortieKind, SupplyUse,
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, AircraftTypeId, BaseId, EntityRef, EventId, OrderId};
+use sim_core::ids::{AircraftTypeId, BaseId, EntityRef, EventId, OrderId};
 use sim_core::orders::AirMission;
 use sim_core::refdata::AttackWeapon;
 use sim_core::rng::{Draw, RngKey, RngStream, Subsystem};
@@ -369,20 +370,8 @@ fn load() -> Scenario {
     common::load(&scenario_path()).expect("scenario 6 loads")
 }
 
-fn n(value: i64) -> Fixed {
-    Fixed::from_int(value)
-}
-
 fn tenths(value: i64) -> Fixed {
     Fixed::from_ratio(value, 10)
-}
-
-fn hundredths(value: i64) -> Fixed {
-    Fixed::from_ratio(value, 100)
-}
-
-fn group(id: u32) -> AirGroupId {
-    AirGroupId::new(id)
 }
 
 /// The index of a group number in the arrays of eleven.
@@ -443,15 +432,6 @@ fn t(h: i64) -> String {
     } else {
         format!("{}.{:02}", h / 100, h % 100)
     }
-}
-
-/// Whether k out of n is within four standard deviations of probability `p`
-/// (in millionths), in exact integer arithmetic.
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 // ---------------------------------------------------------------------

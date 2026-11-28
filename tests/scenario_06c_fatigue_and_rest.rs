@@ -217,10 +217,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{group, hundredths, n};
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind, FatigueChange, SortieKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, EntityRef, EventId, OrderId};
+use sim_core::ids::{BaseId, EntityRef, EventId, OrderId};
 use sim_core::orders::AirMission;
 use sim_core::rng::{Draw, RngKey, RngStream, Subsystem};
 use sim_core::state::{AirGroupLocation, Side};
@@ -262,21 +263,8 @@ fn tenths(value: i64) -> Fixed {
     Fixed::from_ratio(value, 10)
 }
 
-fn hundredths(value: i64) -> Fixed {
-    Fixed::from_ratio(value, 100)
-}
-
 fn int(value: u32) -> Fixed {
     Fixed::from_int(i64::from(value))
-}
-
-/// A fatigue of whole units, from a number of the tables.
-fn n(value: i64) -> Fixed {
-    Fixed::from_int(value)
-}
-
-fn group(id: u32) -> AirGroupId {
-    AirGroupId::new(id)
 }
 
 /// The index of a group number in the arrays of five.

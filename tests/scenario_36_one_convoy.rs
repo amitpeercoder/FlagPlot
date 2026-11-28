@@ -170,6 +170,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::process::Command;
 
+use crate::common::replace_once as changed;
+use crate::common::values::{base, command_table, force, fx, intent, n, ship};
 use sim_core::choices::Moment;
 use sim_core::command::{
     CommandKind, PlanId, PlanState, Reason, RunDays, RunSpec, StaffDecisions, StaffOrder,
@@ -177,7 +179,7 @@ use sim_core::command::{
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
+use sim_core::ids::ShipId;
 use sim_core::orders::{BaseOrder, Cargo, OrderKind, TaskForceOrder};
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{ShipLocation, Side, TaskForceStatus, TruthState};
@@ -202,30 +204,6 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
 fn plan(raw: u32) -> PlanId {
     PlanId::new(raw)
 }
@@ -244,18 +222,8 @@ fn head() -> String {
         .to_string()
 }
 
-/// Text with one change, asserting that the original appears exactly once.
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
 fn days(text: &str, count: u32) -> String {
     changed(text, "days = 18", &format!("days = {count}"))
-}
-
-/// A command table as the scenario states it.
-fn command_table(day: u32, body: &str) -> String {
-    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
 }
 
 /// A game played to its end with the doctrine's staffs passed in: what the

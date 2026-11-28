@@ -234,6 +234,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{at, hex};
 use sim_core::choices::Moment;
 use sim_core::command::{
     CommandKind, IntentKind, NoticeKind, Reason, Risk, Staff, StaffDecisions, StaffOrder,
@@ -258,18 +259,8 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn hex(q: i32, r: i32) -> Hex {
-    Hex { q, r }
-}
-
 fn c() -> TaskForceId {
     TaskForceId::new(1)
-}
-
-/// Adds `what` at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    common::replace_once(text, &mark, &format!("{what}{mark}"))
 }
 
 fn command(day: u32, body: &str) -> String {

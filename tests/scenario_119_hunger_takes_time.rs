@@ -133,7 +133,7 @@ use std::path::{Path, PathBuf};
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, EventId, LandUnitId};
+use sim_core::ids::{BaseId, EventId};
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, TruthState};
 use sim_core::time::Pulse;
@@ -141,6 +141,8 @@ use sim_core::Staffs;
 use sim_data::{LoadOptions, Scenario};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{at, base, n, unit};
 
 /// P, the empty shore, and Q, the base at the start.
 const P: Hex = Hex::new(8, 0);
@@ -154,30 +156,8 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-/// Adds `what` at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    changed(text, &mark, &format!("{what}{mark}"))
-}
-
 fn fx(text: &str) -> Fixed {
     text.parse::<Fixed>().expect("a decimal figure")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 // ---------------------------------------------------------------- Variants

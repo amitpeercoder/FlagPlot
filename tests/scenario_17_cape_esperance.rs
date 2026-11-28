@@ -91,6 +91,7 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::millionths;
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -104,10 +105,6 @@ const MEETING: Hex = Hex::new(2, -5);
 
 fn fx(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 fn load() -> Scenario {

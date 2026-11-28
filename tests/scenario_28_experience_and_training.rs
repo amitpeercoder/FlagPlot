@@ -131,10 +131,11 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{base, fx, n, unit};
 use sim_core::events::{Cause, Event, EventKind, ExperienceSource};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, EventId, LandUnitId, OrderId};
+use sim_core::ids::{EventId, OrderId};
 use sim_core::orders::{Activity, Posture};
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, TruthState};
@@ -171,22 +172,6 @@ fn working() -> LoadOptions {
 
 fn from(source: &str) -> Scenario {
     common::from_text_with(source, &path(), &working()).expect("the variant loads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 fn with(source: &str, block: &str) -> String {
