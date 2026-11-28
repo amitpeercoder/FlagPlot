@@ -281,13 +281,35 @@ struct Converted {
 }
 
 const NAME: &[&str] = &["name"];
+const GROUND: &[&str] = &["ground"];
+/// What a file of `table-boats` states beside its boats: the three keys of
+/// the submarine files and the two `[side]` tables; file a also the ground
+/// figures of the table.
+const BOAT_KEYS: &[&str] = &[
+    "submarine_classes",
+    "submarine_torpedoes",
+    "submarines",
+    "side",
+];
+const BOAT_KEYS_A: &[&str] = &[
+    "ground",
+    "submarine_classes",
+    "submarine_torpedoes",
+    "submarines",
+    "side",
+];
+const REAR_KEYS: &[&str] = &["name", "trial"];
+const RUNS: &[i64] = &[30, 32, 33, 34, 35, 36, 37, 38, 39];
 const NEW_CLASSES: &[&str] = &["name", "ship_classes", "class_sides"];
 
-/// The table, copied as data when step C was built; step D adds its 31 rows
-/// of `table-hunger`, `table-boats` and `table-rear-bases`. A file `a`, `b`
+/// The table, copied as data when step C was built and step D (its 31 rows
+/// of `table-hunger`, `table-boats` and `table-rear-bases`). A file `a`, `b`
 /// or `c` of a pairing states `name` and its commands; a file `d`, `name`
-/// alone.
+/// alone. A row of the lists `island` is named by its `number`, not an `id`.
 fn converted() -> Vec<Converted> {
+    fn leak(text: String) -> &'static str {
+        Box::leak(text.into_boxed_str())
+    }
     let mut out = vec![
         Converted {
             file: "coral-sea/base_coral_sea_oilers.toml",
@@ -353,13 +375,151 @@ fn converted() -> Vec<Converted> {
             });
         }
     }
+    // The table's own files (step D).
+    // (the table-hunger copy, the file it is built on)
+    for (copy, below) in [
+        ("01b_midway", "midway/01b_midway"),
+        ("01c_midway", "midway/01c_midway"),
+        ("01d_midway", "midway/01d_midway"),
+        (
+            "02b_eastern_solomons_oilers",
+            "five-days/02b_eastern_solomons_oilers",
+        ),
+        (
+            "02c_eastern_solomons_oilers",
+            "five-days/02c_eastern_solomons_oilers",
+        ),
+        (
+            "02d_eastern_solomons_oilers",
+            "five-days/02d_eastern_solomons_oilers",
+        ),
+        (
+            "03b_coral_sea_both_oilers",
+            "coral-sea/03b_coral_sea_both_oilers",
+        ),
+        (
+            "03c_coral_sea_both_oilers",
+            "coral-sea/03c_coral_sea_both_oilers",
+        ),
+        (
+            "03d_coral_sea_both_oilers",
+            "coral-sea/03d_coral_sea_both_oilers",
+        ),
+        ("07_full_slice", "staff/07_full_slice"),
+        ("07b_slice", "stage-3-proof/07b_slice"),
+        ("07c_slice", "stage-3-proof/07c_slice"),
+    ] {
+        out.push(Converted {
+            file: leak(format!("table-hunger/{copy}.toml")),
+            built_on: leak(format!("../{below}.toml")),
+            keys: GROUND,
+            rows: &[],
+            commands: false,
+        });
+    }
+    // (the file of table-boats, the file it is built on, the boats' ids)
+    let midway: &'static [i64] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+    let coral: &'static [i64] = &[1, 2, 3, 4];
+    let five: &'static [i64] = &[1, 2, 3, 4, 5];
+    let slice: &'static [i64] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    for (file, below, a, boats) in [
+        ("01a_midway", "midway/01a_midway", true, midway),
+        ("01b_midway", "table-hunger/01b_midway", false, midway),
+        ("01c_midway", "table-hunger/01c_midway", false, midway),
+        ("01d_midway", "table-hunger/01d_midway", false, midway),
+        (
+            "02a_eastern_solomons_oilers",
+            "five-days/02a_eastern_solomons_oilers",
+            true,
+            five,
+        ),
+        (
+            "02b_eastern_solomons_oilers",
+            "table-hunger/02b_eastern_solomons_oilers",
+            false,
+            five,
+        ),
+        (
+            "02c_eastern_solomons_oilers",
+            "table-hunger/02c_eastern_solomons_oilers",
+            false,
+            five,
+        ),
+        (
+            "02d_eastern_solomons_oilers",
+            "table-hunger/02d_eastern_solomons_oilers",
+            false,
+            five,
+        ),
+        (
+            "03a_coral_sea_both_oilers",
+            "coral-sea/03a_coral_sea_both_oilers",
+            true,
+            coral,
+        ),
+        (
+            "03b_coral_sea_both_oilers",
+            "table-hunger/03b_coral_sea_both_oilers",
+            false,
+            coral,
+        ),
+        (
+            "03c_coral_sea_both_oilers",
+            "table-hunger/03c_coral_sea_both_oilers",
+            false,
+            coral,
+        ),
+        (
+            "03d_coral_sea_both_oilers",
+            "table-hunger/03d_coral_sea_both_oilers",
+            false,
+            coral,
+        ),
+        ("07_full_slice", "table-hunger/07_full_slice", false, slice),
+        ("07a_slice", "stage-3-proof/07a_slice", true, slice),
+        ("07b_slice", "table-hunger/07b_slice", false, slice),
+        ("07c_slice", "table-hunger/07c_slice", false, slice),
+    ] {
+        let rows: &'static [(&'static str, &'static [i64])] =
+            Box::leak(vec![("submarine", boats)].into_boxed_slice());
+        out.push(Converted {
+            file: leak(format!("table-boats/{file}_submarines.toml")),
+            built_on: leak(format!("../{below}.toml")),
+            keys: if a { BOAT_KEYS_A } else { BOAT_KEYS },
+            rows,
+            commands: false,
+        });
+    }
+    // (the file of table-rear-bases: built on the file of its name in
+    // table-boats; the islands: 1, 2 and 3 in the full slice, 3 in the others)
+    for (file, islands) in [
+        ("07_full_slice", &[1, 2, 3][..]),
+        ("07b_slice", &[3][..]),
+        ("07c_slice", &[3][..]),
+    ] {
+        let rows: &'static [(&'static str, &'static [i64])] = Box::leak(
+            vec![
+                ("base", &[3][..]),
+                ("task_force", RUNS),
+                ("island", islands),
+            ]
+            .into_boxed_slice(),
+        );
+        out.push(Converted {
+            file: leak(format!("table-rear-bases/{file}_submarines.toml")),
+            built_on: leak(format!("../table-boats/{file}_submarines.toml")),
+            keys: REAR_KEYS,
+            rows,
+            commands: false,
+        });
+    }
     out
 }
 
 #[test]
 fn r3_each_converted_file_states_what_its_row_gives_and_nothing_else() {
     let files = converted();
-    assert_eq!(files.len(), 27, "step C converts 27 files");
+    assert_eq!(files.len(), 58, "steps C and D convert 27 and 31 files");
     for row in &files {
         let path = scenarios_dir().join(row.file);
         let text = std::fs::read_to_string(&path).expect("reads");
@@ -389,9 +549,36 @@ fn r3_each_converted_file_states_what_its_row_gives_and_nothing_else() {
                 .as_array()
                 .expect("a list of tables")
                 .iter()
-                .map(|r| r["id"].as_integer().expect("an id"))
+                .map(|r| {
+                    r.get("id")
+                        .or_else(|| r.get("number"))
+                        .and_then(toml::Value::as_integer)
+                        .expect("an id, or for an island its number")
+                })
                 .collect();
             assert_eq!(&got, ids, "{}: the rows of {list}", row.file);
+            // The files of `table-rear-bases` state, of each row, these keys
+            // and no other (decision 0232, item 5a).
+            if row.file.starts_with("table-rear-bases/") {
+                let want: &[&str] = match *list {
+                    "base" => &["id", "supply_t"],
+                    "task_force" => &["at_base", "available_from", "home_port", "id"],
+                    _ => &["name", "number", "places"],
+                };
+                for r in table[*list].as_array().expect("a list of tables") {
+                    let have: Vec<&str> = r
+                        .as_table()
+                        .expect("a table")
+                        .keys()
+                        .map(String::as_str)
+                        .collect();
+                    let mut want = want.to_vec();
+                    want.sort_unstable();
+                    let mut have = have;
+                    have.sort_unstable();
+                    assert_eq!(have, want, "{}: the keys of a row of {list}", row.file);
+                }
+            }
         }
         if row.commands {
             assert!(
@@ -426,7 +613,6 @@ fn r4_the_three_folders_of_the_tables_games_hold_the_converted_files_and_nothing
 }
 
 #[test]
-#[ignore = "from step D: the files of the table's three folders still say it until they are converted"]
 fn r5_do_not_edit_by_hand_is_in_eight_files_and_no_other() {
     let mut files = Vec::new();
     scenario_files(&scenarios_dir(), &mut files);

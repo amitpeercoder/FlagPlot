@@ -100,7 +100,11 @@ pub mod digest {
             names.sort();
             for path in names {
                 let name = format!("{prefix}{}", path.file_name().unwrap().to_string_lossy());
-                let text = std::fs::read_to_string(&path).expect("the file reads");
+                // The scenario resolved (decision 0234, reading (a)): the
+                // commands may be in a file it is built on. A file that does
+                // not resolve is read as it is.
+                let text = sim_data::Scenario::resolved_text(&sim_data::Disk, &path)
+                    .unwrap_or_else(|_| std::fs::read_to_string(&path).expect("the file reads"));
                 if text.contains("kind = \"set_intent\"") {
                     found.push(name);
                 }
@@ -420,7 +424,8 @@ struct Commands {
 
 fn commands_of(file: &str) -> Commands {
     let path = common::data_dir().join("scenarios").join(file);
-    let text = std::fs::read_to_string(path).expect("the file reads");
+    // The scenario resolved (decision 0234, reading (a)).
+    let text = common::resolved_text(&path);
     let doc: toml::Table = text.parse().expect("the file is TOML");
     let commands = doc
         .get("command")

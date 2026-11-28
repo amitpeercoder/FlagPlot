@@ -1,9 +1,10 @@
 //! The games of Midway with submarines: decision 0225, as amended on review on Nov 23, 2026, and decision 0227, as amended on review the same day.
 //!
-//! Four copies of the game in `data/scenarios/table-boats/`, made by
-//! `scripts/table-boats/make_files.py`: of the table's copies of files b, c
-//! and d (`data/scenarios/table-hunger/`), the three copies being what the
-//! table plays, and of file a on the table's ground figures, kept for the
+//! Four copies of the game in `data/scenarios/table-boats/`, each built on
+//! (decision 0234, step D) its source, which was copied by the script
+//! `scripts/table-boats/make_files.py` until then: of the table's copies of
+//! files b, c and d (`data/scenarios/table-hunger/`), the three copies being
+//! what the table plays, and of file a on the table's ground figures, kept for the
 //! measure of decision 0227, stage 3, and not offered. Each has its boats on
 //! station, each from a row by the rules of the decision ("The rules of
 //! placing"; for Midway, decision 0225's amended rules 2 and 3 too). The
@@ -40,11 +41,11 @@
 //! 8. Played on seed 1 with no order to any boat, every boat on the map at
 //!    the end that is not going home is in the hex she started in.
 //!
-//! Since step C of decision 0234 the script makes thirteen of the sixteen; the three files a of the Coral Sea, the five days and Midway are kept, and held as tables by statement 7.
-//!
-//! And the script, run with `--check`, says every file kept is the one it
-//! makes and the folder holds nothing else. No statement holds a number that
-//! rests on a figure.
+//! Since step D of decision 0234 each file is built on the file it copies and
+//! the script that made them is retired: statement 7 is read as tables, the
+//! copy resolved against its source resolved, and the script's check is
+//! withdrawn (reading (d)). No statement holds a number that rests on a
+//! figure.
 
 use crate::common;
 
@@ -240,8 +241,6 @@ const GAME: Game = Game {
         ),
     ],
     boats: &BOATS,
-    script_files: 13,
-    kept_files: 3,
 };
 
 fn game() -> &'static Game {
@@ -286,9 +285,4 @@ fn statement_7_without_its_boats_it_is_the_game_it_copies() {
 #[test]
 fn statement_8_played_on_seed_1_no_boat_on_the_map_has_moved() {
     game().statement_8(&game().letters());
-}
-
-#[test]
-fn the_script_says_each_copy_is_the_one_it_makes() {
-    game().the_script_says_each_copy_is_the_one_it_makes();
 }
