@@ -173,10 +173,22 @@ fn run_locate(flags: &Flags) -> Result<(), String> {
     flags.check_known(&["--lat", "--lon", "--map"])?;
     let lat = parse_degrees(flags, "--lat")?;
     let lon = parse_degrees(flags, "--lon")?;
-    // A map that cannot be read is said so below; its hex is then worked on
-    // the default frame, as before decision 0199.
-    let frame =
-        Frame::of_map_or_default(&flags.map_path()).unwrap_or_else(|_| Frame::south_pacific());
+    // A map with no projection lines (a hand-written map) is worked on the
+    // default frame, as before decision 0199. A map that has them and fails
+    // to read is an error that names it (decision 0242, rule 16).
+    let map_path = flags.map_path();
+    let frame = match Frame::of_map(&map_path) {
+        Ok(Some(frame)) => frame,
+        Ok(None) => Frame::south_pacific(),
+        // A map that is not there is said so below, as before.
+        Err(_) if !map_path.exists() => Frame::south_pacific(),
+        Err(error) => {
+            return Err(format!(
+                "the map {} has a frame that cannot be read: {error}",
+                map_path.display()
+            ))
+        }
+    };
     let projection = frame.projection();
     let (q, r) = projection.hex_of(lat, frame.lon_in_run(lon));
     let (clat, clon) = projection.centre_of(q, r);

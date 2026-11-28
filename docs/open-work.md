@@ -9,7 +9,7 @@ Trimmed on Nov 27, 2026 to what is open or next. What was closed, built or overt
 1. **Stage 4's proof** (decision 0161, step 9): set up in `docs/validation/stage-4-proof-setup.md`, amended twice on Nov 27, 2026, for decision 0232's steps 1 and 2, and not run. Run once, by the architect. Two misses are expected on the Japanese side, conditions 3 and 13, their cause named before the run.
 2. **A plan the commander writes** (decision 0232): steps 1 and 2 are built; step 3, the table, is next.
 3. **The enemy's approaches** (decision 0161, step 10; below): its own record and plan first, for the designer's confirmation.
-4. **Levels** (`docs/design/levels.md`): a note, nothing built; the designer's answers of Nov 26 and 27, 2026 are in it. Its first three rungs are planned as plain scenarios on the table's list (decision 0237, confirmed on Nov 27, 2026); rung 1's map, file and hand calculation are written and its tests are not filled.
+4. **Levels** (`docs/design/levels.md`): a note, nothing built; the designer's answers of Nov 26 and 27, 2026 are in it. Its first three rungs are planned as plain scenarios on the table's list (decision 0237, confirmed on Nov 27, 2026); rung 1 is built and on the table; rung 3 goes on before rung 2, on the designer's word of Nov 28, 2026, and its mission names day 14: its game is built (scenario 140) and its table is planned and not built (`docs/decisions/as-built/0237-the-first-three-rungs.md`); rung 2's figures wait for his account of rung 1.
 5. **The clean-up in progress,** beside these and not ahead of the proof.
 
 ## The clean-up in progress

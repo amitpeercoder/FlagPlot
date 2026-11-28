@@ -27,11 +27,20 @@ pub struct MapOut {
 /// A map's frame, as its header gives it. Longitudes are in the frame's run:
 /// a map across the date line has its eastern edge above 180, while each
 /// hex's `lon` stays west negative, from -180 to 180.
+///
+/// A map of one factor is written as it always was: `centre_lat`,
+/// `centre_lon`, `factor`, `west`, `east`, and nothing more. A map about a
+/// centre (decision 0242) has `kind` and `scale` in place of `factor`.
 #[derive(Serialize)]
 struct FrameOut {
     centre_lat: Num,
     centre_lon: Num,
-    factor: Num,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    kind: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    factor: Option<Num>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    scale: Option<Num>,
     west: Num,
     east: Num,
 }
@@ -88,12 +97,22 @@ pub fn map(map: &Map, frame: Option<&sim_data::MapFrame>) -> MapOut {
     MapOut {
         hex_nm: HEX_NM,
         real,
-        frame: frame.map(|f| FrameOut {
-            centre_lat: Num(f.centre_lat),
-            centre_lon: Num(f.centre_lon),
-            factor: Num(f.factor),
-            west: Num(f.west),
-            east: Num(f.east),
+        frame: frame.map(|f| {
+            let (kind, factor, scale) = match f.projection {
+                sim_data::MapProjection::OneFactor { factor } => (None, Some(Num(factor)), None),
+                sim_data::MapProjection::AboutCentre { scale } => {
+                    (Some("about a centre"), None, Some(Num(scale)))
+                }
+            };
+            FrameOut {
+                centre_lat: Num(f.centre_lat),
+                centre_lon: Num(f.centre_lon),
+                kind,
+                factor,
+                scale,
+                west: Num(f.west),
+                east: Num(f.east),
+            }
         }),
         hexes,
     }

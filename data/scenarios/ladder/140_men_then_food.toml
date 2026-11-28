@@ -1,0 +1,135 @@
+# Scenario 140: men, then food. The third rung of the ladder (decision 0237).
+#
+# A game for play, and no battle's. Allied base 1 at S, the source, holds
+# 200 t of supply and no fuel. Land unit 1, 600 men, is ashore there and eats
+# 3 t a day from it. Task force 1, three placeholder fast transports that
+# carry men and no cargo (class 11: 200 men each, 16 kn, 0.125 t of fuel a
+# mile), lies stopped in port at S with 200 t of fuel in each ship. Ship 4, a
+# placeholder fast transport with cargo (class 12: 30 t of cargo, ten days of
+# food for the 600 men), lies in port at S in no task force with 300 t of
+# fuel. Japanese base 2 at E, (3,3), has no man, gun, aircraft or stock, and
+# the Japanese side has nothing else. A ship is charged 208 nm from S to E:
+# 13 hours at 16 kn. The game is 21 days. No random number is drawn.
+#
+# The mission is to seize E and hold it with its men fed: base 2 is to be the
+# side's, and no man ashore at E is to go a night unfed, to the end of day
+# 21. At the risk "balanced" the landing is ready on day 21 and would land on
+# day 22, too late. At "press" the men land on the morning of day 12 with
+# three nights of rations, 9 t, and base 2 is the side's at the end of that
+# day. The rations feed the nights of days 13, 14 and 15, so a supply run
+# must land on day 15 at the latest: an order to keep base 2 supplied given
+# on day 13 or 14 does that, one given on day 15 lands a day late, and one
+# given before day 13 is refused. A hold of base 2 given with the landing,
+# with ship 4 and base 1 named, has the staff form the supply on day 13.
+#
+# No command is in force: the commander gives the orders. The test adds
+# commands at the mark `orders`, the last line of this file. The hand
+# calculation is in tests/scenario_140_men_then_food.rs. The test runs this
+# file on the figures it names, the live ones, by decision 0237's exception
+# (question 8); the ground figures are the table's, with hunger that takes
+# time.
+#
+# In a folder of its own, so that no loop over data/scenarios/*.toml reads it
+# (decision 0072).
+#
+# PLACEHOLDER DATA. The bases, ships, unit and map are invented. The game is
+# invented whole, so its things carry invented names without the word
+# (decision 0241): Saltmere is S and Merrowdale is the supply ship, as in
+# scenario 138; Emberholt is E; the transports are Farrowby, Gadwell and
+# Hestercombe; the men are the Saltmere battalion. None is a name in
+# data/oob.
+
+name = "Placeholder scenario 140: Men, then food"
+placeholder = true
+seed = 1942
+days = 21
+map = "../../map/placeholder_ladder.toml"
+ship_classes = [
+    "../../reference/ship_classes.csv",
+    "../../reference/ship_classes_placeholder_transports.csv",
+    "../../reference/ship_classes_placeholder_fast_transport_cargo.csv",
+]
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+ground = "../../reference/ground_hunger.toml"
+
+# S: the source. Port size 1, one berth. Supply to spare: the 600 men eat
+# 33 t of it before they sail and a full ship takes 30 t. No fuel: every
+# ship holds what the game needs.
+[[base]]
+id = 1
+name = "Saltmere"
+side = "allied"
+q = 0
+r = 0
+supply_t = 200
+fuel_t = 0
+
+# E: the empty place, the enemy's on the side's map. Port size 0, by
+# lighter. No gun, no aircraft, no man, no stock.
+[[base]]
+id = 2
+name = "Emberholt"
+side = "japanese"
+q = 3
+r = 3
+supply_t = 0
+fuel_t = 0
+
+# Task force 1: three fast transports, 600 berths, stopped in port at S. A
+# round trip to E burns 52 t in each ship.
+[[task_force]]
+id = 1
+name = "Landing force"
+side = "allied"
+at_base = 1
+mission = "transport"
+
+[[ship]]
+id = 1
+name = "Farrowby"
+class = 11
+side = "allied"
+fuel_t = 200
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Gadwell"
+class = 11
+side = "allied"
+fuel_t = 200
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Hestercombe"
+class = 11
+side = "allied"
+fuel_t = 200
+task_force = 1
+
+# Ship 4 lies in port at S in no task force: the supply ship, with fuel for
+# five round trips.
+[[ship]]
+id = 4
+name = "Merrowdale"
+class = 12
+side = "allied"
+fuel_t = 300
+port = 1
+
+# The men: 600 x 0.005 t = 3 t a day. A fighting unit of standard
+# experience, so it needs no training before it rehearses.
+[[land_unit]]
+id = 1
+name = "Saltmere battalion"
+side = "allied"
+men = 600
+q = 0
+r = 0
+experience = 2
+
+# orders
