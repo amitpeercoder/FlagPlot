@@ -82,7 +82,7 @@ An **intent** is the outcome you ask the staff to bring about or maintain. Click
 | **Deny these waters** | Task available forces to act against enemy activity in the selected area. |
 | **Operate** a carrier force, **Station** a surface force, or **Patrol these waters with submarines** | Ask for a force or boats to work from or within the selected waters, where offered. |
 
-In the order paper, set **Risk** where offered. **Balanced** is the default. **Preserve** asks for greater caution and **Press** permits greater risk. How much the staff changes its plan depends on the objective and situation. Open **Limits** to see the controls that apply to this order. These may include eligible forces, a supply source, an operating area, or a timing or intelligence requirement. An additional limit can leave the staff with too few means to act.
+In the order paper, a supply order asks for the ships and the base it is supplied from, under its heading, and cannot be signed until both are named. Open **Limits** to set **Risk**, where offered, and the other controls that apply to this order; **Risk** is its first line. **Balanced** is the default. **Preserve** asks for greater caution and **Press** permits greater risk. How much the staff changes its plan depends on the objective and situation. A patrol shows its boats, and a station order its risk, on the paper itself. The limits may include eligible forces, a supply source, an operating area, or a timing or intelligence requirement. These may include eligible forces, a supply source, an operating area, or a timing or intelligence requirement. An additional limit can leave the staff with too few means to act.
 
 Read **The Staff’s Reading** before you choose **Sign and Send**. It shows how the staff would carry out the draft and can flag a shortage of suitable forces or another obstacle. Open a task’s **Why** to see what informed the choice. Use **Tear Up** to discard the draft. A signed order appears under **Your Orders** when in force, with pending entries shown under **Signed**. Use **Take Back** on a pending entry while it is still available.
 
@@ -149,7 +149,7 @@ At the end, **How It Ended** shows the result and what each side achieved. Use *
 Start **Midway** as **Allied** against **The Engine**. It is 1800 on 2 June. Your directive calls for holding Midway and defeating the enemy carriers. Give the staff an opening objective, then see what it asks of you at dawn.
 
 1. Close the directive. Select Midway on the chart, or open **Staff → Order of Battle** and click the base under **Ashore**.
-2. On Midway’s card, choose **Hold Midway** under **Orders You Can Give**, in the **Or Only** row. Leave risk at **Balanced**, read **The Staff’s Reading**, and click **Sign and Send**.
+2. On Midway’s card, choose **Hold Midway** under **Orders You Can Give**, in the **Or Only** row. Leave risk at **Balanced** (under **Limits**), read **The Staff’s Reading**, and click **Sign and Send**.
 
    ![The Midway base card with Hold Midway in the Or Only row](images/quickstart/hold-midway.jpg)
 

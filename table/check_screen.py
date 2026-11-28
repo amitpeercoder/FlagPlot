@@ -366,9 +366,9 @@ def the_paper_reads_as_the_order():
     start = text.index('<form class="order gives" id="paper"')
     form = text[start:text.index("</form>", start)]
     # A1
-    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="p-limits"', 'id="p-plan"', 'id="o-pv"', 'id="o-dry-says"', 'id="p-says"', 'id="p-foot"']
+    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="p-says"', 'id="p-foot"']
     at = [form.find(p) for p in parts]
-    check(all(a >= 0 for a in at) and at == sorted(at), "A1: the paper's parts are in order: the way back, the head line, the heading, the order, in whose hands, LIMITS, YOUR PLAN, the reading, the dry run's line, what was sent, the foot")
+    check(all(a >= 0 for a in at) and at == sorted(at), "A1: the paper's parts are in order: the way back, the head line, the heading, the order, in whose hands, what was sent, the foot (the reading and the folds between are B1's)")
     foot = form[form.index('id="p-foot"'):]
     fat = [foot.find(p) for p in ('id="p-acts-t"', 'id="p-sign"', 'id="p-dry"', 'id="p-cancel"')]
     check(all(a >= 0 for a in fat) and fat == sorted(fat), "A1: the foot holds, in order, when the order acts, SIGN AND SEND, DRY RUN and TEAR UP")
@@ -509,7 +509,119 @@ def the_face_and_the_fold():
     What does not change: what any order sends, key for key (the forces limit of a supply order is the body it was: `limit:
     "forces"`, `ships`, `task_forces`, `source`); the words of every limit line but the two headings of B10; `LIMITS_OFFERED`; the
     reading's own words; YOUR PLAN. The floor still starts at 30: stage C empties it."""
-    raise NotImplementedError("decision 0240, stage B: the developer writes this check to the statements above")
+    import re
+    print("-- the face and the fold: what an order needs on its face, the reading under the order, the risk first in the fold", flush=True)
+    text = page_text()
+    start = text.index('<form class="order gives" id="paper"')
+    form = text[start:text.index("</form>", start)]
+    # B1
+    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="o-pv"', 'id="o-dry-says"', 'id="p-limits"', 'id="p-plan"', 'id="p-says"', 'id="p-foot"']
+    at = [form.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at), "B1: the paper's parts are in order: the order, in whose hands, the staff's reading, the dry run's line, LIMITS, YOUR PLAN, what was sent, the foot")
+    the = form[form.index('id="p-the"'):form.index('id="p-hands"')]
+    check(the.index('id="o-supply"') < the.index('id="p-face"') < the.index('id="p-summary"'), "B1: the face of the order, p-face, is in the order's part after the supply order's blanks and before its summary")
+    # B2
+    gone = ['id="o-risk"', 'name="risk"', "chosen('risk')", "<legend>RISK</legend>"]
+    check(not [g for g in gone if g in text] and "risk = lim.risk" in cut_function(text, "  function sentLimits(kind) {"),
+          "B2: the risk's fieldset and the radios that read it are gone; the risk of a draft is lim.risk and sentLimits reads it there")
+    # B3 to B7, and what is sent
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    for f in ("faceKeys", "hasFold", "missing", "sourceChoices", "foldLine"):
+        check(f"  function {f}(" in model and f"\n  }}\n" in cut_function(model, f"  function {f}(") + "\n",
+              f"B3 to B7: {f} is inside the limits model and closes with its lone brace")
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function main() {
+  M.names['task_force:17'] = 'Task Force 17'; M.names['ship:1'] = 'Merrowdale'; M.names['base:1'] = 'Saltmere'; M.names['base:2'] = 'Thornwick'; M.names['base:3'] = 'Lunga';
+  const out = {}, kinds = ['hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island', 'destroy_force'];
+  out.face = {}; ['keep_supplied', 'patrol', 'stand_at'].concat(kinds).forEach(k => out.face[k] = faceKeys(k));
+  out.fold = {}; ['patrol', 'stand_at', 'keep_supplied'].concat(kinds).forEach(k => out.fold[k] = hasFold(k));
+  const mk = (ships, tfs, src, mode) => { const l = newLim(); l.ships = { mode: mode || 'only', task_forces: tfs || [], ships: ships || [] }; l.source = src == null ? null : src; return l; };
+  out.missing = [missing('keep_supplied', newLim()), missing('keep_supplied', mk([1], [], null)), missing('keep_supplied', mk([], [], 1)), missing('keep_supplied', mk([], [17], 1)),
+                 missing('keep_supplied', mk([1], [], 1)), missing('keep_supplied', mk([], [], 1, 'only'))];
+  out.others = {}; ['patrol', 'stand_at'].concat(kinds).forEach(k => out.others[k] = missing(k, newLim()));
+  const bases = [1, 2, 3].map(n => ({ base: { handle: 'base:' + n } }));
+  out.sources = [sourceChoices('keep_supplied', bases, 2), sourceChoices('hold', bases, 2)];
+  const press = newLim(); press.risk = 'press'; const fixed = newLim(); fixed.ships = { mode: 'only', task_forces: [], ships: [1] }; fixed.source = 1;
+  const hp = newLim(); hp.ships = { mode: 'only', task_forces: [17], ships: [] }; hp.risk = 'press';
+  out.lines = [foldLine('keep_supplied', newLim()), foldLine('keep_supplied', press), foldLine('keep_supplied', fixed), foldLine('hold', hp), foldLine('hold', newLim())];
+  out.limitsLine = limitsLine('hold', newLim());
+  out.bodies = [limitBodies('keep_supplied', mk([1], [], 1)), limitBodies('keep_supplied', mk([], [17], 1))];
+  return out;
+}
+"""
+    said = run_in_node(code, None)
+    check(said["face"]["keep_supplied"] == ["ships", "source"] and said["face"]["patrol"] == ["submarines"] and said["face"]["stand_at"] == ["risk"]
+          and all(v == [] for k, v in said["face"].items() if k not in ("keep_supplied", "patrol", "stand_at")), f"B3: faceKeys of each kind ({said['face']})")
+    check(said["fold"]["patrol"] is False and said["fold"]["stand_at"] is False and all(v is True for k, v in said["fold"].items() if k not in ("patrol", "stand_at")), f"B4: hasFold is false for a patrol and a stand_at and true for the other nine kinds ({said['fold']})")
+    check(said["missing"] == [["ships", "source"], ["source"], ["ships"], [], [], ["ships"]] and all(v == [] for v in said["others"].values()),
+          f"B5: what a supply order still needs, in the order of its face, and nothing for any other kind ({said['missing']})")
+    check(said["sources"] == [[["1", "Saltmere"], ["3", "Lunga"]], [["1", "Saltmere"], ["2", "Thornwick"], ["3", "Lunga"]]], f"B6: a supply order's source is not offered its own place ({said['sources']})")
+    rest = "the rest the staff’s choice"
+    check(said["lines"] == ["Risk: balanced · " + rest, "Risk: press · " + rest, "Risk: balanced · " + rest, "Risk: press · Ships and forces: Task Force 17", "Risk: balanced · " + rest],
+          f"B7: the fold's closed line says the risk first and what is set in the fold, and not what is on the face ({said['lines']})")
+    check(said["limitsLine"] == "The staff’s choice in all.", "B7: limitsLine answers as it did")
+    check(said["bodies"] == [[{"limit": "forces", "task_forces": [], "ships": [1], "source": 1}], [{"limit": "forces", "task_forces": [17], "ships": [], "source": 1}]],
+          f"what a supply order sends is the forces limit it was: ships, task forces and source ({said['bodies']})")
+    # B8
+    end = cut_function(text, "  function endChanged() {")
+    summary = cut_function(text, "  function limSummary() {")
+    check("if (kind === 'keep_supplied') lim.ships.mode = 'only';" in end and "$('p-limits').hidden = !hasFold(kind)" in end and "'LIMITS · ' + foldLine(kind, lim)" in summary,
+          "B8: a supply order's ships are 'use only these' from the start, the fold is hidden where the kind has none, and the fold's closed line is LIMITS and foldLine")
+    # B9
+    draw = cut_function(text, "  function drawLimits(focusId) {")
+    check("faceKeys(kind)" in draw and "$('p-face')" in draw and "$('p-limits-body')" in draw and "(offers(kind, 'risk') ? ['risk'] : []).concat(LINES)" in draw and draw.count("appendChild(row)") == 1
+          and "'risk'" not in re.search(r"var LINES = \[[^\]]*\]", text).group(0),
+          "B9: drawLimits draws the kind's face keys into p-face and every other line into the fold, the risk first, each line once")
+    # B10, by rendering the two lines with the page's own functions
+    need = cut_function(text, "  function needLine(key, name, kind) {")
+    check("The staff’s choice" not in need and "STAFFS" not in need and "'None'" not in need and "limBack" not in need and "BACK TO" not in need and "'bad'" not in need and "notsent" not in need
+          and "!limCtx && kind === 'keep_supplied' && (key === 'ships' || key === 'source')) return needLine(key, key === 'ships' ? 'Ships' : 'From', kind)" in text,
+          "B10: a supply order's ships line is headed Ships and its source From, with no choice of the staff's, no None and no way back to it")
+    check(text.count("No ship named yet.") == 1 and text.count("No source named yet.") == 1 and "'need-ships'" in need and "'need-source'" in need, "B10: the page holds each sentence once, with the ids need-ships and need-source")
+    render = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "limRow", "limHead", "limSelect", "limCheck", "toggled", "needLine"]) + model + r"""
+Object.defineProperty(Node.prototype, 'dataset', { get() { return this._ds || (this._ds = {}); } }); Node.prototype.addEventListener = function () {};
+function limShips() { return [{ h: 'task_force:17', label: 'Task Force 17' }, { h: 'ship:1', label: 'Merrowdale, at Saltmere' }]; }
+function limSet() {} const limCtx = null; const draft = { base: { base: { handle: 'base:2' } } };
+let lim;
+function walk(n, f) { f(n); n.kids.forEach(k => walk(k, f)); }
+function main() {
+  M.names['ship:1'] = 'Merrowdale'; M.names['base:1'] = 'Saltmere'; M.names['base:2'] = 'Thornwick'; M.names['base:3'] = 'Lunga';
+  M.bases = [1, 2, 3].map(n => ({ base: { handle: 'base:' + n } }));
+  const out = {}, draw = (key, name) => { const row = needLine(key, name, 'keep_supplied'); const ids = []; let sel = null, cls = []; walk(row, n => { if (n.id) ids.push(n.id); if (n.tag === 'select') sel = n.kids.map(o => o.own); cls.push(n.className); }); return { text: row.textContent, ids, sel, cls }; };
+  lim = newLim(); lim.ships.mode = 'only';
+  out.shipsEmpty = draw('ships', 'Ships'); out.sourceEmpty = draw('source', 'From');
+  lim.ships.ships = [1]; lim.source = 1;
+  out.shipsGiven = draw('ships', 'Ships'); out.sourceGiven = draw('source', 'From');
+  return out;
+}
+"""
+    r = run_in_node(render, None)
+    se, so = r["shipsEmpty"], r["sourceEmpty"]
+    check("Ships" in se["text"] and "No ship named yet." in se["text"] and "need-ships" in se["ids"] and "Task Force 17" in se["text"] and "Merrowdale, at Saltmere" in se["text"]
+          and not any(w in se["text"] for w in ("The staff’s choice", "None", "BACK TO")) and not any("bad" in c.split() or "notsent" in c.split() for c in se["cls"]),
+          f"B10: an empty ships line says Ships, ticks for each ship and force, and \"No ship named yet.\" in plain ink ({se['text']})")
+    check("From" in so["text"] and "No source named yet." in so["text"] and "need-source" in so["ids"] and so["sel"] == ["", "Saltmere", "Lunga"]
+          and not any(w in so["text"] for w in ("The staff’s choice", "None", "BACK TO", "Thornwick")),
+          f"B10: an empty source line says From, an empty first choice and the other bases, and \"No source named yet.\" ({so['sel']})")
+    check("No ship named yet." not in r["shipsGiven"]["text"] and "need-ships" not in r["shipsGiven"]["ids"] and "No source named yet." not in r["sourceGiven"]["text"] and "need-source" not in r["sourceGiven"]["ids"],
+          "B10: once a ship and a source are given, the sentences beside them are gone")
+    # B11
+    ask = cut_function(text, "  function askPreview() {")
+    pre = ask[:ask.index("api('preview'")]
+    check("missing(kind, lim).length" in pre and "$('o-preview').textContent = ''" in pre and "$('p-sign').disabled = true" in pre and "$('p-dry').disabled = true" in pre and "return;" in pre[pre.index("missing(kind, lim).length"):],
+          "B11: the staff is not asked while the order needs something: the reading's place is empty, SIGN AND SEND and DRY RUN wait, and no call is made")
+    check("missing(limKind(), lim).length" in cut_function(text, "  function limAsk() {") and "if (previewNo == null) return;" in cut_function(text, "  function signStaff() {"),
+          "B11: a change does not show the staff being asked while a need is unmet, and signing is not reached without a reading")
+    # B12
+    lp = cut_function(text, "  function openLimitPaper(root, key, back) {")
+    check("$('p-limits').hidden = true" in lp and "$('p-limits').open" not in lp and "$('p-face')" in lp and "limitPlan(" not in lp and "limCtx = { root: root, top: top, kind: top.kind, key: key, group: group, keys: keys }" in lp,
+          "B12: the change-of-limits paper draws its lines in p-face and shows no fold; what it sends is as it was")
+    # B13
+    refused = cut_function(text, "  function limitRefused(key) {")
+    check("faceKeys(limKind()).indexOf(key) >= 0" in refused and "if (!face) part.open = true" in refused and "(face ? $('p-face') : $('p-limits-body'))" in refused and "limMarked === key" in draw
+          and "limRow('risk', name)" in cut_function(text, "  function riskLine() {"),
+          "B13: a limit refused is marked at its line on the face or in the fold, the fold opened only where the line is in it, and a risk refused at the fold's risk line")
 
 
 def the_fold_and_the_keys():
@@ -4272,7 +4384,7 @@ def the_supply_orders_two_numbers(bridge):
     text = page_text()
     floor_tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
     interval_tag = re.search(r'<input type="number" id="o-interval"[^>]*>', text).group(0)
-    row = text[text.index('<div id="o-supply"'):text.index('<fieldset id="o-risk">')]
+    row = text[text.index('<div id="o-supply"'):text.index('<div id="p-face"')]
     check('min="1"' in floor_tag and 'max="99"' in floor_tag and 'value="30"' in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
           and all(w in row for w in ("Never below", "days of supply", "Each run brings", "days more")) and "left to the staff: 15 days" in text
           and "Keep it supplied, 30 days" not in text and "['Keep it supplied', { intent_kind: 'keep_supplied'" in text,
@@ -4494,6 +4606,7 @@ def main():
     orders_and_signed()
     one_order_paper()
     the_paper_reads_as_the_order()
+    the_face_and_the_fold()
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()

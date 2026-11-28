@@ -19,3 +19,16 @@ What the pull request "order paper, stage A" makes. It changes what the table gi
 
 Tried by hand on a local table, on rung 1: the supply order at Thornwick ("Keep Thornwick supplied") and a deny on open water ("Deny the waters about (2, 4), within 160 miles"). Not tried by hand: a unit's paper, the change-of-limits, give-back and landing papers, and the 39 days.
 
+
+## Stage B: the face, the reading and the fold (Nov 28, 2026)
+
+What the pull request "order paper, stage B" makes. It changes what the table gives and no rule; what any order sends is as it was. The statements it is held to are B1 to B13 in `the_face_and_the_fold` in `table/check_screen.py`, written before the build.
+
+- **The reading under the order.** The staff's reading and the dry run's line stand directly under the order and its in-whose-hands part; LIMITS and YOUR PLAN, folded, come after them.
+- **The face.** A new part `p-face` in the order's part holds the lines that stand on the face of a kind: for a supply order the ships and the source, for a patrol its boats, for a station order its risk. Five pure functions in the limits model say it: `faceKeys`, `hasFold`, `missing`, `sourceChoices` and `foldLine`. `LIMITS_OFFERED` is not changed.
+- **A supply order's blanks.** Ships are ticks for each ship and task force the forces line offers, headed "Ships", and the source a list of the side's other bases headed "From", with an empty first choice. Neither offers the staff's choice, none or a way back to it; the ships are "use only these" from the start. Beside an empty one the paper says "No ship named yet." or "No source named yet." While either is empty the staff is not asked, the reading's place is empty and SIGN AND SEND and DRY RUN wait. What is sent is the forces limit it was. The floor still starts at 30 (stage C).
+- **The fold.** The fieldset RISK is gone; the risk of a draft is `lim.risk`, the first line of the fold for every kind that offers it. The fold's closed line is "LIMITS · " and `foldLine`: the risk, then what is set in the fold, or "the rest the staff's choice"; what is on the face is not said again. A patrol and a station order show no fold.
+- **The change-of-limits paper** draws its lines on the face and shows no fold. A limit refused is marked at its line, on the face or in the fold, and the fold is opened only where the line is in it.
+- **Checks restated.** `the_paper_reads_as_the_order`'s A1 (the order of the reading and the folds is B1's) and `the_supply_orders_two_numbers`'s O1 (its row is cut at `p-face`, not at the risk's fieldset). Nothing was loosened or removed.
+
+Not tried by hand in a browser; the check reads the page's text and runs its functions in node.
