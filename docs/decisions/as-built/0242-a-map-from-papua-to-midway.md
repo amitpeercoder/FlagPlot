@@ -154,3 +154,112 @@ Made on Nov 28, 2026 on reading the build.
 7. **The located file follows its rows.** A row of position added inside the extent means the file is made again in the same pull request; `docs/engineering/layout.md` says so. The research rows of Nov 28, 2026 added none.
 8. **Five tests that save a game failed in the developer's full run and passed alone** (scenarios 36, 40, 41 and 42). They read no map of this change and are reported to fail together on `main` too. Not this change; reported to the designer as a fault to look at.
 
+
+
+## Step 3: the table laid out in a map's plane (Nov 28, 2026)
+
+What step 3 makes. The table's page lays its chart out in the map's plane, so that it can draw the map from Papua to Midway. The bridge reads both kinds of frame. The coast and the names of the new map, the shared file of checked positions, and a placeholder game are made. No rule of the simulation changes and nothing in `sim-core`, `sim-staff` or `sim-trial`. The two present maps, their coast files and their names files are not changed by one byte. The viewer, the check of passages and the export are not touched: they are step 4.
+
+### What changed, by file
+
+- **`table/index.html`, commit A.** Two read-only hooks and nothing else: `window.flagplotLayout()` gives `{TW, TD, K, HEXR, hexes}` and `window.flagplotChartHash()` gives an FNV-1a (32 bits, as hex) of the base chart canvas's `toDataURL()` with the board's width and depth and the hex radius to six decimals.
+- **`table/index.html`, commit B.** One function, `plane(lat, lon)`, gives east and north in nautical miles from the centre of hex (0,0), the longitude in the frame's run: for a frame of one factor east is (lon - centre_lon) x 60 x factor and north is (lat - centre_lat) x 60; for a frame about a centre it is part 1 of `crates/map-tool/tests/about_a_centre.rs` with 3437.746771 and the frame's scale (the angle from its sine and cosine, as the map tool does it); with no frame a degree of latitude and a degree of longitude are both 60 miles. `world(lat, lon, y)` is that point centred on the board and scaled to it, so every caller of `world` is as it was. `worldOff(lat, lon, east, north)` is a point so many miles east and north of a position in the plane. `hexOfPlane(east, north)` is the hex whose centre is nearest a point of the plane. `layChart` takes the board's width, depth and hex radius from the planes of the hexes. The lines of latitude and longitude, the ticks along the border and the outside of the map are drawn as the brief says (below). The raycaster's own variable `plane` is now `tablePlane`, since the new function took the name.
+- **`table/serve.py`.** `read_frame` and `read_frame_and_edges` read both forms of a header. A frame about a centre is served with `kind` "about a centre" and `scale`; a frame of one factor is served with the keys and values it has always had. A map with projection lines that cannot be read as either kind is a `ValueError` that names the map.
+- **`scripts/web/site.py`: not changed.** It writes `load_chart`'s frame as it is, so the browser build carries the new kind. Run alone it makes the site as before (the frames of the two generated maps are what they were, and the hand-written map's is `null`), and the frame of the new map, passed through `load_chart` and written as the script writes it, carries `kind` and `scale`. The full build (`scripts/web/build.sh`) and `web/check.mjs` were not run: `wasm-bindgen-cli` is not installed here.
+- **`table/chart/clip_coast.py`.** Its docstring says it reads either kind through the bridge's reader. Its code is not changed: it already read the frame through `read_frame_and_edges`. It made `table/chart/papua_to_midway_coast.json`, 631 rings and 19,315 points, with `--map data/map/papua_to_midway.csv` from the two Natural Earth shapefiles under `references/`, which are not committed. Run again for the Midway map it gives `midway_coast.json` byte for byte.
+- **`table/chart/papua_to_midway_names.json`.** 28 names: the 23 of `south_pacific_names.json` and the 5 of `midway_names.json`, each at the position its file gives. None is left out and none is added. The seas are in it at the positions the south-west Pacific file gives for them, which rest on no row; they were in a names file already.
+- **`crates/map-tool/src/fixture.rs` (new), `main.rs`, `lib.rs`, `located.rs`.** The command `plane-fixture --out FILE [--positions CSV]` writes `table/chart/plane_fixture.json`: one entry for each of the three generated maps, with the file's name, the frame as the bridge serves it and the points (222 in all: 97 for the south-west Pacific map, 12 for the Midway map, 113 for the map about a centre, the lines of its located file). A point is the row, the latitude and longitude as the row gives them, east and north in the plane to three decimals, and the hex. `located.rs` gains `rows_inside`, the reading of the positions file that `locate_rows` did in its body, so that the fixture reads the file one way; `locate_rows` gives what it gave and the located file is byte for byte the same (its test passes).
+- **`crates/map-tool/tests/plane_fixture.rs`.** Tests under the architect's doc comment, which is not changed.
+- **`table/check_screen.py`.** Two new functions, run first: `the_bridge_reads_both_kinds_of_frame` and `the_plane_agrees_with_the_shared_file`. The second cuts the page's own `plane` and `hexOfPlane` from its text and runs them in node over every point of the file, as the page's other functions are run.
+- **`data/scenarios/wide-map/placeholder_the_wide_sea.toml`, `tests/scenario_the_wide_sea.rs`, `tests/all.rs`.** The placeholder game and its test.
+- **`docs/commands.md`, `table/README.md`.** The command, and the page's plane, the second kind of frame, the fixture, the hooks and the wide sea.
+
+### The hashes and the layouts, before and after
+
+Made with the table's bridge on the same scenario each time, in the browser pane of the desktop app. Before is commit A (`efcc1af3`) and after is commit B. The games: scenario 5c (`data/scenarios/second-proof/05c_eastern_solomons.toml`) on the south-west Pacific map; `data/scenarios/table-boats/01b_midway_submarines.toml` with `--map data/map/midway.csv`; `data/scenarios/ladder/138_one_ship.toml` with `--map data/map/placeholder_ladder.toml` for the hand-written map. The base chart depends on the map alone, not on the game.
+
+| Map | Layout, before and after | Hash as loaded, before | Hash as loaded, after | Hash with the canvas's blur off, before and after |
+| --- | --- | --- | --- | --- |
+| South-west Pacific, 1,600 hexes | TW 10, TD 8.591958229875925, K 0.3703701663430477, HEXR 0.1425638851581159: the same in all four | 144b37e7 | 144b37e7 | 3a302d2b, 3a302d2b |
+| Midway, 1,418 hexes | TW 10, TD 7.459211539496315, HEXR 0.14081804433331546: the same; K 0.3658538656348586 before and 0.36585386563485867 after, one unit in the last place | f4eac523 | f4eac523 on some loads, not on others (below) | 39b6dc7d, 39b6dc7d |
+| Hand-written (the ladder's), 209 hexes | TW 10, TD 8.294228585288568, K 0.7499999625000018: the same; HEXR 0.2886752644986169 before and 0.28867526449861697 after, one unit in the last place | 6c0f765c | 6c0f765c | e92e09db, e92e09db |
+
+The two last digits that differ are the order in which the floating-point sums are made (the plane's and the old degrees'); every hash, which holds the sizes to six decimals, is unchanged.
+
+**What the proof rests on, and how it was taken.** The hash of a picture made with the canvas's blur filter is not steady. The page paints the coast with `ctx.filter = 'blur(...)'`; the browser's blur does not give the same pixels twice. Commit A itself, loaded five times in an iframe on the Midway game, gave a0a24e18, 658fa114, f4eac523, d7ab6ea4 and f4eac523, and a repaint of the south-west Pacific chart gave c3d063f9 once in four. So a hash as loaded can be compared only where it is steady, and on the Midway map it is not. What was compared instead: the same page (a copy of commit A from `git archive` beside the changed page, each with a temporary hook that repaints and which was taken out before the commit) with the setter of `CanvasRenderingContext2D.prototype.filter` replaced by one that does nothing, repainted four times, the hash read each time; every one of the four gave one value on each page, and the two pages gave the same value for each of the three kinds (the last column). The same Midway chart, loaded at commit A and at commit B, was also compared tile by tile (100 by 100 pixels, 300 tiles): on the one load at each where the picture was steady, none of the 300 differed. The hash hook as committed does not repaint; it reads the picture as the page last drew it.
+
+### What was found that worked in latitude and longitude, and what was done
+
+- `world(lat, lon, y)`: now the plane (above). Every caller is as it was, and the hex centres, the names, the coast, the land drawn from the hexes, the forces' places and every route drawn through `world` are placed by it.
+- `layChart`: the board's width, depth and hex radius from the planes of the hexes. For a map of one factor, the depth is padded as it always was by a hex's width in degrees of longitude taken as degrees of latitude: a hex's width over the factor, in miles. For a map with no frame the factor is 1 and for a map about a centre the pad is a hex's width, 40 miles.
+- The lines of latitude and longitude and the ticks along the border: for a map about a centre, curves (below); for the others, straight as they were, each through `world`.
+- The DENY ring and the PATROL ring (`world(h[3] + miles / 60, h[4])` before): `worldOff(h[3], h[4], miles, 0)`.
+- `reachShape`, which draws a search arc, a strike's reach, a suspected waters' ring and a following ring (`lat + d cos b / 60`, `lon + d sin b / (60 FX)` before): `worldOff(lat, lon, d sin b, d cos b)`. A bearing is the grid's, north being up the page.
+- `compassWord`, which says north-east and the like for a march (the bearing worked with the cosine of the latitude of the hex marched from, before): the bearing is worked in the plane, from the planes of the two hexes. For a hex's neighbour the word is the same as before.
+- `hexMiles` (a great-circle distance between hexes (0,0) and (1,0), rounded to five, before): the plane distance between them, rounded to five. It is 40 on every map, as it was.
+- `FX` and `lonMid` and `latMid` as page-wide variables are gone. A local `latMid` and `lonMid` remain in `layChart` for the straight lines of the maps that have them.
+- Found and not changed: the pointer's position is read as a point on the table and taken to the nearest hex through `world`; no readout turns it into a latitude and longitude. So no inverse of the plane is in the page.
+
+### The lines of latitude and longitude, the board's edge, and the hexes
+
+On a map about a centre each line of latitude and longitude is sampled every half degree through the plane (parallels over the hexes' longitude range and 8 degrees more each way, meridians over the latitude range and 8 degrees more), kept where it is on the board, and drawn. A line is drawn every ten degrees on such a map when its hexes span more than 30 degrees of either, else every two; no ticks are drawn along the border. Each line is lettered where its last point on the board is: a meridian at the foot, a parallel at the east, set in the chart's ink with a pale halo so that it reads over the dark tone. The part of the board outside every hex of the map is painted in one flat tone, `#4b6371`, over everything drawn before it and under the names, the hex overlay and the border's frame. The map's own chart has 6 meridians (150 E to 160 W) and 6 parallels (20 S to 30 N), drawn as curves.
+
+### Settled here, not in the brief
+
+1. **A hex is placed through the plane from the latitude and longitude the map file gives it,** not from its (q, r) as the plan's rule 17 says. The map files give four decimals (0.0001 degree is under 0.006 nm), and the three present kinds must come out as they are today, which they do only if the hexes are placed from the same numbers. A neighbouring hex of the new map is 39.997 nm away on the table, not 40. If the architect would have a hex placed from (q, r) for a map about a centre, it is one line (`plane` is the only function that would change) and the present maps would be unaffected.
+2. **The rule of a line every ten degrees on a map "more than 30 degrees across" is applied to a map about a centre only.** The Midway map is 31 degrees across, and its chart must not change.
+3. **The served frame of one factor has no `kind` key,** so that it is exactly what it was. The brief says both that the frame carries `kind` and that a frame of one factor is exactly as it is. The page reads a frame with no `kind` as of one factor, as a frame file and the export do (the export of a map of one factor has none). A frame about a centre carries `kind` and `scale`.
+4. **`K` in `flagplotLayout()` is board lengths to a degree of latitude,** as it was, so that the number is comparable; the plane's own scale is `KP`.
+5. **`rows_inside` was made in `located.rs`** (a small refactor of the map tool's own reading, class 2) so that the fixture and the located file read the positions file one way.
+6. **The tone outside the map, `#4b6371`, and the halo on the letters** are the developer's; the brief said only plain, darker and flat.
+7. **The rule 18 file's note, and the order of the three maps** (south-west Pacific, Midway, map from Papua to Midway) are the developer's.
+8. **The python that runs the bridge is 3.11 or later** (`tomllib`). This machine's `python3` is 3.9; the checks here were run with 3.12. CI's is the runner's.
+
+### Where this departs from the plan's wording
+
+- Rule 17 says a hex is placed "from its (q, r) in map miles, as the viewer does" (settled 1 above).
+- The brief names nine hand-worked points in part 1 of `tests/about_a_centre.rs`; the doc comment of `tests/plane_fixture.rs` lists eight, each with a row of the positions file. The ninth in part 1's table is the centre itself, which is no row of the positions file, so the fixture has no point for it. The test checks the eight in the file and the centre by the projection (east 0, north 0, hex (0,0)).
+- The game is **not on the new game screen's list**; see below.
+
+### The game, and what stopped it
+
+`data/scenarios/wide-map/placeholder_the_wide_sea.toml` is on `data/map/papua_to_midway.csv`, three days, no objectives, four bases (Placeholder base at Midway (31,-41) and at Lunga Point (-32,22), Allied; at Wake (2,-26) and at Rabaul (-39,14), Japanese) and one force of one placeholder cruiser and one placeholder destroyer (classes 1 and 2 of `data/reference/ship_classes.csv`) at each, with no order. It opens on the table from the command line:
+
+```
+python3 table/serve.py data/scenarios/wide-map/placeholder_the_wide_sea.toml --map data/map/papua_to_midway.csv
+```
+
+An entry for it was written for `table/scenarios.json` (the ladder's shape: `placeholder` true, no start, `"engine": "absent"`, one pairing of a person at the Allied seat) and **taken out again**. The architect's checks of the list (`L2` and `K2` in `check_screen.py`) hold that every entry after the first two has no `placeholder` key, has a start and has no pairing with the engine absent, and `L1` and `K1` hold the first two entries; an entry anywhere in the list fails one of them. They cannot be changed by the developer. The entry that fits the list's pairings is:
+
+```
+{
+  "id": "the-wide-sea",
+  "map": "data/map/papua_to_midway.csv",
+  "name": "Placeholder: the wide sea",
+  "dates": "An invented game",
+  "days": 3,
+  "placeholder": true,
+  "lines": ["A game to look at the map from Papua to Midway with: four bases, a small force at each, three days and no enemy to meet.", "A placeholder game: everything in it is invented. Nothing is ordered on either side."],
+  "sides": {"allied": "Look at the map: Midway and Lunga Point are your bases."},
+  "islands": [],
+  "pairings": [{"allied": "person", "japanese": "engine", "engine": "absent", "file": "data/scenarios/wide-map/placeholder_the_wide_sea.toml"}]
+}
+```
+
+It is for the architect to say where it goes and which of the four checks he changes. The seat sees only its own side's units and bases as in any game; nothing of the enemy's truth is shown for this to work.
+
+### Tests added
+
+- `crates/map-tool/tests/plane_fixture.rs`, under the doc comment: the committed file is what the command gives; it has an entry for each of the three maps, in order, with a point for each line of the located file and for each row inside the extent of the others; the eight rows of part 1 as the doc comment prints them (east and north to 0.0005 nm, the hex exact) and the centre; Lunga Point on the south-west Pacific map (east 1.679, north 155.677, hex (2,-4)); and every point's hex is the nearest to its plane position.
+- `tests/scenario_the_wide_sea.rs`: it loads on the map (10,395 hexes), is a placeholder of three days named "Placeholder: the wide sea"; each base and force is at the architect's hex, a coast hex of the map, a base named "Placeholder base at ..."; it runs its three days with no order from either side, ends, and every force lies where it began.
+- `table/check_screen.py`: `the_bridge_reads_both_kinds_of_frame` and `the_plane_agrees_with_the_shared_file`: the page's plane agrees with all 222 points to 0.01 nm (worst 0.0005) and gives the same hex for each.
+
+### Checks run
+
+- `cargo fmt --all -- --check`: passes. `cargo clippy --workspace --all-targets -- -D warnings`: passes.
+- `cargo test --workspace --no-fail-fast`: 5,927 passed and 4 failed. The four are scenario 36's, 40's and 41's "saves and the staff checks" tests and scenario 42's `d_a_play_game_of_another_doctrine_version_is_refused_and_names_it`, the tests that save a game and are reported to fail when the whole binary runs together. Each was run alone, with `--exact`, and passed. Every other test passed, among them every test of `map-tool`, `sim-data` and `sim-cli` (the `timing` test, which took about 25 minutes in the debug build on a busy machine, passed) and the three tests of the wide sea.
+- `python3 table/check_screen.py`, with python 3.12 and `sim-cli` built in release, as CI runs it: "all held (1445 checks)", the two new functions among them.
+- `sh scripts/regenerate.sh --check`: "every generated file is what the engine gives".
+- `map-tool plane-fixture --out` run in release as well as in the debug build the test uses: the same bytes as the committed file.
+- The web site script, `python3 -I scripts/web/site.py FOLDER`: makes the site; the charts of the three maps the list offers carry the frames they had. `scripts/web/build.sh` and `node web/check.mjs`: not run (`wasm-bindgen-cli` is not installed on this machine).
+- The page, loaded from `python3 table/serve.py` on ports 8801 to 8804 (not 8742; each stopped): the south-west Pacific map, the Midway map, the hand-written ladder map and the wide sea. There is no headless browser in the repository's own checks, so the built-in browser pane of the desktop app was used: each page booted (no "The table could not reach the game" in its text), no resource failed except `/names` for the hand-written map, which has no names file and never had, and the layout of each was read (the wide sea: TW 10, TD 10.862208143188871, HEXR 0.060777836354910054, 10,395 hexes). The pane's console log was empty throughout; it may not have recorded errors from before the log was first read, so "no console error" is not shown as strongly as it would be by a headless run. The wide sea's chart was looked at: the curved meridians and parallels, the dark tone outside the map, the coast, the names and the three-dimensional table with the bases. Rings and search arcs on the wide map were not drawn by an order in a browser; `worldOff` was measured on it: a ring's edge 40 miles east or north of a hex is 40 miles in the plane, and `compassWord` gives north-west for the hex above-left.
