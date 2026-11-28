@@ -293,3 +293,24 @@ Built in `table/index.html` to the statements of `a_landing_written_under_an_ord
 7. The paper's THE ORDER line is drawn as text, the order's link, and a full stop; the stop can fall alone on a line where the link is long (seen in the screenshot). Left as it is.
 8. The dry run's `readEstimate` takes the paper's hex as a fourth argument; `landingTried` prefers a hex it is given to the lookup.
 
+
+## Planned: a follow-up to C (Nov 28, 2026)
+
+Written by the architect on main at `d521db26`, after pull request C was merged (pull request 778). It mends one thing the reading of C found and adds the line C's list lacked.
+
+**The line missing from C's "Filled otherwise than written".** 9. C12 says a limit of his landing stands alone under that landing's own line, so `limitLinks` must know the number of the line it is drawn under. "Built: step 3, C" says it "takes the line's own number"; it does not take it. `whyView` sets a variable of the page, `WHY_OWN`, to the task's number, and `limitLinks` reads it once and clears it, because two checks of `reason_limits_as_links` held the page to the calls `limitLinks(t.reasons, PAPER_ROOT))` and `limitLinks([r], null)` letter for letter, and an expected string is not the developer's to change. That came back to the architect only on the reading, not before it was built as C2 asks.
+
+**The ruling.** The number is an argument. The two checks are amended by the architect in this change, and a third is added; they fail on main's page until the follow-up is built.
+
+**Class 2,** as C was (C1): no rule, tool, answer or schema changes, and what the page shows does not change. The files are `table/index.html` and "Built" under this section, and nothing else.
+
+**What the developer changes in `table/index.html`.**
+1. The signature is `function limitLinks(reasons, intoRoot, own) {`. `own` is the number of the task whose line the block is drawn under, or null under no task's line.
+2. `var WHY_OWN = null;`, the comment line above it that speaks of it, and the first line of `limitLinks`' body that reads and clears it are removed. The comment above `limitLinks` says in their place what `own` is. Nothing else in the body changes: it reads `own` as it does today.
+3. In `whyView` the setting `WHY_OWN = t.n;` is removed and the call is `limitLinks(t.reasons, PAPER_ROOT, t.n)`.
+4. In `reasonView` the call is `limitLinks([r], null, null)`.
+5. The name `WHY_OWN` is nowhere in the page.
+
+**Shown to the architect:** `check_screen.py` passing whole, with U10 and R3 unchanged and passing; the diff, which holds the lines above in `table/index.html` and the "Built" lines here and nothing in `table/check_screen.py`; and anything filled otherwise than written, which comes back before it is changed.
+
+**Recorded in `docs/open-work.md`, "Open from step 3", and not mended here:** SIGNED's "another order" for an `After` on a landing not yet in force (C's filling 5); `approve`'s note that the staff gives no order for an order with no forces limit ("Not B's", above); and a `dry_run` that names no size the page knows ("Noted after the sizes were built", above).
