@@ -154,6 +154,7 @@ From the Standing lines of the records on Nov 27, 2026; the index has each in fu
 
 - Decision 0201, refuelling at sea: stages B to D (below, "Kept so they are not lost"). Decision 0206, the American oiler as a real class, waits for its build, and decision 0207's estimate follows it.
 - Decision 0204, a dry run inside a day: stage 2 (rule 14).
+- Decision 0150, leaving a place (step 8 of stage 3, first part): settled inside decision 0139 and not built, moved to after stage 3's proof. Its hand calculation is written in `tests/scenario_75_leaving_a_place.rs`, which holds no test and is exempt by name in `tests/all.rs`; the scenario file it names, `data/scenarios/75_leaving_a_place.toml`, is not written. The build writes both and lifts the exemption.
 - Decisions 0211 (each raid its own ship) and 0212 (fire aboard a carrier): to be reviewed again and measured. Decision 0213 (a figure by side and date): to be reviewed.
 - Decision 0216, a land unit's orders at the table: the three orders are built, the rest is not.
 - Decisions 0221 (the screen round the stop) and 0226 (the paper THE ENEMY): planned, to be reviewed.

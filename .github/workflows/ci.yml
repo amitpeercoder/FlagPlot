@@ -260,6 +260,8 @@ jobs:
           for scenario in data/scenarios/*.toml; do
             cargo run --locked --profile checked -p sim-cli -- export "$scenario" --out "viewer/replays/$(basename "$scenario" .toml).json"
           done
+          # The loop walks data/scenarios/*.toml only: the one game on the map about a centre (decision 0242) is in a folder of its own.
+          cargo run --locked --profile checked -p sim-cli -- export data/scenarios/wide-map/placeholder_the_wide_sea.toml --out viewer/replays/placeholder_the_wide_sea.json
           node viewer/check.js viewer/replays/*.json
 
   # The browser's build and its check (decision 0229, rulings 46 and 47): the

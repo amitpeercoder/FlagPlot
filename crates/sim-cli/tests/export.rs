@@ -896,6 +896,24 @@ fn a_generated_map_carries_its_frame() {
     assert!(placeholder["map"].get("frame").is_none());
 }
 
+/// Decision 0242, rule 16: the export of a game on the map about a centre
+/// carries its kind and scale and no factor (a map of one factor is exported as
+/// it was, above).
+#[test]
+fn a_map_about_a_centre_carries_its_kind_and_scale() {
+    let path = "data/scenarios/wide-map/placeholder_the_wide_sea.toml";
+    let wide = parse(&export("wide-sea", path, &[]));
+    assert_eq!(
+        wide["map"]["frame"],
+        serde_json::json!({"centre_lat": 4, "centre_lon": 174.5, "kind": "about a centre", "scale": 0.964, "west": 142, "east": 207})
+    );
+    assert!(wide["map"]["frame"].get("factor").is_none());
+    let text = String::from_utf8(export("wide-sea-text", path, &[])).expect("UTF-8");
+    assert!(text.contains("\"kind\":\"about a centre\""));
+    assert!(text.contains("\"scale\":0.964"));
+    assert!(!text.contains("\"factor\""));
+}
+
 /// The Midway map's labels (decision 0199, 29) are read as any labels file
 /// is, each position its row's of `data/oob/place_positions.csv`, exactly.
 #[test]

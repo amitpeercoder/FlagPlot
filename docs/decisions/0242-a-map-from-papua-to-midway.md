@@ -4,7 +4,7 @@ Status: a plan by the architect, written on Nov 28, 2026 at the designer's askin
 
 Summary: The game has two maps, each of one sea, and each flat with one factor for longitude. A game of 1942 from Papua to Midway needs one map of both seas and what lies between, about 10,400 hexes. Measured, the present way of flattening would put the carrier battle off Midway 8 to 10 in 100 out east to west and the Solomons 5 to 7. This plans a third map with a second kind of projection, about the map's own centre, which holds every named place within 4 in 100; says what every reader of a map must learn for it; and leaves the two present maps, and every game on them, as they are.
 
-Standing: Planned by the architect and amended on review; approved by the designer on Nov 28, 2026; steps 1 to 3 of five are built
+Standing: Planned by the architect and amended on review; approved by the designer on Nov 28, 2026; steps 1 to 4 of five are built
 
 ## Why
 

@@ -704,8 +704,16 @@ function checkReplay(file) {
     const fr = replay.map.frame;
     if (fr !== undefined || (replay.map.real && replay.version >= 6)) {
       assert(fr && typeof fr === 'object', 'a replay of a real map carries no map.frame (re-export it)');
-      if (fr) for (const k of ['centre_lat', 'centre_lon', 'factor', 'west', 'east']) assert(typeof fr[k] === 'number' && Number.isFinite(fr[k]), 'map.frame.' + k + ' is not a number');
-      if (fr) assert(fr.factor > 0 && fr.factor <= 1 && fr.east > fr.west, 'map.frame is not a frame: ' + JSON.stringify(fr));
+      if (fr && fr.kind === 'about a centre') {
+        // A map about a centre (decision 0242): its scale in place of a factor, and no factor.
+        for (const k of ['centre_lat', 'centre_lon', 'scale', 'west', 'east']) assert(typeof fr[k] === 'number' && Number.isFinite(fr[k]), 'map.frame.' + k + ' is not a number');
+        assert(!('factor' in fr), 'a map.frame about a centre has a factor: ' + JSON.stringify(fr));
+        assert(fr.scale > 0 && fr.scale <= 1 && fr.east > fr.west, 'map.frame is not a frame: ' + JSON.stringify(fr));
+      } else {
+        if (fr) assert(fr.kind === undefined || fr.kind === 'one factor', 'map.frame has a kind the viewer does not know: ' + JSON.stringify(fr));
+        if (fr) for (const k of ['centre_lat', 'centre_lon', 'factor', 'west', 'east']) assert(typeof fr[k] === 'number' && Number.isFinite(fr[k]), 'map.frame.' + k + ' is not a number');
+        if (fr) assert(fr.factor > 0 && fr.factor <= 1 && fr.east > fr.west, 'map.frame is not a frame: ' + JSON.stringify(fr));
+      }
     }
   }
 
@@ -714,12 +722,17 @@ function checkReplay(file) {
     for (const p of model.placements) {
       assert(model.hexByKey.has(p.q + ',' + p.r), 'label ' + p.label.place + ' placed off the map');
       // independent recomputation of the nearest hex, in the map's own frame (decision 0199)
+      // (for a map of one factor the factor is the cosine of the centre's latitude, as the engine's; for a map about a centre the
+      // distance is in the plane, which the check of the shared fixture below holds to the map tool's)
       const fr = replay.map.frame, factor = fr && Number.isFinite(fr.factor) ? fr.factor : Math.cos(12 * Math.PI / 180);
       const runOf = (lon) => (fr && fr.east > 180 && lon < fr.west ? lon + 360 : lon);
+      const centre = fr && fr.kind === 'about a centre';
       let best = null, bd = Infinity;
       for (const h of replay.map.hexes) {
         if (typeof h.lat !== 'number') continue;
-        const dx = (runOf(p.label.lon) - runOf(h.lon)) * factor, dy = p.label.lat - h.lat;
+        let dx, dy;
+        if (centre) { const a = Core.plane(p.label.lat, p.label.lon, fr), b = Core.plane(h.lat, h.lon, fr); dx = a[0] - b[0]; dy = a[1] - b[1]; }
+        else { dx = (runOf(p.label.lon) - runOf(h.lon)) * factor; dy = p.label.lat - h.lat; }
         const d = dx * dx + dy * dy;
         if (d < bd) { bd = d; best = h; }
       }
@@ -983,6 +996,13 @@ function synthetic() {
   nolatlon.labels = [{ place: 'nowhere', feature: 'x', lat: -5, lon: 150 }];
   run('labels but no lat/lon on the map', nolatlon, 1);
   assert(Core.placeLabels(nolatlon.map.hexes, nolatlon.labels).length === 0, 'placeLabels placed on a map without lat/lon');
+  // A frame that is there and cannot be read stops the build with an error (decision 0242), where it once fell back to the cosine of 12 degrees.
+  for (const bad of [{}, { factor: 'x' }, { kind: 'about a centre' }, { kind: 'about a centre', scale: 'x' }, { kind: 'other', factor: 0.9 }]) {
+    const r = base(); r.map.frame = bad;
+    let message = null;
+    try { Core.buildModel(r); } catch (e) { message = e.message; }
+    assert(message !== null && message.includes('cannot be read'), 'a frame the viewer cannot read did not stop the build: ' + JSON.stringify(bad));
+  }
   run('zero task forces with events', Object.assign(base(), { events: [{ id: 1, day: 1, pulse: 'night', kind: 'claim_received', text: '#1 D1 night     Allied claims 0 enemy ships sunk at (0,0)', causes: [], entities: [], data: { side: 'allied', hex: [0, 0], claimed_sunk: 0 } }] }), 2);
   // Step rules
   const ev = (id, day, pulse) => ({ id, day, pulse, kind: 'x', text: '#' + id + ' D' + day + ' ' + (pulse || '-') + ' t', causes: [], entities: [], data: {} });
@@ -1326,6 +1346,40 @@ function checkMeasuring() {
   console.log('  air cases ' + fx.air.length + ', sea cases ' + fx.sea.length + ' (' + routes + ' with a route, ' + none + ' with none)' + (failures === before ? '  OK' : '  FAILED'));
 }
 
+// ---- The viewer's plane against the shared file of checked positions (decision 0242, rule 18) ----
+// table/chart/plane_fixture.json is written by the map tool (crates/map-tool/src/fixture.rs): for each of the three maps its frame
+// and points, each with east and north in the map's plane to three decimals and the hex whose centre is nearest.
+function checkPlane() {
+  console.log("the viewer's plane vs the map tool's (table/chart/plane_fixture.json)");
+  let fx;
+  try { fx = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'table', 'chart', 'plane_fixture.json'), 'utf8')); }
+  catch (e) { fail('cannot read table/chart/plane_fixture.json: ' + e.message); return; }
+  const before = failures;
+  let points = 0, worst = 0;
+  assert(Array.isArray(fx.maps) && fx.maps.length === 3, 'the fixture does not hold three maps');
+  for (const m of fx.maps) {
+    for (const pt of m.points) {
+      points++;
+      const lat = parseFloat(pt.lat), lon = parseFloat(pt.lon), label = m.file + ' row ' + pt.row;
+      const got = Core.plane(lat, lon, m.frame);
+      const off = Math.max(Math.abs(got[0] - pt.east), Math.abs(got[1] - pt.north));
+      worst = Math.max(worst, off);
+      if (!(off <= 0.01)) { fail(label + ': the plane gives ' + got[0].toFixed(3) + ', ' + got[1].toFixed(3) + ', the map tool ' + pt.east + ', ' + pt.north); continue; }
+      // the viewer lays a hex's centre at 40 x (q + r/2) east and 34.641016 x r south of hex (0,0)'s: north is up the page
+      const hex = Core.pointToHex(got[0], -got[1]);
+      assert(hex.q === pt.q && hex.r === pt.r, label + ': the hex nearest is (' + hex.q + ',' + hex.r + '), the map tool\'s (' + pt.q + ',' + pt.r + ')');
+    }
+  }
+  // the frame cases: a frame that is there and cannot be read is an error, not the cosine of 12 degrees
+  for (const bad of [{}, { factor: 'x', centre_lat: 0, centre_lon: 0 }, { kind: 'about a centre' }, { kind: 'about a centre', scale: null }, { kind: 'about a centre', scale: NaN }, { kind: 'flat', factor: 0.9 }, 'frame', 5]) {
+    let threw = false;
+    try { Core.frameCase(bad); } catch (e) { threw = true; }
+    assert(threw, 'a frame the viewer cannot read was accepted: ' + JSON.stringify(bad));
+  }
+  assert(Core.frameCase(undefined) === 'none' && Core.frameCase(null) === 'none', 'no frame is not read as none');
+  console.log('  ' + points + ' points, worst difference ' + worst.toFixed(4) + ' nm' + (failures === before ? '  OK' : '  FAILED'));
+}
+
 // ---- Main ----
 const files = process.argv.slice(2).filter(a => !a.startsWith('--'));
 if (!files.length) console.log('(no replay files given: only the script and synthetic checks run)');
@@ -1333,5 +1387,6 @@ for (const f of files) checkReplay(f);
 synthetic();
 syntheticAir();
 checkMeasuring();
+checkPlane();
 console.log(failures ? '\n' + failures + ' check(s) FAILED' : '\nAll checks passed.');
 process.exit(failures ? 1 : 0);
