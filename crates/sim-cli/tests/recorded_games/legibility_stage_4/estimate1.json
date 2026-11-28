@@ -1,0 +1,1031 @@
+{
+  "asked": {
+    "beside": "without_it",
+    "compare": true,
+    "course": [],
+    "dates": null,
+    "days": 14,
+    "for_day": 1,
+    "in_force": false,
+    "inside_day": null,
+    "intent": 1,
+    "orders_not_tried": 0,
+    "preview": null,
+    "second_trial": true,
+    "size": "standard",
+    "standing": [
+      "set intent 1: control island 1",
+      "set intent 2: control island 2",
+      "give leave to prepare",
+      "give leave to launch"
+    ],
+    "tried_intent": 1,
+    "worlds": 16
+  },
+  "assumed": [
+    {
+      "from": {
+        "kind": "map"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy's base:1 \"Lunga\" at (2,-4), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:1",
+          "name": "Lunga"
+        },
+        "fuel_t": "500",
+        "kind": "enemy_base",
+        "place": {
+          "lat": "-9.6906",
+          "lon": "160",
+          "name": null,
+          "q": 2,
+          "r": -4
+        },
+        "supply_t": "1000"
+      }
+    },
+    {
+      "from": {
+        "kind": "map"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy's base:2 \"Rabaul\" at (-5,-13), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:2",
+          "name": "Rabaul"
+        },
+        "fuel_t": "500",
+        "kind": "enemy_base",
+        "place": {
+          "lat": "-4.4944",
+          "lon": "152.1621",
+          "name": null,
+          "q": -5,
+          "r": -13
+        },
+        "supply_t": "1000"
+      }
+    },
+    {
+      "from": {
+        "kind": "map"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy's base:4 \"Tulagi\" at (3,-5), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:4",
+          "name": "Tulagi"
+        },
+        "fuel_t": "500",
+        "kind": "enemy_base",
+        "place": {
+          "lat": "-9.1132",
+          "lon": "160.3408",
+          "name": null,
+          "q": 3,
+          "r": -5
+        },
+        "supply_t": "1000"
+      }
+    },
+    {
+      "from": {
+        "kind": "map"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy's base:7 \"Shortland\" at (-2,-8), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:7",
+          "name": "Shortland"
+        },
+        "fuel_t": "500",
+        "kind": "enemy_base",
+        "place": {
+          "lat": "-7.3812",
+          "lon": "155.9106",
+          "name": null,
+          "q": -2,
+          "r": -8
+        },
+        "supply_t": "1000"
+      }
+    },
+    {
+      "from": {
+        "kind": "estimate"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "5,275 men at (2,-4), from your estimate of the place, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "men",
+        "men": 5275,
+        "place": {
+          "lat": "-9.6906",
+          "lon": "160",
+          "name": null,
+          "q": 2,
+          "r": -4
+        }
+      }
+    },
+    {
+      "from": {
+        "kind": "estimate"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "1,850 men at (3,-5), from your estimate of the place, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "men",
+        "men": 1850,
+        "place": {
+          "lat": "-9.1132",
+          "lon": "160.3408",
+          "name": null,
+          "q": 3,
+          "r": -5
+        }
+      }
+    },
+    {
+      "from": {
+        "kind": "believed",
+        "name": "Placeholder Japanese cruiser force",
+        "standing": "present"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [
+        "placed where it could have reached since it was last seen, in 16 worlds"
+      ],
+      "text": "a force of 6 ships led by a cruiser near (-5,-13), believed present (\"Placeholder Japanese cruiser force\"), in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); placed where it could have reached since it was last seen, in 16 worlds",
+      "thing": {
+        "kind": "force",
+        "place": {
+          "lat": "-4.4944",
+          "lon": "152.1621",
+          "name": null,
+          "q": -5,
+          "r": -13
+        },
+        "ship_kind": "cruiser",
+        "ships": 6
+      }
+    },
+    {
+      "from": {
+        "kind": "believed",
+        "name": "Placeholder Japanese carrier force",
+        "standing": "unknown"
+      },
+      "made_in": [
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16
+      ],
+      "not_in": [
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15
+      ],
+      "notes": [
+        "put at a base of the enemy's, its place not known, in 8 worlds"
+      ],
+      "text": "a force of 8 ships led by a carrier, believed, standing unknown (\"Placeholder Japanese carrier force\"), in 8 of 16 worlds (worlds 2, 4, 6, 8, 10, 12, 14 and 16) and not in 8 of 16 worlds (worlds 1, 3, 5, 7, 9, 11, 13 and 15); put at a base of the enemy's, its place not known, in 8 worlds",
+      "thing": {
+        "kind": "force",
+        "place": null,
+        "ship_kind": "carrier",
+        "ships": 8
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy given nothing he could know of you: no contact, no claim and no estimate, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "no_belief"
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy taken to intend to hold base:1 \"Lunga\", in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:1",
+          "name": "Lunga"
+        },
+        "intent": "hold",
+        "kind": "enemy_intent",
+        "place": null
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy taken to intend to hold base:4 \"Tulagi\", in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:4",
+          "name": "Tulagi"
+        },
+        "intent": "hold",
+        "kind": "enemy_intent",
+        "place": null
+      }
+    }
+  ],
+  "beside": {
+    "cost": {
+      "aircraft_lost": {
+        "highest": 31,
+        "lowest": 18,
+        "middle": 23
+      },
+      "men_lost_to_the_enemy": {
+        "highest": 300,
+        "lowest": 0,
+        "middle": 200
+      },
+      "men_lost_unfed": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_out_of_action": {
+        "highest": 7,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_sunk": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      }
+    },
+    "could_not_be_played": [],
+    "enemy_lost": {
+      "aircraft_lost": {
+        "highest": 36,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_to_the_enemy": {
+        "highest": 1850,
+        "lowest": 20,
+        "middle": 1850
+      },
+      "men_lost_unfed": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_out_of_action": {
+        "highest": 3,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_sunk": {
+        "highest": 3,
+        "lowest": 0,
+        "middle": 0
+      }
+    },
+    "how_it_went": null,
+    "last_day": 14,
+    "of": "without_it",
+    "world_for_world": null
+  },
+  "cost": {
+    "aircraft_lost": {
+      "highest": 26,
+      "lowest": 15,
+      "middle": 22
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 2120,
+      "lowest": 500,
+      "middle": 1680
+    },
+    "men_lost_unfed": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_out_of_action": {
+      "highest": 7,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 1,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "could_not_be_played": [],
+  "enemy_lost": {
+    "aircraft_lost": {
+      "highest": 36,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 3061,
+      "lowest": 768,
+      "middle": 2786
+    },
+    "men_lost_unfed": {
+      "highest": 1455,
+      "lowest": 0,
+      "middle": 143
+    },
+    "ships_out_of_action": {
+      "highest": 1,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 7,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "estimate": 1,
+  "first_day": 1,
+  "format": "flagplot-agent",
+  "has_end": true,
+  "how_it_went": {
+    "met_and_kept": [],
+    "met_and_lost_again": [],
+    "met_days": null,
+    "not_met": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "worlds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ]
+  },
+  "kind": "trial",
+  "last_day": 14,
+  "leaves_given_to_the_side": [],
+  "needs": {
+    "at_the_end_of_day": 1,
+    "count": null,
+    "differs_in": [],
+    "expected_ashore": null,
+    "men": null,
+    "tasks": [
+      {
+        "bases": [],
+        "day": null,
+        "force": null,
+        "kind": "take_place",
+        "phase": null,
+        "place": {
+          "lat": "-9.6906",
+          "lon": "160",
+          "name": null,
+          "q": 2,
+          "r": -4
+        },
+        "text": "take the place at (2,-4)"
+      },
+      {
+        "bases": [],
+        "day": null,
+        "force": {
+          "formed": false,
+          "task_force": {
+            "handle": "task_force:9",
+            "name": "Placeholder transports, Guadalcanal"
+          }
+        },
+        "kind": "ready_landing",
+        "phase": null,
+        "place": {
+          "lat": "-9.6906",
+          "lon": "160",
+          "name": null,
+          "q": 2,
+          "r": -4
+        },
+        "text": "ready a landing at (2,-4) by task_force:9 \"Placeholder transports, Guadalcanal\""
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:1",
+              "name": "Lunga"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "hold",
+        "phase": null,
+        "place": null,
+        "text": "hold base:1 \"Lunga\""
+      },
+      {
+        "bases": [],
+        "day": null,
+        "force": null,
+        "kind": "deny",
+        "phase": null,
+        "place": {
+          "lat": "-9.6906",
+          "lon": "160",
+          "name": null,
+          "q": 2,
+          "r": -4
+        },
+        "text": "deny the waters within 3 hexes of (2,-4)"
+      },
+      {
+        "bases": [],
+        "day": null,
+        "force": {
+          "formed": false,
+          "task_force": {
+            "handle": "task_force:1",
+            "name": "Task Force 16"
+          }
+        },
+        "kind": "operate_carriers",
+        "phase": null,
+        "place": {
+          "lat": "-9.1132",
+          "lon": "163.067",
+          "name": null,
+          "q": 7,
+          "r": -5
+        },
+        "text": "operate the carrier force task_force:1 \"Task Force 16\" from (7,-5)"
+      },
+      {
+        "bases": [],
+        "day": null,
+        "force": {
+          "formed": false,
+          "task_force": {
+            "handle": "task_force:2",
+            "name": "Task Force 11"
+          }
+        },
+        "kind": "operate_carriers",
+        "phase": null,
+        "place": {
+          "lat": "-9.1132",
+          "lon": "163.067",
+          "name": null,
+          "q": 7,
+          "r": -5
+        },
+        "text": "operate the carrier force task_force:2 \"Task Force 11\" from (7,-5)"
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:1",
+              "name": "Lunga"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "neutralise",
+        "phase": null,
+        "place": null,
+        "text": "neutralise base:1 \"Lunga\""
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:4",
+              "name": "Tulagi"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "neutralise",
+        "phase": null,
+        "place": null,
+        "text": "neutralise base:4 \"Tulagi\""
+      },
+      {
+        "bases": [
+          {
+            "base": {
+              "handle": "base:7",
+              "name": "Shortland"
+            },
+            "formed": false
+          }
+        ],
+        "day": null,
+        "force": null,
+        "kind": "neutralise",
+        "phase": null,
+        "place": null,
+        "text": "neutralise base:7 \"Shortland\""
+      }
+    ],
+    "waits_for": [],
+    "world": 1
+  },
+  "other_plans": [
+    {
+      "displaced": "later",
+      "intent": 2,
+      "task": {
+        "bases": [],
+        "day": null,
+        "force": null,
+        "kind": "control_island",
+        "place": null,
+        "text": "control island 2"
+      },
+      "with": {
+        "middle_day": 3,
+        "worlds": [
+          1,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      },
+      "without": {
+        "middle_day": 1,
+        "worlds": [
+          1,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ]
+      }
+    }
+  ],
+  "partings": [
+    {
+      "by": {
+        "kind": "force",
+        "place": null,
+        "ship_kind": "carrier",
+        "ships": 8
+      },
+      "from": {
+        "kind": "believed",
+        "name": "Placeholder Japanese carrier force",
+        "standing": "unknown"
+      },
+      "with": {
+        "cost": {
+          "aircraft_lost": {
+            "highest": 26,
+            "lowest": 15,
+            "middle": 24
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 2120,
+            "lowest": 500,
+            "middle": 1660
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 7,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 1,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "enemy_lost": {
+          "aircraft_lost": {
+            "highest": 36,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 2940,
+            "lowest": 768,
+            "middle": 2786
+          },
+          "men_lost_unfed": {
+            "highest": 1172,
+            "lowest": 0,
+            "middle": 143
+          },
+          "ships_out_of_action": {
+            "highest": 1,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 7,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "how_it_went": {
+          "met_and_kept": [],
+          "met_and_lost_again": [],
+          "met_days": null,
+          "not_met": [
+            2,
+            4,
+            6,
+            8,
+            10,
+            12,
+            14,
+            16
+          ],
+          "worlds": [
+            2,
+            4,
+            6,
+            8,
+            10,
+            12,
+            14,
+            16
+          ]
+        }
+      },
+      "without": {
+        "cost": {
+          "aircraft_lost": {
+            "highest": 26,
+            "lowest": 16,
+            "middle": 19
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 1940,
+            "lowest": 1520,
+            "middle": 1680
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "enemy_lost": {
+          "aircraft_lost": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 3061,
+            "lowest": 2655,
+            "middle": 2707
+          },
+          "men_lost_unfed": {
+            "highest": 1455,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "how_it_went": {
+          "met_and_kept": [],
+          "met_and_lost_again": [],
+          "met_days": null,
+          "not_met": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            15
+          ],
+          "worlds": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            15
+          ]
+        }
+      }
+    }
+  ],
+  "text": [
+    "Tried: intent 1, control island 1, as it would go from the morning of day 1, with what you have handed in for that morning, in 16 worlds of 14 days each (the size standard).",
+    "Taken in on that morning as you have it: set intent 1: control island 1; set intent 2: control island 2; give leave to prepare; give leave to launch.",
+    "How it went, over 16 worlds played: met and kept in none of the 16 worlds; met and lost again in none of the 16 worlds; not met by day 14 in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16).",
+    "What it cost your side, the lowest, the middle and the highest over the worlds: men lost to the enemy 500, 1,680, 2,120; men lost unfed 0, 0, 0; ships sunk 0, 0, 1; ships out of action at the end 0, 0, 7; aircraft lost 15, 22, 26.",
+    "What the trial's enemy lost, by the trial's own reckoning of an enemy it made from your beliefs, not a claim or a report: men lost to the enemy 768, 2,786, 3,061; men lost unfed 0, 143, 1,455; ships sunk 0, 0, 7; ships out of action at the end 0, 0, 1; aircraft lost 0, 0, 36.",
+    "What it needs and has, as your staff worked it in world 1 at the end of day 1: it waits for nothing; no day ashore can yet be given. Its tasks: take the place at (2,-4); ready a landing at (2,-4) by task_force:9 \"Placeholder transports, Guadalcanal\"; hold base:1 \"Lunga\"; deny the waters within 3 hexes of (2,-4); operate the carrier force task_force:1 \"Task Force 16\" from (7,-5); operate the carrier force task_force:2 \"Task Force 11\" from (7,-5); neutralise base:1 \"Lunga\"; neutralise base:4 \"Tulagi\"; neutralise base:7 \"Shortland\".",
+    "Beside it, your side without the order, in the same worlds: the order is not there to have gone, so only what it cost is given.",
+    "Beside it, what it cost your side, the lowest, the middle and the highest over the worlds: men lost to the enemy 0, 200, 300; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 7; aircraft lost 18, 23, 31.",
+    "Beside it, what the trial's enemy lost, by the trial's own reckoning: men lost to the enemy 20, 1,850, 1,850; men lost unfed 0, 0, 0; ships sunk 0, 0, 3; ships out of action at the end 0, 0, 3; aircraft lost 0, 0, 36.",
+    "Your intent 2, control island 2: met and kept in 15 worlds with this and 15 without: displaced, met later, the middle day 3 against 1.",
+    "What was assumed: the enemy's base:1 \"Lunga\" at (2,-4), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy's base:2 \"Rabaul\" at (-5,-13), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy's base:4 \"Tulagi\" at (3,-5), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy's base:7 \"Shortland\" at (-2,-8), holding 1000 t of supply and 500 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); 5,275 men at (2,-4), from your estimate of the place, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); 1,850 men at (3,-5), from your estimate of the place, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); a force of 6 ships led by a cruiser near (-5,-13), believed present (\"Placeholder Japanese cruiser force\"), in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); placed where it could have reached since it was last seen, in 16 worlds; a force of 8 ships led by a carrier, believed, standing unknown (\"Placeholder Japanese carrier force\"), in 8 of 16 worlds (worlds 2, 4, 6, 8, 10, 12, 14 and 16) and not in 8 of 16 worlds (worlds 1, 3, 5, 7, 9, 11, 13 and 15); put at a base of the enemy's, its place not known, in 8 worlds; the enemy given nothing he could know of you: no contact, no claim and no estimate, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy taken to intend to hold base:1 \"Lunga\", in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy taken to intend to hold base:4 \"Tulagi\", in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16).",
+    "No leave was given by the trial: what it needed you had given, or have queued.",
+    "Where the worlds part, by a force of 8 ships led by a carrier, believed, standing unknown (\"Placeholder Japanese carrier force\"). With them, 8 worlds (worlds 2, 4, 6, 8, 10, 12, 14 and 16): met and kept in none, your side's men lost to the enemy 500, 1,660, 2,120 and ships sunk 0, 0, 1 and ships out of action at the end 0, 0, 7 and aircraft lost 15, 24, 26, the trial's enemy's men lost to the enemy 768, 2,786, 2,940 and men lost unfed 0, 143, 1,172 and ships sunk 0, 0, 7 and ships out of action at the end 0, 0, 1 and aircraft lost 0, 0, 36. Without them, 8 worlds (worlds 1, 3, 5, 7, 9, 11, 13 and 15): met and kept in none, your side's men lost to the enemy 1,520, 1,680, 1,940 and aircraft lost 16, 19, 26, the trial's enemy's men lost to the enemy 2,655, 2,707, 3,061 and men lost unfed 0, 0, 1,455."
+  ],
+  "uneven": false,
+  "version": 57
+}
