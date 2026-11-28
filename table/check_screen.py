@@ -670,8 +670,9 @@ def the_readings_mends():
     print("-- the reading's mends: a new force, a force formed, the note under a reading, a change that brings no order, the select", flush=True)
     text = page_text()
     model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
-    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords", "readingUnit", "planOrderLine", "readingTop"]) + model + r"""
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords", "readingUnit", "planOrderLine", "readingTop", "runsLine"]) + model + r"""
 function dateOf() { return ''; } const hexes = [];
+function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 function main() {
   M.names['base:1'] = 'Saltmere'; M.names['task_force:17'] = 'Task Force 17'; M.names['ship:1'] = 'Merrowdale';
   const out = {};
@@ -681,6 +682,8 @@ function main() {
               limitsNote('hold', [{ key: 'ships' }]), limitsNote('patrol', [{ key: 'submarines' }]), limitsNote('hold', [])];
   const bare = () => ({ kids: [], units: [] }), one = { kids: [], units: [{}] };
   out.top = [readingTop(bare(), 'hold', false), readingTop(bare(), 'hold'), readingTop(bare(), 'hold', true), readingTop(one, 'hold', true), readingTop(one, 'hold', false), readingTop(one, 'hold')];
+  const dw = n => 'day ' + n, nr = load_t => ({ next_run: { days: { load: 3, sail: 4, arrive: 4, free: 7 }, load_t: load_t, ships: [1] } });
+  out.runs = [runsLine(nr('25'), dw), runsLine(nr('1250'), dw), runsLine({}, dw), runsLine(null, dw)];
   return out;
 }
 """
@@ -697,6 +700,11 @@ function main() {
     check(r["top"][0] == {"text": nothing, "bad": True} and r["top"][1] == {"text": nothing, "bad": True} and r["top"][2] == {"text": "The staff would give no new order under it now."}
           and all(t == {"text": "The staff would give these orders:"} for t in r["top"][3:]), f"M4: a bare reading of a change brings no new order, a bare reading of an order serves nothing yet ({r['top']})")
     check("readingTop(root, top.kind, !!own)" in cut_function(text, "  function readingView(out, p, e, own) {"), "M4: readingView passes !!own")
+    check(r["runs"] == ["No run is needed yet. The first, of 25 t, would load on day 3 and be due on day 4.", "No run is needed yet. The first, of 1,250 t, would load on day 3 and be due on day 4.", "", ""],
+          f"M6: runsLine says the first run's weight, load day and due day, and nothing where there is no next run ({r['runs']})")
+    view = cut_function(text, "  function readingView(out, p, e, own) {")
+    check("runsLine(w, " in view and "if (runs) lead = { text: runs }" in view and "lead.bad" in view and "dateOf(n - 1)" in view and "'day ' + n" in view and "bad" not in view[view.index("if (runs) lead"):view.index("if (runs) lead") + 30],
+          "M7: a draft whose tree has no task and no unit but a next run is headed by runsLine in plain ink, with the date where the game has dates, else day N; otherwise \"Nothing can serve\" stays")
     css = re.search(r"#paper select \{([^}]*)\}", text)
     check(css is not None and "background: transparent" in css.group(1) and "border: 0" in css.group(1) and "border-bottom:" in css.group(1), "M5: a list in the paper is drawn as a blank: transparent, no border but one beneath")
 
