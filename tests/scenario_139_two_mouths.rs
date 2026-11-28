@@ -95,8 +95,8 @@
 //!   it is due. Once it has landed the stock itself has it.
 //! - **Fuel** binds nothing. Each ship's tanks are full. A round trip burns
 //!   140 t in ship 2 to U and 50 t to T, 112 t in ship 1 to U and 40 t to T.
-//! - **The commands.** Every case gives leave to prepare and leave to launch
-//!   on day 1. Unless a case says otherwise, intent 1 is "keep base 2
+//! - **The commands.** Every case but G gives leave to prepare and leave to
+//!   launch on day 1. Unless a case says otherwise, intent 1 is "keep base 2
 //!   supplied" (T) and intent 2 "keep base 3 supplied" (U), each with a
 //!   forces limit that names its ships and base 1 as the source; plan 1 is
 //!   intent 1's and plan 2 intent 2's. The intents are served in number
@@ -359,7 +359,8 @@
 //!
 //! ## Case G: no command
 //!
-//! No run is sent. **400 are unfed at U on each night from day 4 to day 8,
+//! The file as given, with nothing added: no order and no leave. No run is
+//! sent. **400 are unfed at U on each night from day 4 to day 8,
 //! and 1,000 at T on each night from day 6 to day 8.** S holds 500 t at the
 //! end.
 //!
@@ -393,6 +394,37 @@
 //!
 //! T is fed every night. So a hold with no number is no answer here, as on
 //! rung 1.
+//!
+//! ## Case I: the right ships, a day late. The far garrison goes unfed
+//!
+//! Case A's two orders and their forces limits, given on day 2 in place of
+//! day 1; the leaves on day 1 as before.
+//!
+//! - Day 1: no order is in force. Day 2, U, reading 4: a run by ship 2
+//!   would be due on day 4; the reading of day 5 is 0, below 4: run 1 of
+//!   plan 2. The reading of day 4 is 0; load = (4 - 0) + 10 = 14 t. Loading
+//!   day 2, sailing day 3, due day 4, free day 8; ship 2 committed for days
+//!   2 to 7. T: the reading of day 4 is 10 t, not below 10: no run.
+//! - Day 3, T: run 1 of plan 1, 25 t, as case A.
+//! - **Night of day 4: 0 of 400 fed at U, 400 unfed.** Ship 2 halts there 11
+//!   hours into the day, after the meal, and lands 14 t. It is the night,
+//!   and the count, of case D: the right ships a day late read as the wrong
+//!   ships do.
+//! - Day 7, U, reading 10: the reading of day 10 is 4 t, not below 4. Day
+//!   8: T, reading 15: run 2 of plan 1, 25 t, as case A. U, reading 8: ship
+//!   2 is free; due day 10; the reading of day 11 is 2 t, below 4; the
+//!   reading of day 10 is 4 t; run 2 of plan 2, 0 + 10 = 10 t, loading day
+//!   8, sailing day 9, due day 10, free day 14, committed for days 8 to 13.
+//!   The staff hands in "cannot meet" on no day.
+//!
+//! | Night of day | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+//! | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+//! | T | 20 | 15 | 10 | 30 | 25 | 20 | 15 | 10 |
+//! | U | 4 | 2 | 0 | 14 | 12 | 10 | 8 | 6 |
+//! | S | 500 | 486 | 461 | 461 | 461 | 461 | 461 | 426 |
+//!
+//! T is fed every night. U has no day to spare: its food is gone after the
+//! night of day 3 and ship 2 lands on the second day after she is ordered.
 //!
 //! ## In every case
 //!
@@ -459,10 +491,16 @@
 //!     other run is added; 400 unfed at (0,14) on the night of day 4
 //!     and on no other; nobody unfed at (5,0); the stocks after each day are
 //!     the table's.
-//! 12. In each of cases A, B, C, D, E1, E2, E3, G and H no `MenLostUnfed` is
-//!     recorded, unit 1 has 1,000 men and unit 2 400 at the end, and the
+//! 12. In each of cases A, B, C, D, E1, E2, E3, G, H and I no `MenLostUnfed`
+//!     is recorded, unit 1 has 1,000 men and unit 2 400 at the end, and the
 //!     game played twice gives the same hash each day; the last day's hash
 //!     of each is pinned.
+//! 13. Case I: plan 2 has runs of 14 t added on day 2, with days (2, 3, 4,
+//!     8) and ship 2 committed for days 2 to 7, and of 10 t on day 8, with
+//!     days (8, 9, 10, 14); plan 1 has runs of 25 t on days 3 and 8; no run
+//!     is added on day 1; 400 unfed at (0,14) on the night of day 4 and on
+//!     no other; nobody unfed at (5,0); the stocks after each day are the
+//!     table's; "cannot meet" is handed in on no day.
 
 /// Statement 1: the file as the player is given it.
 #[test]
@@ -549,5 +587,13 @@ fn no_command_and_two_holds() {
 #[test]
 #[ignore = "statement written, not built"]
 fn nobody_lost_and_the_same_twice() {
+    todo!()
+}
+
+/// Statement 13: case I, the right ships a day late, and the far garrison
+/// unfed as with the wrong ships.
+#[test]
+#[ignore = "statement written, not built"]
+fn the_right_ships_a_day_late() {
     todo!()
 }
