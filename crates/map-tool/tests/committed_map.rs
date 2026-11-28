@@ -1,6 +1,7 @@
 //! Checks on the committed generated maps: every `.csv` file of `data/map`
 //! whose header gives a frame (decision 0199), the present map
-//! `south_pacific.csv` and the Midway map `midway.csv` among them. It needs
+//! `south_pacific.csv`, the Midway map `midway.csv` and the map from Papua to
+//! Midway `papua_to_midway.csv` (decision 0242) among them. It needs
 //! nothing from references/. Each map is loaded through `sim_data::load_map`,
 //! which checks the symmetry of the closed sides; the raw text is parsed here
 //! to check the rest, in the frame its own header gives.
@@ -54,7 +55,8 @@ fn generated_maps() -> Vec<(PathBuf, Frame)> {
         .collect();
     assert!(
         names.contains(&"south_pacific.csv".to_string())
-            && names.contains(&"midway.csv".to_string()),
+            && names.contains(&"midway.csv".to_string())
+            && names.contains(&"papua_to_midway.csv".to_string()),
         "{names:?}"
     );
     maps
@@ -369,8 +371,12 @@ fn the_midway_frame_file_and_the_header_agree() {
     assert_eq!(frame.centre_lon.to_string(), "178.5");
     assert!(frame.crosses_date_line());
     // cos 28.5 degrees is 0.8788171...; the literal is it to six places.
+    // The check is of a map of one factor (decision 0242, rule 16).
+    let map_tool::frame::Kind::OneFactor(factor) = &file.kind else {
+        panic!("the Midway frame is of one factor");
+    };
     let cos = (28.5_f64).to_radians().cos();
-    assert!((cos - file.factor.value).abs() < 0.0000005, "{cos}");
+    assert!((cos - factor.value).abs() < 0.0000005, "{cos}");
 }
 
 /// Each land mark of the Midway frame cites its row of

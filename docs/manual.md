@@ -70,19 +70,19 @@ A game day begins at **1800 on the preceding calendar date**. For a scenario who
 
 ### 4.1 Giving an objective
 
-An **intent** is the outcome you ask the staff to bring about or maintain. Click the base, force, or waters that the order concerns. Under **Orders You Can Give**, choose an objective. The available orders depend on the place, scenario, and forces at hand.
+An **intent** is the outcome you ask the staff to bring about or maintain. Click the base, force, or waters that the order concerns. Under **Orders You Can Give**, choose an objective. The available orders depend on the place, scenario, and forces at hand. The paper opens headed by that order in words, for example "Keep Thornwick supplied"; to give another order, use the way back at the top of the paper and choose again on the card.
 
 | Objective | What you are asking of the staff |
 | --- | --- |
 | **Hold** a friendly base | Keep the place in your hands. The staff can form tasks for its defense and support. |
-| **Keep it supplied, 30 days** | Try to maintain the stated supply floor. The staff needs a source, available shipping, and time to deliver. |
+| **Keep it supplied** | Try to maintain the supply floor you state, in days of supply; the paper says how many days the place holds now. The order waits until you give the days, a ship and a source. The staff needs shipping and time to deliver. |
 | **Cover it from the air** | Assign air protection to a place using suitable groups in reach. |
 | **Capture** or **Seize and hold** | Take a particular place, or conduct the wider operation for a named island. A wider order can already include tasks for individual places. |
 | **Neutralise** an enemy base | Suppress the base’s ability to operate. |
 | **Deny these waters** | Task available forces to act against enemy activity in the selected area. |
 | **Operate** a carrier force, **Station** a surface force, or **Patrol these waters with submarines** | Ask for a force or boats to work from or within the selected waters, where offered. |
 
-In the order paper, set **Risk** where offered. **Balanced** is the default. **Preserve** asks for greater caution and **Press** permits greater risk. How much the staff changes its plan depends on the objective and situation. Open **Limits** to see the controls that apply to this order. These may include eligible forces, a supply source, an operating area, or a timing or intelligence requirement. An additional limit can leave the staff with too few means to act.
+In the order paper, a supply order asks for the ships and the base it is supplied from, under its heading, and cannot be signed until both are named. Open **Limits** to set **Risk**, where offered, and the other controls that apply to this order; **Risk** is its first line. **Balanced** is the default. **Preserve** asks for greater caution and **Press** permits greater risk. How much the staff changes its plan depends on the objective and situation. A patrol shows its boats, and a station order its risk, on the paper itself. The limits may include eligible forces, a supply source, an operating area, or a timing or intelligence requirement. These may include eligible forces, a supply source, an operating area, or a timing or intelligence requirement. An additional limit can leave the staff with too few means to act.
 
 Read **The Staff’s Reading** before you choose **Sign and Send**. It shows how the staff would carry out the draft and can flag a shortage of suitable forces or another obstacle. Open a task’s **Why** to see what informed the choice. Use **Tear Up** to discard the draft. A signed order appears under **Your Orders** when in force, with pending entries shown under **Signed**. Use **Take Back** on a pending entry while it is still available.
 
@@ -96,7 +96,7 @@ Use **Cancel Plan** on a plan where offered. Use **Withdraw This Order** when yo
 
 ## 5. Direct orders and control of units
 
-Click a friendly task force, air group, land unit, or submarine and choose **Give a Direct Order** when offered. The paper shows the choices for that unit, who will control it, and when the order acts. Review the draft before signing. As the order takes effect, the unit is held in your hands. A held unit is kept out of the staff’s plans.
+Click a friendly task force, air group, land unit, or submarine and choose **Give a Direct Order** when offered. The paper is headed by the unit's name and shows the choices for that unit and who will control it. When the order acts is said beside **Sign and Send**. Review the draft before signing. As the order takes effect, the unit is held in your hands. A held unit is kept out of the staff’s plans.
 
 Use **Return It to the Staff** on a held unit’s card when you want the staff to use it again. Some cards also let you keep a unit out of the staff’s plans without giving it an immediate task. Before taking a unit, check whether it already serves an objective elsewhere. A plan may now have to wait or find another unit.
 
@@ -149,7 +149,7 @@ At the end, **How It Ended** shows the result and what each side achieved. Use *
 Start **Midway** as **Allied** against **The Engine**. It is 1800 on 2 June. Your directive calls for holding Midway and defeating the enemy carriers. Give the staff an opening objective, then see what it asks of you at dawn.
 
 1. Close the directive. Select Midway on the chart, or open **Staff → Order of Battle** and click the base under **Ashore**.
-2. On Midway’s card, choose **Hold Midway** under **Orders You Can Give**, in the **Or Only** row. Leave risk at **Balanced**, read **The Staff’s Reading**, and click **Sign and Send**.
+2. On Midway’s card, choose **Hold Midway** under **Orders You Can Give**, in the **Or Only** row. Leave risk at **Balanced** (under **Limits**), read **The Staff’s Reading**, and click **Sign and Send**.
 
    ![The Midway base card with Hold Midway in the Or Only row](images/quickstart/hold-midway.jpg)
 

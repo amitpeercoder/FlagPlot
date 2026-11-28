@@ -1,5 +1,7 @@
 # Larger scenarios
 
+**Nov 28, 2026: the direction has moved on.** The designer chose one game of 1942 on one wide map, from Papua to Midway (`one-map-1942.md`); Guadalcanal to the end of November, proposed below, is now the last part of that note's third stage. Of the needs in the table below, forces that arrive by date (decision 0195), supply from off the map (0196), replacement men (0197), submarines against warships and a second map (0199) have since been built. The rest of this note stands as it was written.
+
 A design note by the architect, begun on Nov 20, 2026 at the designer's asking ("start researching and looking into larger scenarios. I'm leaving that to you"). It is not a plan and nothing here is built. It says what a larger scenario would need, which candidates there are, and what the architect proposes to do first. Facts were gathered from the code and the records by a team and the ones the proposals rest on were checked by the architect; a figure marked "measured" was measured on Nov 20, 2026.
 
 ## Where the game is

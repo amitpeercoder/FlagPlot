@@ -282,15 +282,45 @@ pub fn classify(land_points: u32, points: u32) -> (u32, Kind) {
     (percent, kind)
 }
 
+/// The points of an edge of the extent, from `from` to `to`, at every tenth
+/// of a degree and at the end itself.
+fn along(from: f64, to: f64) -> Vec<f64> {
+    let steps = ((to - from) * 10.0).floor() as i32;
+    let mut points: Vec<f64> = (0..=steps).map(|k| from + f64::from(k) / 10.0).collect();
+    if points.last() != Some(&to) {
+        points.push(to);
+    }
+    points
+}
+
 /// Every hex whose centre lies in the frame's extent, sorted by r then q.
-/// The rows and columns searched are worked from the extent, with a hex to
-/// spare on every side; the extent alone decides which hexes are taken.
+/// The rows and columns searched are worked from the four edges of the
+/// extent, sampled along their length at every tenth of a degree (a meridian
+/// bows outward on a map about a centre, decision 0242, rule 16), with a
+/// hex to spare on every side; the extent alone decides which hexes are
+/// taken.
 pub fn extent_hexes(frame: &Frame) -> Vec<(i32, i32)> {
     let projection = frame.projection();
     let (lat_min, lat_max) = (frame.south.value, frame.north.value);
     let (lon_min, lon_max) = (frame.west_run(), frame.east_run());
-    let (west, north) = projection.to_nm(lat_max, lon_min);
-    let (east, south) = projection.to_nm(lat_min, lon_max);
+    let mut edge_points = Vec::new();
+    for lon in along(lon_min, lon_max) {
+        edge_points.push((lat_min, lon));
+        edge_points.push((lat_max, lon));
+    }
+    for lat in along(lat_min, lat_max) {
+        edge_points.push((lat, lon_min));
+        edge_points.push((lat, lon_max));
+    }
+    let (mut west, mut east) = (f64::INFINITY, f64::NEG_INFINITY);
+    let (mut south, mut north) = (f64::INFINITY, f64::NEG_INFINITY);
+    for (lat, lon) in edge_points {
+        let (e, n) = projection.to_nm(lat, lon);
+        west = west.min(e);
+        east = east.max(e);
+        south = south.min(n);
+        north = north.max(n);
+    }
     let r_low = (-north / ROW_NM).floor() as i32 - 1;
     let r_high = (-south / ROW_NM).ceil() as i32 + 1;
     let mut hexes = Vec::new();
@@ -309,10 +339,20 @@ pub fn extent_hexes(frame: &Frame) -> Vec<(i32, i32)> {
 }
 
 /// Keeps the polygons whose bounding box touches the extent padded by one
-/// hex (40 nm of latitude and of longitude).
+/// hex (40 nm of latitude and of longitude), or by one degree of each for a
+/// map about a centre.
 pub fn keep_near_extent(polygons: Vec<Polygon>, frame: &Frame) -> Vec<Polygon> {
-    let pad_lat = 40.0 / NM_PER_DEG_LAT;
-    let pad_lon = 40.0 / frame.projection().nm_per_deg_lon();
+    // A map about a centre pads by one degree of latitude and of longitude
+    // (decision 0242, rule 16): a meridian bows, so a hex's reach in
+    // longitude is not worked from the factor.
+    let (pad_lat, pad_lon) = if frame.is_about_a_centre() {
+        (1.0, 1.0)
+    } else {
+        (
+            40.0 / NM_PER_DEG_LAT,
+            40.0 / frame.projection().nm_per_deg_lon(),
+        )
+    };
     let (lat_min, lat_max) = (frame.south.value, frame.north.value);
     let (lon_min, lon_max) = (frame.west_run(), frame.east_run());
     polygons

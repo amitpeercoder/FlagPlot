@@ -39,7 +39,7 @@ Each entity type has an identity file: one row per thing, holding only what defi
 | `sensors.csv` | Radar, sonar, hydrophone, optical director or rangefinder, by model | `nation`, `kind` |
 | `air_units.csv` | Squadron, kōkūtai, or carrier air group component | `nation`, `service`, `parent` (key, optional) |
 | `places.csv` | Airfield, anchorage or base named in a fact | `region` |
-| `engagements.csv` | Named battle or operation used to group an order of battle | `date_from`, `date_to` |
+| `engagements.csv` | Named battle or operation used to group an order of battle. Also an operation, a directive's task or a plan with its timetable (see "Operations, directives and plans") | `date_from`, `date_to`, `zone` |
 | `sources.csv` | Source, see "Sources" | |
 
 Notes:
@@ -197,7 +197,7 @@ Added for scenario 4c (Savo Island). A scenario needs more than who was present:
 | `id` | Whole number |
 | `engagement` | `key` in `engagements.csv` |
 | `time` | `YYYY-MM-DDTHH:MM` in the engagement's reference zone, which `engagements.csv` names. Empty if the source gives no time |
-| `kind` | `sighting`, `radar_contact`, `report_sent`, `report_received`, `order`, `readiness`, `course_change`, `illumination`, `open_fire`, `torpedo_launch`, `torpedo_hit`, `gun_hit`, `cease_fire`, `sunk`, `other` |
+| `kind` | `sighting`, `radar_contact`, `report_sent`, `report_received`, `order`, `readiness`, `course_change`, `illumination`, `open_fire`, `torpedo_launch`, `torpedo_hit`, `gun_hit`, `cease_fire`, `sunk`, `other`; for an operation's orders and timetable, `plan_date`, `postponement`, `cancellation`, `estimate`, `assembly`, `loading`, `rehearsal`, `sailed`, `arrived`, `fuelling` (see "Operations, directives and plans") |
 | `actor`, `target` | A ship `key`, a formation name, or a few words for an aircraft or submarine |
 | `means` | `visual`, `radar`, `sound`, `aircraft`, `searchlight`, `starshell`, `flare`, `radio`, `tbs`, `blinker`, or empty |
 | `range_m`, `bearing_deg` | Range and true bearing from actor to target, if the source gives them |
@@ -245,6 +245,19 @@ Added for scenario 4c (Savo Island). A scenario needs more than who was present:
 A place may have several rows: one per feature and one per source. The rows are today's positions of features that have not moved. Whether a modern airport stands on a 1942 airfield is a separate statement and is made in the note, with its basis. Positions for an engagement (a patrol line, a ship at a time) stay in `engagement_positions.csv`.
 
 These rows are history to test against. They are never an input that makes the simulation reproduce the night: a scenario takes its starting positions and alert states from them, and its result is then compared with the outcomes.
+
+### Operations, directives and plans
+
+The architect's ruling for the 1942 pass of 2026-11-28. An operation, a directive, a plan and its timetable are not a new kind of entity. The operation is a row of `engagements.csv`, keyed as the documents name it (`mo-operation`, `mi-operation`, `watchtower`, `providence`), with the zone its events are written in, or an empty zone where no document read states one. What was ordered, planned, changed, cancelled, estimated and done is a row of `engagement_events.csv`, in time order. Facts about a ship, a ship class, an air unit, a land unit, a place or training stay in their own fact files.
+
+| `kind` | `time` | The other columns |
+| --- | --- | --- |
+| `order` | The date issued | `actor` who issued it; `target` to whom; `as_stated` the task in the document's words; the purpose, the forces allotted and what was to follow in the note, each only as the document states it |
+| `plan_date` | The date a plan or order set: a landing day, a day to be ready by, a not-later-than | `as_stated` the words; the note says which kind of date it is and which order set it. A planned date is never entered as if it happened |
+| `postponement` | The date of the decision or the request; empty if not printed | The note gives the old and new dates, who asked, who decided, the reason as stated, and whether it was granted |
+| `cancellation` | The date the plan was dropped | The reason as stated, in the note |
+| `estimate` | The estimate's own date; empty if the document gives none, never inferred | `actor` the command whose estimate it is; `target` the enemy operation or force; the note says it is that side's belief. The row goes in the engagement of the operation estimated |
+| `assembly`, `loading`, `rehearsal`, `sailed`, `arrived`, `fuelling` | The date of the step | `actor` the force; `position` the place |
 
 ## Sources
 
@@ -427,6 +440,11 @@ These are choices I would rather not make alone. My recommendation is first in e
 ## Changes made for the real map (stage 4b)
 
 - **`place_positions.csv`,** described under "Engagement records". `places.csv` still holds names only. A position is one source's statement like any other fact, so it gets rows with sources and not a column on the identity file.
+
+## Changes made in the 1942 pass (2026-11-28)
+
+- **Operations, directives and plans** are engagements and their events, by the architect's ruling, under "Engagement records" above, with ten new event kinds. Seventeen engagements were added for them (`outside-research-nov-28.md`).
+- **`position_note`** for a place: a distance and direction in the source's own words, where no latitude and longitude is printed.
 
 ## What this design does not cover
 

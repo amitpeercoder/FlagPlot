@@ -6,6 +6,7 @@ use std::process::ExitCode;
 
 use map_tool::frame::Frame;
 use map_tool::generate::{csv_text, generate_with_anchors, into_run, parse_anchors, Kind};
+use map_tool::located::located_text;
 use map_tool::projection::degrees_text;
 use map_tool::{render, shp, water};
 use sim_core::hex::{Hex, HEX_NM};
@@ -16,6 +17,7 @@ const DEFAULT_MAP: &str = "data/map/south_pacific.csv";
 const USAGE: &str = "usage:
   map-tool generate --land <shp> --minor-islands <shp> --out <csv> [--anchors <csv>] [--frame <toml>]
   map-tool render [--map <csv>] [--mark q,r=X ...]
+  map-tool locate-rows --map <csv> --positions <csv> --out <csv>
   map-tool locate --lat <deg> --lon <deg> [--map <csv>]
   map-tool path --from q,r --to q,r [--map <csv>]
   map-tool sides --hex q,r [--map <csv>]
@@ -27,6 +29,11 @@ generate makes the map of the frame file given (decision 0199); with none, the
 present map, data/map/south_pacific.csv. locate and water read the frame of
 the map they are given from its header; a longitude is west negative, and one
 west of the map's western edge is counted on across the date line.
+
+locate-rows writes a map's file of located positions (decision 0242, rule 15):
+the hex of each row of the positions file (data/oob/place_positions.csv, the
+one file of data/oob the map tool reads) whose position is inside the map's
+extent, by the map's own projection.
 
 render marks coast hexes with a closed side toward water as % (+ otherwise).
 Each row is labelled with its r and the q of its first hex.";
@@ -173,10 +180,22 @@ fn run_locate(flags: &Flags) -> Result<(), String> {
     flags.check_known(&["--lat", "--lon", "--map"])?;
     let lat = parse_degrees(flags, "--lat")?;
     let lon = parse_degrees(flags, "--lon")?;
-    // A map that cannot be read is said so below; its hex is then worked on
-    // the default frame, as before decision 0199.
-    let frame =
-        Frame::of_map_or_default(&flags.map_path()).unwrap_or_else(|_| Frame::south_pacific());
+    // A map with no projection lines (a hand-written map) is worked on the
+    // default frame, as before decision 0199. A map that has them and fails
+    // to read is an error that names it (decision 0242, rule 16).
+    let map_path = flags.map_path();
+    let frame = match Frame::of_map(&map_path) {
+        Ok(Some(frame)) => frame,
+        Ok(None) => Frame::south_pacific(),
+        // A map that is not there is said so below, as before.
+        Err(_) if !map_path.exists() => Frame::south_pacific(),
+        Err(error) => {
+            return Err(format!(
+                "the map {} has a frame that cannot be read: {error}",
+                map_path.display()
+            ))
+        }
+    };
     let projection = frame.projection();
     let (q, r) = projection.hex_of(lat, frame.lon_in_run(lon));
     let (clat, clon) = projection.centre_of(q, r);
@@ -200,6 +219,22 @@ fn run_locate(flags: &Flags) -> Result<(), String> {
         },
         Err(e) => println!("map: not read ({e})"),
     }
+    Ok(())
+}
+
+fn run_locate_rows(flags: &Flags, command_line: &str) -> Result<(), String> {
+    flags.check_known(&["--map", "--positions", "--out"])?;
+    let map_path = PathBuf::from(flags.require("--map")?);
+    let frame = Frame::of_map(&map_path)?
+        .ok_or_else(|| format!("the map {} has no frame in its header", map_path.display()))?;
+    let positions_file = flags.require("--positions")?;
+    let positions =
+        std::fs::read_to_string(positions_file).map_err(|e| format!("{positions_file}: {e}"))?;
+    let out = flags.require("--out")?;
+    let text = located_text(&frame, &positions, command_line)?;
+    std::fs::write(out, &text).map_err(|e| format!("{out}: {e}"))?;
+    let lines = text.lines().filter(|l| !l.starts_with('#')).count() - 1;
+    println!("wrote {out}: {lines} located positions");
     Ok(())
 }
 
@@ -360,6 +395,7 @@ fn run(args: &[String]) -> Result<(), String> {
         "generate" => run_generate(&flags, &args.join(" ")),
         "render" => run_render(&flags),
         "locate" => run_locate(&flags),
+        "locate-rows" => run_locate_rows(&flags, &args.join(" ")),
         "path" => run_path(&flags),
         "sides" => run_sides(&flags),
         "water" => run_water(&flags),

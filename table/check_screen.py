@@ -207,9 +207,9 @@ def one_order_paper():
           "every way to an order opens the one paper: a force's card, an air group's, a land unit's, and a card's orders you can give")
     start = text.index('<form class="order gives" id="paper"')
     form = text[start:text.index("</form>", start)]
-    parts = ['id="p-to"', "THE ORDER", "IN WHOSE HANDS", "ACTS", 'id="o-pv"', "THE STAFF'S READING", 'id="p-says"', "SIGN AND SEND", "TEAR UP"]
+    parts = ['id="p-head"', 'id="p-title"', 'id="p-the"', "IN WHOSE HANDS", 'id="o-pv"', "THE STAFF'S READING", 'id="p-says"', 'id="p-acts-t"', "SIGN AND SEND", "TEAR UP"]
     at = [form.find(p) for p in parts]
-    check(all(a >= 0 for a in at) and at == sorted(at), "the paper's parts are in order: TO, THE ORDER, IN WHOSE HANDS, ACTS, the staff's reading, what was sent, SIGN AND SEND, TEAR UP")
+    check(all(a >= 0 for a in at) and at == sorted(at), "the paper's parts are in order: the heading, the order, IN WHOSE HANDS, the staff's reading, what was sent, when it acts, SIGN AND SEND, TEAR UP")
     check('id="o-pv" open' in form and "$('o-pv').open = true" in text and 'id="p-dry"' in form and "OFFERED.trial" in text,
           "the staff's reading is shown open, with DRY RUN where the game has a trial")
     check("function actsText(orders)" in text and "return ACTS_NOW;" in text and "return ACTS_DUSK;" in text and "return ACTS_TONIGHT;" in text and "ACTS_NOW + ': ' + names(now)" in text,
@@ -291,6 +291,517 @@ def the_trail_holds_no_duplicate():
           "stepping through a stack replaces the card without growing the trail, and a link from the stop paper starts a new trail")
     check(all("remember(" + c + ", function" in text for c in ("cardContact", "cardForce", "cardBase", "cardPlace", "cardHex", "cardUnit", "cardEntity", "cardGone")),
           "every way a card opens names the thing it shows")
+
+
+def the_paper_reads_as_the_order():
+    """Decision 0240, stage A: the order paper's head and foot, by the page's text and by the page's own functions run in node.
+    Written by the architect before the build; the expected words here are his and are changed by nobody else. (The page as drawn is
+    tried in a browser, not here.)
+
+    The parts.
+    A1. Inside `<form class="order gives" id="paper"`, in this order: `id="p-back"`, `id="p-head"`, `id="p-title"`, `id="p-the"`,
+        `id="p-hands"`, `id="p-limits"`, `id="p-plan"`, `id="o-pv"`, `id="o-dry-says"`, `id="p-says"`, `id="p-foot"`. Inside
+        `p-foot`, in this order: `id="p-acts-t"`, `id="p-sign"`, `id="p-dry"`, `id="p-cancel"`. (Stage B moves the reading above
+        LIMITS: from then the order of `o-pv`, `o-dry-says`, `p-limits` and `p-plan` is B1's, in `the_face_and_the_fold`, and this
+        check holds the rest.)
+    A2. Gone from the page's text: `id="p-to"`, `id="p-to-name"`, `id="o-ends"`, `id="o-place"`, `name = 'end'`, `chosen('end')`,
+        "you are to:", `<legend>END</legend>`, the labels `<span class="pl">TO</span>`, `<span class="pl">THE ORDER</span>` and
+        `<span class="pl">ACTS</span>`, and the heading `<h2>ORDER &middot;`. `id="p-acts"` is gone; `id="p-acts-t"` stays, in the foot.
+    A3. The end of a draft is kept in the draft itself: the page's text holds `draft.end = first || 0` in `openDraft`, and every
+        place that read the chosen radio reads `draft.ends[draft.end]`.
+
+    The head line: the page's own `headLine(kind)`, cut and run in node.
+    A4. headLine('staff') is "ORDER TO THE STAFF \u00b7 DRAFT"; headLine('force'), ('air'), ('land') and ('boat') are each
+        "ORDER \u00b7 DRAFT"; headLine('limit') is "CHANGE OF LIMITS \u00b7 DRAFT"; headLine('giveback') is "GIVEN BACK TO THE STAFF
+        \u00b7 DRAFT". headLine('landing'), the paper of a landing written under an order in force (decision 0232, step 3, which came
+        to main while this stage was built), is "A LANDING OF YOUR PLAN \u00b7 DRAFT", and `openLanding` puts the order's link in its
+        heading. `openPaper` sets `$('p-head').textContent = headLine(kind)`.
+
+    The heading: the page's own `draftHeading(e, target)`, cut and run in node with `round` and `cleanName` cut from the page beside
+    it, `showHexes` false and `hexMiles` standing in as a function that returns 40. `e` is an entry of `ends(target)`:
+    [words, the order's arguments, ...]. `target` is {kind, name, ...}.
+    A5. e = ['Hold Placeholder base T', {intent_kind: 'hold', base: 2}], target named "Placeholder base T": "Hold Base T".
+    A6. e = ['Keep it supplied', {intent_kind: 'keep_supplied', base: 2}], the same target: "Keep Base T supplied". With a target named
+        "Thornwick": "Keep Thornwick supplied".
+    A7. e = ['Cover it from the air', {intent_kind: 'cover', base: 2}], target named "Lunga": "Cover Lunga from the air".
+    A8. e = ['Seize and hold Guadalcanal', {intent_kind: 'control_island', island: 1}]: "Seize and hold Guadalcanal".
+        e = ['Capture Lunga only', {intent_kind: 'take_place', base: 3}]: "Capture Lunga only".
+        e = ['Neutralise Rabaul', {intent_kind: 'neutralise', target: 7}]: "Neutralise Rabaul". (Each is the end's own words, cleaned.)
+    A9. target = {kind: 'waters', name: 'the waters about 9\u00b026\u2032S 160\u00b002\u2032E'}:
+        e = ['Deny these waters, within 80 miles', {intent_kind: 'deny', distance: 2}]: "Deny the waters about 9\u00b026\u2032S
+        160\u00b002\u2032E, within 80 miles"; with distance 4: "..., within 160 miles".
+        e = ['Patrol these waters with submarines', {intent_kind: 'patrol'}]: "Patrol the waters about 9\u00b026\u2032S
+        160\u00b002\u2032E with submarines" (no distance: it is the paper's blank).
+        e = ['Operate Task Force 17 from here', {intent_kind: 'operate_carriers', task_force: 17}]: "Operate Task Force 17 from the
+        waters about 9\u00b026\u2032S 160\u00b002\u2032E".
+        e = ['Station Task Force 44 here', {intent_kind: 'stand_at', task_force: 44}]: "Station Task Force 44 in the waters about
+        9\u00b026\u2032S 160\u00b002\u2032E".
+    A10. No heading holds the word "Placeholder", "it" as a word by itself, "these waters" or "here".
+    A11. In the page's text: `openDraft` sets `$('p-title').textContent = draftHeading(` once; for a unit's paper `openPaper` puts the
+        unit's link in the heading, `$('p-title').appendChild(refTo(o.unit, o.name))`; for a change of limits and a give-back the
+        heading is the order's own link, `orderLink(`, and "'Change the limits of '" is still in the page.
+
+    The foot.
+    A12. `actsText([])` is "" (it was "\u2014"), by the page's own `actsText` run in node as `the_submarines` runs it; the other
+        answers of `actsText` are as they were. The page's text holds `$('p-acts-t').hidden = !` so that an empty line takes no room.
+    A13. The style sheet holds a rule for `#paper .pfoot` with `position: sticky` and `bottom: 0` and a `background`, inside
+        `@media (min-width: 760px)`; outside it `.pfoot` is not sticky.
+
+    The look.
+    A14. `.order`'s width is `min(400px, calc(100% - var(--sp-w) - 48px))`, and `body.papered #prompt` has
+        `right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)`. Neither holds 360px.
+    A15. `#paper .pp` has no `border-top`. `#paper .phead` has a `border-bottom` or `#paper #p-title` has one (one rule under the
+        heading), and `#paper .pfoot` has a `border-top` (one rule above the foot). No other rule of `#paper` holds "dashed".
+        A15a. `#paper fieldset` and `#paper .pv` each have `border-top: 0`: the dashed rule those take from `.order`, which the
+        card shares, is not drawn in the paper.
+    A16. A number blank of the paper (`#paper input[type=number]`) has `background: transparent`, `border: 0` and a `border-bottom`.
+    A17. Each of `o-floor`, `o-interval` and `o-dist` has a `<label for="...">` in the paper, and keeps its `aria-label`.
+
+    What does not change: every statement of `one_order_paper` but its list of parts (restated by A1 and A2), the ACTS words of
+    `the_words_and_what_the_papers_say`, and what any order sends. `the_supply_orders_two_numbers`, `the_submarines` and
+    `the_island_of_two_places` hold as they are but for the page lines they quote that this stage moves."""
+    import re
+    print("-- the order paper reads as the order: its head and its foot", flush=True)
+    text = page_text()
+    start = text.index('<form class="order gives" id="paper"')
+    form = text[start:text.index("</form>", start)]
+    # A1
+    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="p-says"', 'id="p-foot"']
+    at = [form.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at), "A1: the paper's parts are in order: the way back, the head line, the heading, the order, in whose hands, what was sent, the foot (the reading and the folds between are B1's)")
+    foot = form[form.index('id="p-foot"'):]
+    fat = [foot.find(p) for p in ('id="p-acts-t"', 'id="p-sign"', 'id="p-dry"', 'id="p-cancel"')]
+    check(all(a >= 0 for a in fat) and fat == sorted(fat), "A1: the foot holds, in order, when the order acts, SIGN AND SEND, DRY RUN and TEAR UP")
+    # A2
+    gone = ['id="p-to"', 'id="p-to-name"', 'id="o-ends"', 'id="o-place"', "name = 'end'", "chosen('end')", "you are to:", "<legend>END</legend>",
+            '<span class="pl">TO</span>', '<span class="pl">THE ORDER</span>', '<span class="pl">ACTS</span>', "<h2>ORDER &middot;", 'id="p-acts"']
+    check(not [g for g in gone if g in text] and 'id="p-acts-t"' in foot,
+          "A2: the part TO, the list of ends with its radios, the sentence \"you are to:\", the labels TO, THE ORDER and ACTS and the old heading are gone; the line that says when it acts stays, in the foot")
+    # A3
+    open_draft = cut_function(text, "  function openDraft(best, first) {")
+    check("draft.end = first || 0" in open_draft and "draft.ends[draft.end]" in text and "draft.ends[parseInt(" not in text,
+          "A3: the end of a draft is kept in the draft, and everything that read the chosen radio reads it there")
+    # A4
+    head = run_in_node(cut_function(text, "  function headLine(kind) {")
+                       + "\nfunction main(ks) { return ks.map(headLine); }", ["staff", "force", "air", "land", "boat", "limit", "giveback", "landing"])
+    check(head == ["ORDER TO THE STAFF \u00b7 DRAFT", "ORDER \u00b7 DRAFT", "ORDER \u00b7 DRAFT", "ORDER \u00b7 DRAFT", "ORDER \u00b7 DRAFT",
+                   "CHANGE OF LIMITS \u00b7 DRAFT", "GIVEN BACK TO THE STAFF \u00b7 DRAFT", "A LANDING OF YOUR PLAN \u00b7 DRAFT"]
+          and "$('p-title').appendChild(orderLink(order))" in cut_function(text, "  function openLanding(order, hex) {"), f"A4: the head line says what the paper is ({head})")
+    check("$('p-head').textContent = headLine(kind)" in cut_function(text, "  function openPaper(kind, o) {"), "A4: opening the paper sets the head line")
+    # A5 to A10
+    waters = "the waters about 9\u00b026\u2032S 160\u00b002\u2032E"
+    base_t, thorn, lunga, wt = {"kind": "own", "name": "Placeholder base T"}, {"kind": "own", "name": "Thornwick"}, {"kind": "own", "name": "Lunga"}, {"kind": "waters", "name": waters}
+    cases = [
+        (["Hold Placeholder base T", {"intent_kind": "hold", "base": 2}], base_t, "Hold Base T"),
+        (["Keep it supplied", {"intent_kind": "keep_supplied", "base": 2}], base_t, "Keep Base T supplied"),
+        (["Keep it supplied", {"intent_kind": "keep_supplied", "base": 2}], thorn, "Keep Thornwick supplied"),
+        (["Cover it from the air", {"intent_kind": "cover", "base": 2}], lunga, "Cover Lunga from the air"),
+        (["Seize and hold Guadalcanal", {"intent_kind": "control_island", "island": 1}], lunga, "Seize and hold Guadalcanal"),
+        (["Capture Lunga only", {"intent_kind": "take_place", "base": 3}], lunga, "Capture Lunga only"),
+        (["Neutralise Rabaul", {"intent_kind": "neutralise", "target": 7}], lunga, "Neutralise Rabaul"),
+        (["Deny these waters, within 80 miles", {"intent_kind": "deny", "distance": 2}], wt, "Deny " + waters + ", within 80 miles"),
+        (["Deny these waters, within 160 miles", {"intent_kind": "deny", "distance": 4}], wt, "Deny " + waters + ", within 160 miles"),
+        (["Patrol these waters with submarines", {"intent_kind": "patrol"}], wt, "Patrol " + waters + " with submarines"),
+        (["Operate Task Force 17 from here", {"intent_kind": "operate_carriers", "task_force": 17}], wt, "Operate Task Force 17 from " + waters),
+        (["Station Task Force 44 here", {"intent_kind": "stand_at", "task_force": 44}], wt, "Station Task Force 44 in " + waters),
+    ]
+    code = (cut_function(text, "  function cleanName(s)") + "\n" + cut_function(text, "  function round(n)") + "\n" + cut_function(text, "  function draftHeading(e, target) {")
+            + "\nfunction main(cs) { return cs.map(function (c) { return draftHeading(c[0], c[1]); }); }")
+    said = run_in_node(code, [[c[0], c[1]] for c in cases])
+    for (e, tgt, want), got in zip(cases, said):
+        check(got == want, f"A5-A9: {e[1]['intent_kind']} at {tgt['name']} is headed \"{want}\" ({got})")
+    check(not [s for s in said if "Placeholder" in s or "these waters" in s or "here" in s or re.search(r"\bit\b", s)],
+          "A10: no heading holds \"Placeholder\", \"it\" by itself, \"these waters\" or \"here\"")
+    # A11
+    check(text.count("$('p-title').textContent = draftHeading(") == 1 and "$('p-title').textContent = draftHeading(" in open_draft,
+          "A11: openDraft sets the heading to the end's words once")
+    open_paper = cut_function(text, "  function openPaper(kind, o) {")
+    check("$('p-title').appendChild(refTo(o.unit, o.name))" in open_paper and "$('p-title').appendChild(orderLink(" in cut_function(text, "  function openLimitPaper(root, key, back) {")
+          and "$('p-title').appendChild(orderLink(" in cut_function(text, "  function openGiveBack(i) {") and "'Change the limits of '" in text,
+          "A11: a unit's paper is headed by the unit's link, and a change of limits and a give-back by the order's link")
+    # A12
+    acts = run_in_node(text[text.index("  var ACTS_TONIGHT"):text.index("\n", text.index("  var ACTS_TONIGHT"))] + "\n" + text[text.index("  var INSIDE_KINDS"):text.index("\n", text.index("  var INSIDE_KINDS"))]
+                       + "\nvar ORDER_LABEL = { station: 'Station' }; var clock = { at: 'dusk' };\n" + cut_function(text, "function labelOf(o)") + "\n" + cut_function(text, "function actsText(orders)")
+                       + "\nfunction main(x) { const o = [{ unit: 'submarine:1', order: { kind: 'station', hex: [1, 1] } }]; const out = [actsText([]), actsText(o)]; clock = { at: '1200' }; out.push(actsText(o)); return out; }", None)
+    check(acts == ["", "Acts at 1800, with tonight\u2019s orders", "Acts at 1800, for the coming day"] and "$('p-acts-t').hidden = !" in text,
+          f"A12: with nothing chosen the line of when it acts is empty and takes no room, and says what it said otherwise ({acts})")
+    # A13 to A16, from the style sheet
+    css = re.sub(r"/\*.*?\*/", "", text[text.index("<style"):text.index("</style>")], flags=re.S)
+    rules = re.findall(r"([^{}]+)\{([^{}]*)\}", css)
+    def decl(sel_has):
+        return [(s.strip(), b) for s, b in rules if sel_has(s)]
+    media = css[css.index("@media (min-width: 760px)"):]
+    media = media[:media.index("}", media.index("#paper .pfoot") + 20) + 1]
+    check("#paper .pfoot" in media and "position: sticky" in media and "bottom: 0" in media and "background:" in media, "A13: from 760 px the foot is held at the paper's bottom")
+    outside = css.replace(media, "")
+    check(not any("sticky" in b for s, b in re.findall(r"([^{}]+)\{([^{}]*)\}", outside) if ".pfoot" in s), "A13: below 760 px the foot is not sticky")
+    check(re.search(r"\.order \{[^}]*width: min\(400px, calc\(100% - var\(--sp-w\) - 48px\)\)", css) is not None
+          and "body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px); }" in css
+          and not any("360px" in b for s, b in rules if s.strip() == ".order") and not any("360px" in b for s, b in rules if "#prompt" in s),
+          "A14: the paper and the card are 400 px wide and the prompt lies beside them")
+    pp = [b for s, b in rules if s.strip() == "#paper .pp"]
+    check(pp and not any("border-top" in b for b in pp), "A15: a part of the paper has no rule above it")
+    check(any("border-bottom" in b for s, b in rules if s.strip() in ("#paper .phead", "#paper #p-title")) and any("border-top" in b for s, b in rules if s.strip() == "#paper .pfoot"),
+          "A15: one rule under the heading and one above the foot")
+    check(not any("dashed" in b for s, b in rules if "#paper" in s), "A15: no rule of the paper is dashed")
+    check(all(any("border-top: 0" in b for s, b in rules if s.strip() == sel) for sel in ("#paper fieldset", "#paper .pv")),
+          "A15a: the paper draws no rule above a fieldset or above the staff's reading")
+    num = [b for s, b in rules if s.strip() == "#paper input[type=number]"]
+    check(num and "background: transparent" in num[0] and "border: 0" in num[0] and "border-bottom" in num[0], "A16: a number blank is drawn as a blank, transparent with a rule beneath it")
+    for i in ("o-floor", "o-interval", "o-dist"):
+        tag = re.search(r'<input type="number" id="%s"[^>]*>' % i, form).group(0)
+        check(f'<label class="fl" for="{i}">' in form and "aria-label=" in tag, f"A17: {i} has a label tied to it and keeps its aria-label")
+
+
+def the_face_and_the_fold():
+    """Decision 0240, stage B: what an order needs stands on its face, the staff's reading stands under the order, and the rest is in
+    the fold with the risk first. By the page's text and by the page's own functions run in node. Written by the architect before the
+    build; the expected words here are his and are changed by nobody else. (The page as drawn is tried in a browser, not here.)
+
+    The parts.
+    B1. Inside `<form class="order gives" id="paper"`, in this order: `id="p-back"`, `id="p-head"`, `id="p-title"`, `id="p-the"`,
+        `id="p-hands"`, `id="o-pv"`, `id="o-dry-says"`, `id="p-limits"`, `id="p-plan"`, `id="p-says"`, `id="p-foot"`. (This takes the
+        place of stage A's A1 for the order of the reading and the folds; A1's foot stands.) Inside `p-the`, `id="p-face"` comes
+        after `id="o-supply"` and before `id="p-summary"`.
+    B2. Gone from the page's text: `id="o-risk"`, `name="risk"`, `chosen('risk')`, `<legend>RISK</legend>`. The risk of a draft is
+        `lim.risk`, and `sentLimits` reads it there.
+
+    The model: five new pure functions inside the limits model (between `var LIMITS_OFFERED` and its end marker), run in node as
+    `the_limits_on_the_paper` runs the model, with the names it stands in ("Task Force 17" for task_force:17, "Merrowdale" for ship:1,
+    "Saltmere" for base:1, "Thornwick" for base:2, "Lunga" for base:3).
+    B3. `faceKeys(kind)`: for 'keep_supplied' it is ['ships', 'source']; for 'patrol' ['submarines']; for 'stand_at' ['risk']; for
+        'hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island' and 'destroy_force' it is [].
+    B4. `hasFold(kind)`: false for 'patrol' and 'stand_at'; true for each of the other nine kinds of B3.
+    B5. `missing(kind, lim, 30)` (stage C's floor, given as 30 here), what the order still needs, in the order of the face: for 'keep_supplied' with a new model (`newLim()`)
+        it is ['ships', 'source']; with ship 1 named (ships.mode 'only', ships [1]) and no source, ['source']; with source 1 and no
+        ship, ['ships']; with a task force named and source 1, []; with ship 1 and source 1, []. With ships.mode 'only' and nothing
+        named it still holds 'ships'. For every other kind of B3 with a new model it is [].
+    B6. `sourceChoices(kind, bases, place)`, the bases a source may be chosen from, as [number as a string, name]: with bases 1
+        "Saltmere", 2 "Thornwick" and 3 "Lunga", for 'keep_supplied' at place 2 it is [['1', 'Saltmere'], ['3', 'Lunga']] (the place
+        itself is not offered); for 'hold' at place 2 it is all three, in that order.
+    B7. `foldLine(kind, lim)`, the fold's closed line without its label:
+        - 'keep_supplied', a new model: "Risk: balanced \u00b7 the rest the staff\u2019s choice".
+        - the same with lim.risk 'press': "Risk: press \u00b7 the rest the staff\u2019s choice".
+        - 'keep_supplied' with ship 1 and source 1 named and nothing else: "Risk: balanced \u00b7 the rest the staff\u2019s choice"
+          (what is on the face is not said in the fold's line).
+        - 'hold' with task force 17 named (ships.mode 'only', task_forces [17]) and risk 'press': "Risk: press \u00b7 Ships and
+          forces: Task Force 17".
+        - 'hold', a new model: "Risk: balanced \u00b7 the rest the staff\u2019s choice".
+        `limitsLine` itself answers as it did (the plan's paper and the change-of-limits paper use it).
+
+    The page.
+    B8. `endChanged` sets `lim.ships.mode = 'only'` where the kind is 'keep_supplied', hides the fold where the kind has none
+        (`$('p-limits').hidden = !hasFold(kind)`), and `limSummary` says `'LIMITS \u00b7 ' + foldLine(kind, lim)` for a draft.
+    B9. `drawLimits` draws each key of `faceKeys(kind)` into `p-face` and every other line into `p-limits-body`, the risk first there
+        where the kind offers it and it is not on the face. A line is drawn once.
+    B10. On a supply order's face the ships line is headed "Ships" and the source "From"; neither offers "The staff\u2019s choice",
+        "None" or BACK TO THE STAFF\u2019S CHOICE. Beside an empty one the paper says "No ship named yet." or "No source named yet."
+        (`id="need-ships"`, `id="need-source"`), in the paper's plain ink (not the class `bad` or `notsent`). The page's text holds
+        both sentences once.
+    B11. `askPreview` asks nothing while the order needs something: before `api('preview'` it tests `missing(kind, lim, 30).length` (stage C: `supplyFloor()` for the 30), and
+        then the reading's place is empty (`$('o-preview').textContent = ''`), `p-sign` and `p-dry` are disabled, and no call is
+        made. `signStaff` is not reached with a need unmet.
+    B12. The change-of-limits paper draws its lines open in `p-face` and shows no fold (`$('p-limits').hidden = true` in
+        `openLimitPaper`); what it sends is as it was.
+    B13. A limit refused is still marked at its line, on the face or in the fold, and the fold opened where the line is in it;
+        a risk refused is marked at the fold's risk line (`[data-key="risk"]`).
+
+    What does not change: what any order sends, key for key (the forces limit of a supply order is the body it was: `limit:
+    "forces"`, `ships`, `task_forces`, `source`); the words of every limit line but the two headings of B10; `LIMITS_OFFERED`; the
+    reading's own words; YOUR PLAN. The floor still starts at 30: stage C empties it."""
+    import re
+    print("-- the face and the fold: what an order needs on its face, the reading under the order, the risk first in the fold", flush=True)
+    text = page_text()
+    start = text.index('<form class="order gives" id="paper"')
+    form = text[start:text.index("</form>", start)]
+    # B1
+    parts = ['id="p-back"', 'id="p-head"', 'id="p-title"', 'id="p-the"', 'id="p-hands"', 'id="o-pv"', 'id="o-dry-says"', 'id="p-limits"', 'id="p-plan"', 'id="p-says"', 'id="p-foot"']
+    at = [form.find(p) for p in parts]
+    check(all(a >= 0 for a in at) and at == sorted(at), "B1: the paper's parts are in order: the order, in whose hands, the staff's reading, the dry run's line, LIMITS, YOUR PLAN, what was sent, the foot")
+    the = form[form.index('id="p-the"'):form.index('id="p-hands"')]
+    check(the.index('id="o-supply"') < the.index('id="p-face"') < the.index('id="p-summary"'), "B1: the face of the order, p-face, is in the order's part after the supply order's blanks and before its summary")
+    # B2
+    gone = ['id="o-risk"', 'name="risk"', "chosen('risk')", "<legend>RISK</legend>"]
+    check(not [g for g in gone if g in text] and "risk = lim.risk" in cut_function(text, "  function sentLimits(kind) {"),
+          "B2: the risk's fieldset and the radios that read it are gone; the risk of a draft is lim.risk and sentLimits reads it there")
+    # B3 to B7, and what is sent
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    for f in ("faceKeys", "hasFold", "missing", "sourceChoices", "foldLine"):
+        check(f"  function {f}(" in model and f"\n  }}\n" in cut_function(model, f"  function {f}(") + "\n",
+              f"B3 to B7: {f} is inside the limits model and closes with its lone brace")
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function main() {
+  M.names['task_force:17'] = 'Task Force 17'; M.names['ship:1'] = 'Merrowdale'; M.names['base:1'] = 'Saltmere'; M.names['base:2'] = 'Thornwick'; M.names['base:3'] = 'Lunga';
+  const out = {}, kinds = ['hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island', 'destroy_force'];
+  out.face = {}; ['keep_supplied', 'patrol', 'stand_at'].concat(kinds).forEach(k => out.face[k] = faceKeys(k));
+  out.fold = {}; ['patrol', 'stand_at', 'keep_supplied'].concat(kinds).forEach(k => out.fold[k] = hasFold(k));
+  const mk = (ships, tfs, src, mode) => { const l = newLim(); l.ships = { mode: mode || 'only', task_forces: tfs || [], ships: ships || [] }; l.source = src == null ? null : src; return l; };
+  out.missing = [missing('keep_supplied', newLim(), 30), missing('keep_supplied', mk([1], [], null), 30), missing('keep_supplied', mk([], [], 1), 30), missing('keep_supplied', mk([], [17], 1), 30),
+                 missing('keep_supplied', mk([1], [], 1), 30), missing('keep_supplied', mk([], [], 1, 'only'), 30)];
+  out.others = {}; ['patrol', 'stand_at'].concat(kinds).forEach(k => out.others[k] = missing(k, newLim(), 30));
+  const bases = [1, 2, 3].map(n => ({ base: { handle: 'base:' + n } }));
+  out.sources = [sourceChoices('keep_supplied', bases, 2), sourceChoices('hold', bases, 2)];
+  const press = newLim(); press.risk = 'press'; const fixed = newLim(); fixed.ships = { mode: 'only', task_forces: [], ships: [1] }; fixed.source = 1;
+  const hp = newLim(); hp.ships = { mode: 'only', task_forces: [17], ships: [] }; hp.risk = 'press';
+  out.lines = [foldLine('keep_supplied', newLim()), foldLine('keep_supplied', press), foldLine('keep_supplied', fixed), foldLine('hold', hp), foldLine('hold', newLim())];
+  out.limitsLine = limitsLine('hold', newLim());
+  out.bodies = [limitBodies('keep_supplied', mk([1], [], 1)), limitBodies('keep_supplied', mk([], [17], 1))];
+  return out;
+}
+"""
+    said = run_in_node(code, None)
+    check(said["face"]["keep_supplied"] == ["ships", "source"] and said["face"]["patrol"] == ["submarines"] and said["face"]["stand_at"] == ["risk"]
+          and all(v == [] for k, v in said["face"].items() if k not in ("keep_supplied", "patrol", "stand_at")), f"B3: faceKeys of each kind ({said['face']})")
+    check(said["fold"]["patrol"] is False and said["fold"]["stand_at"] is False and all(v is True for k, v in said["fold"].items() if k not in ("patrol", "stand_at")), f"B4: hasFold is false for a patrol and a stand_at and true for the other nine kinds ({said['fold']})")
+    check(said["missing"] == [["ships", "source"], ["source"], ["ships"], [], [], ["ships"]] and all(v == [] for v in said["others"].values()),
+          f"B5: what a supply order still needs, in the order of its face, and nothing for any other kind ({said['missing']})")
+    check(said["sources"] == [[["1", "Saltmere"], ["3", "Lunga"]], [["1", "Saltmere"], ["2", "Thornwick"], ["3", "Lunga"]]], f"B6: a supply order's source is not offered its own place ({said['sources']})")
+    rest = "the rest the staff’s choice"
+    check(said["lines"] == ["Risk: balanced · " + rest, "Risk: press · " + rest, "Risk: balanced · " + rest, "Risk: press · Ships and forces: Task Force 17", "Risk: balanced · " + rest],
+          f"B7: the fold's closed line says the risk first and what is set in the fold, and not what is on the face ({said['lines']})")
+    check(said["limitsLine"] == "The staff’s choice in all.", "B7: limitsLine answers as it did")
+    check(said["bodies"] == [[{"limit": "forces", "task_forces": [], "ships": [1], "source": 1}], [{"limit": "forces", "task_forces": [17], "ships": [], "source": 1}]],
+          f"what a supply order sends is the forces limit it was: ships, task forces and source ({said['bodies']})")
+    # B8
+    end = cut_function(text, "  function endChanged() {")
+    summary = cut_function(text, "  function limSummary() {")
+    check("if (kind === 'keep_supplied') lim.ships.mode = 'only';" in end and "$('p-limits').hidden = !hasFold(kind)" in end and "'LIMITS · ' + foldLine(kind, lim)" in summary,
+          "B8: a supply order's ships are 'use only these' from the start, the fold is hidden where the kind has none, and the fold's closed line is LIMITS and foldLine")
+    # B9
+    draw = cut_function(text, "  function drawLimits(focusId) {")
+    check("faceKeys(kind)" in draw and "$('p-face')" in draw and "$('p-limits-body')" in draw and "(offers(kind, 'risk') ? ['risk'] : []).concat(LINES)" in draw and draw.count("appendChild(row)") == 1
+          and "'risk'" not in re.search(r"var LINES = \[[^\]]*\]", text).group(0),
+          "B9: drawLimits draws the kind's face keys into p-face and every other line into the fold, the risk first, each line once")
+    # B10, by rendering the two lines with the page's own functions
+    need = cut_function(text, "  function needLine(key, name, kind) {")
+    check("The staff’s choice" not in need and "STAFFS" not in need and "'None'" not in need and "limBack" not in need and "BACK TO" not in need and "'bad'" not in need and "notsent" not in need
+          and "!limCtx && kind === 'keep_supplied' && (key === 'ships' || key === 'source')) return needLine(key, key === 'ships' ? 'Ships' : 'From', kind)" in text,
+          "B10: a supply order's ships line is headed Ships and its source From, with no choice of the staff's, no None and no way back to it")
+    check(text.count("No ship named yet.") == 1 and text.count("No source named yet.") == 1 and "'need-ships'" in need and "'need-source'" in need, "B10: the page holds each sentence once, with the ids need-ships and need-source")
+    render = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "limRow", "limHead", "limSelect", "limCheck", "toggled", "needLine"]) + model + r"""
+Object.defineProperty(Node.prototype, 'dataset', { get() { return this._ds || (this._ds = {}); } }); Node.prototype.addEventListener = function () {};
+function limShips() { return [{ h: 'task_force:17', label: 'Task Force 17' }, { h: 'ship:1', label: 'Merrowdale, at Saltmere' }]; }
+function limSet() {} function supplyFloor() { return 30; } const limCtx = null; const draft = { base: { base: { handle: 'base:2' } } };
+let lim;
+function walk(n, f) { f(n); n.kids.forEach(k => walk(k, f)); }
+function main() {
+  M.names['ship:1'] = 'Merrowdale'; M.names['base:1'] = 'Saltmere'; M.names['base:2'] = 'Thornwick'; M.names['base:3'] = 'Lunga';
+  M.bases = [1, 2, 3].map(n => ({ base: { handle: 'base:' + n } }));
+  const out = {}, draw = (key, name) => { const row = needLine(key, name, 'keep_supplied'); const ids = []; let sel = null, cls = []; walk(row, n => { if (n.id) ids.push(n.id); if (n.tag === 'select') sel = n.kids.map(o => o.own); cls.push(n.className); }); return { text: row.textContent, ids, sel, cls }; };
+  lim = newLim(); lim.ships.mode = 'only';
+  out.shipsEmpty = draw('ships', 'Ships'); out.sourceEmpty = draw('source', 'From');
+  lim.ships.ships = [1]; lim.source = 1;
+  out.shipsGiven = draw('ships', 'Ships'); out.sourceGiven = draw('source', 'From');
+  return out;
+}
+"""
+    r = run_in_node(render, None)
+    se, so = r["shipsEmpty"], r["sourceEmpty"]
+    check("Ships" in se["text"] and "No ship named yet." in se["text"] and "need-ships" in se["ids"] and "Task Force 17" in se["text"] and "Merrowdale, at Saltmere" in se["text"]
+          and not any(w in se["text"] for w in ("The staff’s choice", "None", "BACK TO")) and not any("bad" in c.split() or "notsent" in c.split() for c in se["cls"]),
+          f"B10: an empty ships line says Ships, ticks for each ship and force, and \"No ship named yet.\" in plain ink ({se['text']})")
+    check("From" in so["text"] and "No source named yet." in so["text"] and "need-source" in so["ids"] and so["sel"] == ["", "Saltmere", "Lunga"]
+          and not any(w in so["text"] for w in ("The staff’s choice", "None", "BACK TO", "Thornwick")),
+          f"B10: an empty source line says From, an empty first choice and the other bases, and \"No source named yet.\" ({so['sel']})")
+    check("No ship named yet." not in r["shipsGiven"]["text"] and "need-ships" not in r["shipsGiven"]["ids"] and "No source named yet." not in r["sourceGiven"]["text"] and "need-source" not in r["sourceGiven"]["ids"],
+          "B10: once a ship and a source are given, the sentences beside them are gone")
+    # B11
+    ask = cut_function(text, "  function askPreview() {")
+    pre = ask[:ask.index("api('preview'")]
+    check("missing(kind, lim, supplyFloor()).length" in pre and "$('o-preview').textContent = ''" in pre and "$('p-sign').disabled = true" in pre and "$('p-dry').disabled = true" in pre and "return;" in pre[pre.index("missing(kind, lim, supplyFloor()).length"):],
+          "B11: the staff is not asked while the order needs something: the reading's place is empty, SIGN AND SEND and DRY RUN wait, and no call is made")
+    check("missing(limKind(), lim, supplyFloor()).length" in cut_function(text, "  function limAsk() {") and "if (previewNo == null) return;" in cut_function(text, "  function signStaff() {"),
+          "B11: a change does not show the staff being asked while a need is unmet, and signing is not reached without a reading")
+    # B12
+    lp = cut_function(text, "  function openLimitPaper(root, key, back) {")
+    check("$('p-limits').hidden = true" in lp and "$('p-limits').open" not in lp and "$('p-face')" in lp and "limitPlan(" not in lp and "limCtx = { root: root, top: top, kind: top.kind, key: key, group: group, keys: keys }" in lp,
+          "B12: the change-of-limits paper draws its lines in p-face and shows no fold; what it sends is as it was")
+    # B13
+    refused = cut_function(text, "  function limitRefused(key) {")
+    check("faceKeys(limKind()).indexOf(key) >= 0" in refused and "if (!face) part.open = true" in refused and "(face ? $('p-face') : $('p-limits-body'))" in refused and "limMarked === key" in draw
+          and "limRow('risk', name)" in cut_function(text, "  function riskLine() {"),
+          "B13: a limit refused is marked at its line on the face or in the fold, the fold opened only where the line is in it, and a risk refused at the fold's risk line")
+
+
+def the_readings_mends():
+    """Four mends to the order paper's reading, found when stages A and B of decision 0240 were tried by hand and asked for by the
+    designer on Nov 28, 2026 ("Fix the flaws then start stage C"). By the page's text and its own functions run in node. Written by
+    the architect before the build; the expected words here are his and are changed by nobody else.
+
+    A force the order itself would form is not said by its handle.
+    M1. `readingUnit(h)`, a new pure function, run in node with `M.names` standing in as {'base:1': 'Saltmere', 'task_force:17':
+        'Task Force 17', 'ship:1': 'Merrowdale'}: readingUnit('base:1') is 'base:1' and readingUnit('task_force:17') is
+        'task_force:17' (each is left for the page's links to name, as now); readingUnit('task_force:1'), a force the side does not
+        have, is 'The new force'; readingUnit('ship:9') is 'ship:9' and readingUnit('air_group:4') is 'air_group:4' (only a force
+        can be new). `unitsView` builds each line from `readingUnit(u) + ' \u00b7 ' + ph`.
+    M2. `planOrderLine({kind: 'form_task_force', ships: [1]})` is "Form a force of 1 ship"; with ships [1, 2, 3] it is "Form a force
+        of 3 ships".
+
+    The note under a reading speaks of limits only where a limit of the fold is set.
+    M3. `limitsNote(kind, sent)`, a new pure function inside the limits model, where `sent` is what `sentLimits` gives (a list of
+        {body, key}): ('keep_supplied', [{key: 'ships'}]) is ""; ('keep_supplied', [{key: 'source'}]) is ""; ('keep_supplied',
+        [{key: 'ships'}, {key: 'risk'}]) is "This reading is worked with the limits you set."; ('hold', [{key: 'ships'}]) is that
+        sentence; ('patrol', [{key: 'submarines'}]) is ""; ('hold', []) is "". `askPreview` says the note from `limitsNote(kind,
+        sent)`, and the sentence is in the page's text once.
+
+    A change of limits that brings no new order is not said as an order nothing can serve.
+    M4. `readingTop(root, kind, own)`, run in node: with root {kids: [], units: []} and `own` false or left out it is {text:
+        "Nothing can serve this order yet.", bad: true}, as now; with `own` true it is {text: "The staff would give no new order
+        under it now."} and `bad` is not set. With one unit in `root.units` it is "The staff would give these orders:" whatever
+        `own` is. `readingView` passes `!!own`.
+
+    A supply order that needs no run yet is not said as an order nothing can serve.
+    M6. `runsLine(w, dayWords)`, a new pure function, where `w` is the reading's `with_change` and `dayWords(n)` says a day of the
+        game: with w.next_run = {days: {load: 3, sail: 4, arrive: 4, free: 7}, load_t: '25', ships: [1]} and dayWords giving "day
+        3" and "day 4" it is "No run is needed yet. The first, of 25 t, would load on day 3 and be due on day 4."; with load_t
+        '1250' the weight is said "1,250 t"; with no `next_run` it is "". Found on Nov 28, 2026, when stage C was tried by hand:
+        rung 1's right answer (2 and 5, Merrowdale, Saltmere) read "Nothing can serve this order yet." in the warning ink, since
+        the staff gives no order on day 1 for a place that holds five days against a floor of two.
+    M7. `readingView`, for a draft (not a change of limits): where the tree has no task and no unit and `runsLine` of the reading is
+        not empty, the head line is that sentence, in the paper's plain ink and not bold-red (`bad` not set); "Nothing can serve
+        this order yet." is kept for a reading with no task, no unit and no next run. The page passes as `dayWords` the words it
+        uses for a day elsewhere on the paper (a date where the game has dates, else "day N").
+
+    The look.
+    M5. The style sheet has a rule `#paper select` with `background: transparent`, `border: 0` and a `border-bottom`: a list in the
+        paper is drawn as a blank, as a number is (stage A, A16)."""
+    import re
+    print("-- the reading's mends: a new force, a force formed, the note under a reading, a change that brings no order, the select", flush=True)
+    text = page_text()
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords", "readingUnit", "planOrderLine", "readingTop", "runsLine"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function commas(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function main() {
+  M.names['base:1'] = 'Saltmere'; M.names['task_force:17'] = 'Task Force 17'; M.names['ship:1'] = 'Merrowdale';
+  const out = {};
+  out.unit = ['base:1', 'task_force:17', 'task_force:1', 'ship:9', 'air_group:4'].map(readingUnit);
+  out.form = [planOrderLine({ kind: 'form_task_force', ships: [1] }), planOrderLine({ kind: 'form_task_force', ships: [1, 2, 3] })];
+  out.note = [limitsNote('keep_supplied', [{ key: 'ships' }]), limitsNote('keep_supplied', [{ key: 'source' }]), limitsNote('keep_supplied', [{ key: 'ships' }, { key: 'risk' }]),
+              limitsNote('hold', [{ key: 'ships' }]), limitsNote('patrol', [{ key: 'submarines' }]), limitsNote('hold', [])];
+  const bare = () => ({ kids: [], units: [] }), one = { kids: [], units: [{}] };
+  out.top = [readingTop(bare(), 'hold', false), readingTop(bare(), 'hold'), readingTop(bare(), 'hold', true), readingTop(one, 'hold', true), readingTop(one, 'hold', false), readingTop(one, 'hold')];
+  const dw = n => 'day ' + n, nr = load_t => ({ next_run: { days: { load: 3, sail: 4, arrive: 4, free: 7 }, load_t: load_t, ships: [1] } });
+  out.runs = [runsLine(nr('25'), dw), runsLine(nr('1250'), dw), runsLine({}, dw), runsLine(null, dw)];
+  return out;
+}
+"""
+    r = run_in_node(code, None)
+    check(r["unit"] == ["base:1", "task_force:17", "The new force", "ship:9", "air_group:4"], f"M1: a force the side does not have is \"The new force\"; every other handle is left for the links ({r['unit']})")
+    units = cut_function(text, "  function unitsView(items) {")
+    check("paperLine('punit', readingUnit(u) + ' \u00b7 ' + ph)" in units.replace("' · '", "' \u00b7 '"), "M1: unitsView builds each line from readingUnit(u) and the phrase")
+    check(r["form"] == ["Form a force of 1 ship", "Form a force of 3 ships"], f"M2: a force the order forms is said as \"Form a force of N ships\" ({r['form']})")
+    sentence = "This reading is worked with the limits you set."
+    check(r["note"] == ["", "", sentence, sentence, "", ""], f"M3: the note under a reading speaks only where a limit outside the face is set ({r['note']})")
+    ask = cut_function(text, "  function askPreview() {")
+    check(text.count(sentence) == 1 and "limitsNote(kind, sent)" in ask and "function limitsNote(" in model, "M3: askPreview says the note from limitsNote(kind, sent) and the sentence is in the page's text once")
+    nothing = "Nothing can serve this order yet."
+    check(r["top"][0] == {"text": nothing, "bad": True} and r["top"][1] == {"text": nothing, "bad": True} and r["top"][2] == {"text": "The staff would give no new order under it now."}
+          and all(t == {"text": "The staff would give these orders:"} for t in r["top"][3:]), f"M4: a bare reading of a change brings no new order, a bare reading of an order serves nothing yet ({r['top']})")
+    check("readingTop(root, top.kind, !!own)" in cut_function(text, "  function readingView(out, p, e, own) {"), "M4: readingView passes !!own")
+    check(r["runs"] == ["No run is needed yet. The first, of 25 t, would load on day 3 and be due on day 4.", "No run is needed yet. The first, of 1,250 t, would load on day 3 and be due on day 4.", "", ""],
+          f"M6: runsLine says the first run's weight, load day and due day, and nothing where there is no next run ({r['runs']})")
+    view = cut_function(text, "  function readingView(out, p, e, own) {")
+    check("runsLine(w, " in view and "if (runs) lead = { text: runs }" in view and "lead.bad" in view and "dateOf(n - 1)" in view and "'day ' + n" in view and "bad" not in view[view.index("if (runs) lead"):view.index("if (runs) lead") + 30],
+          "M7: a draft whose tree has no task and no unit but a next run is headed by runsLine in plain ink, with the date where the game has dates, else day N; otherwise \"Nothing can serve\" stays")
+    css = re.search(r"#paper select \{([^}]*)\}", text)
+    check(css is not None and "background: transparent" in css.group(1) and "border: 0" in css.group(1) and "border-bottom:" in css.group(1), "M5: a list in the paper is drawn as a blank: transparent, no border but one beneath")
+
+
+def the_empty_floor():
+    """Decision 0240, stage C: a supply order's days of supply start empty, and the paper says how many days the place holds. By the
+    page's text and its own functions run in node. Written by the architect before the build; the expected words here are his and
+    are changed by nobody else. NOT TO BE BUILT WITH THE MENDS: it is built after them, on its own branch.
+
+    The blank.
+    C1. `<input type="number" id="o-floor"` has `min="1"`, `max="99"` and no `value`. `openDraft` sets `$('o-floor').value = ''`. The
+        end in `ends()` is `['Keep it supplied', { intent_kind: 'keep_supplied', base: n }` with no `floor_days`, and the page's text
+        holds no `floor_days: 30`.
+    C2. `supplyFloor()`, cut and run in node with the box standing in, as `the_supply_orders_two_numbers` runs it: an empty box
+        gives null; "x" gives null; "0" gives 1; "2" gives 2; "150" gives 99.
+    C3. `addSupplyNumbers(args)` for `intent_kind` 'keep_supplied': with the floor empty the answer has no key `floor_days`; with
+        the floor 2 and the interval empty it has `floor_days` 2 and no `interval_days`; with 2 and 5 it has both. For any other
+        kind it adds nothing.
+
+    The need.
+    C4. `missing(kind, lim, floor)` takes the floor as its third argument (the answer of `supplyFloor()`). For 'keep_supplied' with
+        a new model: floor null gives ['floor', 'ships', 'source']; floor 2 gives ['ships', 'source']. With ship 1 and source 1
+        named: floor null gives ['floor']; floor 2 gives []. For every other kind it is [] whatever the floor. (Stage B's B5 is
+        restated to pass a floor of 30, and holds as it was.)
+    C5. Beside the empty blank the paper says "No days of supply given yet." (`id="need-floor"`), in the paper's plain ink; the
+        page's text holds the sentence once. While the floor is missing the staff is not asked and SIGN AND SEND and DRY RUN are
+        disabled, by the same test as stage B's B11: `askPreview` passes `supplyFloor()` to `missing`.
+    C6. On opening, the focus goes to `o-floor` where the order is a supply order (the first blank it needs).
+
+    The fact of the place.
+    C7. `holdsLine(name, dos)`, a new pure function, run in node with the page's own `dayCount` beside it; `dos` is the base's
+        days of supply as the place's card reads it (the object whose `days` the card's "Days of supply" row says):
+        holdsLine('Thornwick', {days: '5'}) is "Thornwick holds 5 days of supply."; with {days: '1'} it is "Thornwick holds 1 day of
+        supply."; with {days: null} and with no `dos` it is "".
+    C8. The line is the first thing in `o-supply` (`id="o-holds"`, before the row of `o-floor`), filled when a supply order's paper
+        opens and hidden while it is empty.
+
+    What it sends: a supply order signed with 2 and 5, Merrowdale and Saltmere sends what it sent before this stage, key for key.
+    The one change is that a paper left untouched can no longer be signed, where it sent `floor_days` 30. The interval's row still
+    says "left to the staff: 15 days" while it is empty.
+
+    Restated with it: `the_supply_orders_two_numbers`, O1 to O6, wherever they hold the 30 (the box's `value`, `supplyFloor`'s
+    answer for an empty box, the untouched paper's `floor_days`, the reset in `openDraft`, the end's own `floor_days: 30`): each
+    to what C1 to C3 say, and nothing else."""
+    import re
+    print("-- the empty floor: days of supply start empty, the paper says what the place holds", flush=True)
+    text = page_text()
+    # C1
+    tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
+    check('min="1"' in tag and 'max="99"' in tag and "value=" not in tag and "$('o-floor').value = ''" in cut_function(text, "  function openDraft(best, first) {")
+          and "['Keep it supplied', { intent_kind: 'keep_supplied', base: n }" in cut_function(text, "  function ends(target) {") and "floor_days: 30" not in text,
+          "C1: the floor's blank is 1 to 99 with no value, openDraft empties it, the end carries no floor_days, and the page holds no floor_days: 30")
+    # C2, C3
+    code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers("))
+            + "function main(x) { made['o-floor'] = { value: x.floor }; made['o-interval'] = { value: x.interval };"
+              " return x.floorOnly ? supplyFloor() : addSupplyNumbers(Object.assign({ command: 'set_intent' }, x.end)); }")
+    keep = {"intent_kind": "keep_supplied", "base": 2}
+    floors = [run_in_node(code, {"floor": v, "interval": "", "floorOnly": True}) for v in ("", "x", "0", "2", "150")]
+    check(floors == [None, None, 1, 2, 99], f"C2: supplyFloor gives null for an empty box and for \"x\", 1 for 0, 2 for 2 and 99 for 150 ({floors})")
+    adds = [run_in_node(code, {"floor": f, "interval": i, "end": e}) for f, i, e in (("", "", keep), ("2", "", keep), ("2", "5", keep), ("2", "5", {"intent_kind": "hold", "base": 2}))]
+    base = {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2}
+    check(adds[0] == base and adds[1] == dict(base, floor_days=2) and adds[2] == dict(base, floor_days=2, interval_days=5) and adds[3] == {"command": "set_intent", "intent_kind": "hold", "base": 2},
+          f"C3: an empty floor adds no floor_days, 2 adds floor_days 2, 2 and 5 add both, and another kind adds nothing ({adds})")
+    # C4
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function main() {
+  const named = newLim(); named.ships = { mode: 'only', task_forces: [], ships: [1] }; named.source = 1;
+  const others = {}; ['patrol', 'stand_at', 'hold', 'cover', 'deny', 'neutralise', 'operate_carriers', 'take_place', 'control_island', 'destroy_force'].forEach(k => others[k] = [missing(k, newLim(), null), missing(k, newLim(), 2)]);
+  return { new: [missing('keep_supplied', newLim(), null), missing('keep_supplied', newLim(), 2)], named: [missing('keep_supplied', named, null), missing('keep_supplied', named, 2)], others };
+}
+"""
+    r = run_in_node(code, None)
+    check(r["new"] == [["floor", "ships", "source"], ["ships", "source"]] and r["named"] == [["floor"], []] and all(v == [[], []] for v in r["others"].values()),
+          f"C4: a supply order needs its floor, then its ships and source; no other kind needs anything ({r['new']}, {r['named']})")
+    # C5
+    ask = cut_function(text, "  function askPreview() {")
+    need = re.search(r'<[^>]*id="need-floor"[^>]*>', text).group(0)
+    check(text.count("No days of supply given yet.") == 1 and not re.search(r'class="[^"]*\b(bad|notsent)\b', need) and "missing(kind, lim, supplyFloor()).length" in ask[:ask.index("api('preview'")]
+          and "$('p-sign').disabled = true" in ask[:ask.index("api('preview'")] and "$('p-dry').disabled = true" in ask[:ask.index("api('preview'")]
+          and "missing(limKind(), lim, supplyFloor()).length" in cut_function(text, "  function limAsk() {") and "$('need-floor').hidden = supplyFloor() != null" in cut_function(text, "  function showSupply() {"),
+          "C5: beside the empty blank the paper says \"No days of supply given yet.\" in plain ink, once; while the floor is missing the staff is not asked and signing waits")
+    # C6
+    check("$('o-floor')" in cut_function(text, "  function openPaper(kind, o) {") and "f.focus" in cut_function(text, "  function openPaper(kind, o) {"),
+          "C6: opening a supply order's paper puts the focus on the days-of-supply blank")
+    # C7
+    code = "".join(cut_function(text, h) + "\n" for h in ("  function commas(n)", "  function dayCount(", "  function holdsLine(")) + "function main() { return [holdsLine('Thornwick', { days: '5' }), holdsLine('Thornwick', { days: '1' }), holdsLine('Thornwick', { days: null }), holdsLine('Thornwick')]; }"
+    said = run_in_node(code, None)
+    check(said == ["Thornwick holds 5 days of supply.", "Thornwick holds 1 day of supply.", "", ""], f"C7: the line says what the place holds, and nothing where there is no figure ({said})")
+    check("holdsLine(best.name, best.base && best.base.days_of_supply)" in cut_function(text, "  function openDraft(best, first) {") and "dos = b.days_of_supply || {}" in text and "dos.days != null ? dayCount(dos.days)" in text,
+          "C7: the paper reads the same days_of_supply of the place that the card's \"Days of supply\" row reads")
+    # C8
+    supply = text[text.index('<div id="o-supply"'):text.index('<div id="p-face"')]
+    check(re.search(r'<div id="o-supply" hidden>\s*<div id="o-holds" hidden></div>\s*<div class="frow">', supply) is not None and supply.index('id="o-holds"') < supply.index('id="o-floor"')
+          and "hl.hidden = !hl.textContent" in cut_function(text, "  function openDraft(best, first) {"),
+          "C8: the line of what the place holds is the first thing in o-supply, before the floor's row, and hidden while empty")
 
 
 def the_fold_and_the_keys():
@@ -426,7 +937,7 @@ def the_words_and_what_the_papers_say():
     # 7. the prompt at the chart's top centre
     css = re.search(r"#prompt \{([^}]*)\}", text).group(1)
     check("top: 12px" in css and "bottom: 76px" not in css and "margin: 0 auto" in css and "right: 200px" in css and "left: calc(var(--sp-w) + 16px)" in css
-          and "body.papered #prompt { right: calc(min(360px, 100% - var(--sp-w) - 48px) + 32px); }" in text
+          and "body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px); }" in text
           and "top: calc(var(--sp-h, 190px) + 8px)" in text and "setProperty('--sp-h'" in text and "body.prompting .order" in text,
           "the prompt lies at the chart's top centre between the stop paper and the order paper, and under the head and its strip in the drawer layout, clear of the order paper and the controls")
     # 8. SIGNED is never silently stale
@@ -714,7 +1225,7 @@ def the_submarines():
     check("if (top.kind === 'patrol') (pr.stations || []).forEach(" in text and "if (i.kind === 'patrol') (M.boats || []).filter(function (b) { return b.hands && b.hands.by === 'staff' && b.hands.intent === i.number" in text
           and "if (k === 'station')" in text and "case 'station': text('take station at ')" in text and "patrol: 'PATROL WITH SUBMARINES'" in text and "'Patrol the waters within '" in text,
           "a patrol signed is in the plan's paper as the tree shows any task, each boat under it with her station, in YOUR ORDERS and SIGNED and on the chart as an order")
-    check('<span class="fl">Patrol these waters,</span><input type="number" id="o-dist"' in text
+    check('<label class="fl" for="o-dist">Patrol these waters,</label><input type="number" id="o-dist"' in text
           and "' hex' : ' hexes') + ' of ' + where + ' with submarines'" in text,
           "the patrol paper labels its distance as the deny order's choices are labelled (\"these waters\"), and the signed line says it: within 2 hexes of <place>, 1 hex for 1")
     # A link to a boat, a force, a base, a contact, a hex or any other `#see=` kind goes through see(); at a narrow width the stop
@@ -1442,11 +1953,11 @@ def the_screen(bridge):
     check("<html" in get(bridge.table + "/"), "the page is served under the table's key")
     check(get(bridge.table + "/config") == {"screen": True}, "with no game in hand the page is told to show the screen")
     listed = get(bridge.table + "/scenarios")["scenarios"]
-    check([s["id"] for s in listed] == ["ladder-1-one-ship", "eastern-solomons", "coral-sea", "midway", "eastern-solomons-five-days", "guadalcanal-39-days"],
-          "the screen lists the scenarios simplest first: rung 1, the Eastern Solomons, the Coral Sea, Midway, the Eastern Solomons over five days and the 39 days")
+    check([s["id"] for s in listed] == ["ladder-1-one-ship", "ladder-3-men-then-food", "eastern-solomons", "coral-sea", "midway", "eastern-solomons-five-days", "guadalcanal-39-days"],
+          "the screen lists the scenarios simplest first: rung 1, rung 3, the Eastern Solomons, the Coral Sea, Midway, the Eastern Solomons over five days and the 39 days")
     check(all("file" not in p for s in listed for p in s["pairings"]), "the list given to the screen names no file")
-    check([len(s["pairings"]) for s in listed] == [1, 4, 7, 7, 7, 7],
-          "rung 1 offers 1 game, the Eastern Solomons 4, the Coral Sea 7, Midway 7, the five-day Eastern Solomons 7 and the 39 days 7")
+    check([len(s["pairings"]) for s in listed] == [1, 1, 4, 7, 7, 7, 7],
+          "rung 1 offers 1 game, rung 3 1 game, the Eastern Solomons 4, the Coral Sea 7, Midway 7, the five-day Eastern Solomons 7 and the 39 days 7")
     # Every battle that has boats has them (decisions 0225 and 0227): one game of the battle, and it plays the copies with boats in
     # table-boats/; its directives name each side's boats in the situation's last sentence.
     entries = {e["id"]: e for e in json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]}
@@ -1678,7 +2189,7 @@ def the_staffs_reading(bridge):
           "the page no longer words the engine's paragraph: no \"It cannot yet\", no count of orders and commands of its own")
     check("readingView(out, p, e);" in ask and "proposedTree(top, {}, pr)" in text and "paperNode(root, true)" in text,
           "the reading is drawn by readingView from proposedTree and paperNode, the plan paper's own functions")
-    check("This reading is worked with the limits you set." in ask and "args.limits" in ask and "limit: 'risk', risk: risk" in text and "Played at balanced risk" not in text and "worked at balanced risk" not in text,
+    check("This reading is worked with the limits you set." in text and "limitsNote(kind, sent)" in ask and "args.limits" in ask and "limit: 'risk', risk: risk" in text and "Played at balanced risk" not in text and "worked at balanced risk" not in text,
           "the reading is worked with the limits and the risk chosen, and says so where any is sent; nothing says it is worked at balanced risk")
     check("'THE STAFF\\'S WORKING IN FULL'" in text[text.index("  function readingView"):text.index("  function askPreview() {")], "the staff's working in full is the reading's last fold")
     heads = ["commas", "cleanName", "orderWords", "plainCounts", "plainWords", "nameText", "intentWords", "reasonWords", "tidyWorked", "paperPre", "shareWords", "tiredBit",
@@ -2066,10 +2577,12 @@ def reason_limits_as_links(bridge):
     text = page_text()
     words = text[text.index("  var LIMIT_LINK ="):text.index("  function limitLinkWords(")] + cut_function(text, "  function limitLinkWords(") + "\n" + cut_function(text, "  function limitInState(")
     blocks = [cut_function(text, h) for h in ("  function limitLinks(", "  function openLimit(", "  function limitSetOn(")]
-    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT))" in cut_function(text, "  function whyView("),
-          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY")
-    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null)" in cut_function(text, "  function reasonView("),
-          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block")
+    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT, t.n))" in cut_function(text, "  function whyView("),
+          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY, which gives limitLinks the task's own number")
+    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null, null)" in cut_function(text, "  function reasonView("),
+          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block, under no task's line")
+    check("  function limitLinks(reasons, intoRoot, own) {" in text and "WHY_OWN" not in text,
+          "limitLinks is given the number of the line it is drawn under as its third argument: the page keeps no variable for it")
     check(not any(re.search(r"\.exec\(|\.test\(|\.match\(|\.replace\(", b) for b in blocks) and all("worked" not in b and "binding" not in b and "would_change" not in b for b in blocks),
           "the code that makes the links reads the engine's `limits` list: no pattern is run on a reason's words")
     check("readPlan(found.root, found.task !== found.root ? found.task : null, { kind: l.kind })" in blocks[1] and "readOrders({ n: l.intent" in blocks[1] and "see(" in blocks[1]
@@ -2582,7 +3095,7 @@ def your_plan_on_the_order_paper(bridge):
     text = page_text()
     # P1
     at = lambda i: text.index(f'id="{i}"')
-    check(at("p-limits") < at("p-plan") < at("p-acts") and re.search(r'<details[^>]*id="p-plan"[^>]*><summary[^>]*>YOUR PLAN</summary>', text) is not None,
+    check(at("p-limits") < at("p-plan") < at("p-acts-t") and re.search(r'<details[^>]*id="p-plan"[^>]*><summary[^>]*>YOUR PLAN</summary>', text) is not None,
           "P1: the order paper has the fold p-plan after p-limits and before p-acts, whose head begins YOUR PLAN")
     end = cut_function(text, "  function planEnd() {")
     check("'control_island'" in end and "paper.kind !== 'staff'" in end and "WATCH" in end and "part.hidden = !end" in cut_function(text, "  function drawPlan(focusId) {"),
@@ -3942,8 +4455,8 @@ def rung_one_on_the_list(bridge):
           and first["pairings"] == [{"allied": "person", "japanese": "engine", "engine": "absent", "file": "data/scenarios/ladder/138_one_ship.toml"}]
           and sorted(first) == sorted(["id", "map", "name", "dates", "days", "placeholder", "lines", "sides", "islands", "directives", "mission", "pairings"]),
           "L1: three lines, the Allied side alone in `sides` and `directives`, the mission, and the one pairing with no agent and the engine absent")
-    check(all("mission" not in e and "placeholder" not in e and "start" in e and all(p.get("engine") != "absent" for p in e["pairings"]) for e in entries[1:]),
-          "L2: every other entry has no `mission` or `placeholder`, no pairing with the engine absent, and a start")
+    check(all("mission" not in e and "placeholder" not in e and "start" in e and all(p.get("engine") != "absent" for p in e["pairings"]) for e in entries[2:]),
+          "L2: every entry but the first two has no `mission` or `placeholder`, no pairing with the engine absent, and a start")
     directive = json.load(open(os.path.join(root, first["directives"]["allied"])))["directives"]
     d = directive[0]
     check(len(directive) == 1 and d["number"] == 1 and d["when"] == "start" and d["from"] == "Area Commander" and d["to"] == "Commander, Saltmere" and d["subject"] == "Both garrisons fed"
@@ -4030,16 +4543,16 @@ def the_supply_orders_two_numbers(bridge):
     """The floor and the interval on the order paper, for the end "keep it supplied".
 
     In the page's text:
-    O1. The paper has a row with the id `o-supply` holding two inputs of type number, `o-floor` (min 1, max 99, value 30) and
+    O1. The paper has a row with the id `o-supply` holding two inputs of type number, `o-floor` (min 1, max 99, no value: stage C) and
         `o-interval` (min 1, max 99, no value), and the words "Never below", "days of supply", "Each run brings", "days more" and "left
         to the staff: 15 days". The page does not hold "Keep it supplied, 30 days"; the end reads "Keep it supplied".
     O2. The row is shown where the end chosen is `keep_supplied` and hidden for every other, by the same path that shows `o-patrol`
         for a patrol; a change of either input asks the reading again, as a change of `o-dist` does.
 
     The page's own functions, cut from its text and run in node, with a stand-in for the two inputs:
-    O3. Nothing touched (30, empty): what the paper adds to the order is `floor_days` 30 and no key `interval_days`, so the arguments of
-        the reading are exactly {command "set_intent", intent_kind "keep_supplied", base n, floor_days 30}: what the page sent before.
-    O4. (2, 5) gives `floor_days` 2 and `interval_days` 5. An empty floor, or one that is no number, gives 30; 0 gives 1; 150 gives 99.
+    O3. Nothing touched (empty, empty): what the paper adds to the order is no key `floor_days` and no key `interval_days` (stage C), so
+        the arguments are exactly {command "set_intent", intent_kind "keep_supplied", base n}; with (2, empty) they add `floor_days` 2 only.
+    O4. (2, 5) gives `floor_days` 2 and `interval_days` 5. An empty floor, or one that is no number, gives none (stage C); 0 gives 1; 150 gives 99.
         An interval of 0 gives 1 and of 150 gives 99; an empty one gives no key. For an end of any other kind neither key is added.
     O5. What a place's card says of an order in force: {kind keep_supplied, floor_days 2, interval_days 5} gives "Kept supplied, 2
         days, each run 5 days more"; {floor_days 30} with no interval gives "Kept supplied, 30 days", as before.
@@ -4053,32 +4566,32 @@ def the_supply_orders_two_numbers(bridge):
     text = page_text()
     floor_tag = re.search(r'<input type="number" id="o-floor"[^>]*>', text).group(0)
     interval_tag = re.search(r'<input type="number" id="o-interval"[^>]*>', text).group(0)
-    row = text[text.index('<div id="o-supply"'):text.index('<fieldset id="o-risk">')]
-    check('min="1"' in floor_tag and 'max="99"' in floor_tag and 'value="30"' in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
+    row = text[text.index('<div id="o-supply"'):text.index('<div id="p-face"')]
+    check('min="1"' in floor_tag and 'max="99"' in floor_tag and "value=" not in floor_tag and 'min="1"' in interval_tag and 'max="99"' in interval_tag and "value=" not in interval_tag
           and all(w in row for w in ("Never below", "days of supply", "Each run brings", "days more")) and "left to the staff: 15 days" in text
           and "Keep it supplied, 30 days" not in text and "['Keep it supplied', { intent_kind: 'keep_supplied'" in text,
-          "O1: the paper has the row o-supply with o-floor (1 to 99, 30) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
+          "O1: the paper has the row o-supply with o-floor (1 to 99, empty) and o-interval (1 to 99, empty), their words and \"left to the staff: 15 days\"; the end reads \"Keep it supplied\"")
     check("$('o-supply').hidden = !on" in text and "function supplyChosen()" in text and "e[1].intent_kind === 'keep_supplied'" in text
-          and "showPatrol(); showSupply(); endChanged();" in text and "e.target.id === 'o-floor' || e.target.id === 'o-interval'" in text and "{ showSupply(); askPreview(); }" in text
-          and "$('o-floor').value = '30'; $('o-interval').value = '';" in text,
+          and "showPatrol(); showSupply(); drawMarks(); endChanged();" in text and "e.target.id === 'o-floor' || e.target.id === 'o-interval'" in text and "{ showSupply(); askPreview(); }" in text
+          and "$('o-floor').value = ''; $('o-interval').value = '';" in text,
           "O2: the row is shown where the end chosen is keep_supplied and hidden for every other, by the path that shows o-patrol; a change of either input asks the reading again")
     code = ("".join(cut_function(text, h) + "\n" for h in ("  function supplyFloor(", "  function supplyInterval(", "  function addSupplyNumbers(", "  function commas(n)", "  function dayCount(", "  function suppliedWords("))
             + "function main(list) { return list.map(function (x) { made['o-floor'] = { value: x.floor }; made['o-interval'] = { value: x.interval };"
               " return { args: addSupplyNumbers(Object.assign({ command: 'set_intent' }, x.end)), card: x.card ? suppliedWords(x.card) : null }; }); }")
     keep = {"intent_kind": "keep_supplied", "base": 2}
     out = run_in_node(code, [
-        {"floor": "30", "interval": "", "end": keep}, {"floor": "2", "interval": "5", "end": keep}, {"floor": "", "interval": "", "end": keep},
+        {"floor": "", "interval": "", "end": keep}, {"floor": "2", "interval": "5", "end": keep}, {"floor": "2", "interval": "", "end": keep},
         {"floor": "abc", "interval": "abc", "end": keep}, {"floor": "0", "interval": "0", "end": keep}, {"floor": "150", "interval": "150", "end": keep},
         {"floor": "2", "interval": "5", "end": {"intent_kind": "hold", "base": 2}},
         {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 2, "interval_days": 5}},
         {"floor": "30", "interval": "", "end": keep, "card": {"kind": "keep_supplied", "floor_days": 30}}])
     args = [o["args"] for o in out]
-    check(args[0] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 30},
-          "O3: nothing touched (30, empty) adds floor_days 30 and no interval_days: the arguments are what the page sent before")
-    check(args[1]["floor_days"] == 2 and args[1]["interval_days"] == 5 and args[2]["floor_days"] == 30 and "interval_days" not in args[2] and args[3]["floor_days"] == 30 and "interval_days" not in args[3]
+    check(args[0] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2} and args[2] == {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 2},
+          "O3: nothing touched (empty, empty) adds neither floor_days nor interval_days; a floor of 2 alone adds floor_days 2")
+    check(args[1]["floor_days"] == 2 and args[1]["interval_days"] == 5 and args[2]["floor_days"] == 2 and "interval_days" not in args[2] and "floor_days" not in args[3] and "interval_days" not in args[3]
           and args[4]["floor_days"] == 1 and args[4]["interval_days"] == 1 and args[5]["floor_days"] == 99 and args[5]["interval_days"] == 99
           and args[6] == {"command": "set_intent", "intent_kind": "hold", "base": 2},
-          "O4: (2, 5) gives 2 and 5; empty or no number gives a floor of 30 and no interval; 0 gives 1; 150 gives 99; an end of another kind gets neither key")
+          "O4: (2, 5) gives 2 and 5; empty or no number gives no floor and no interval; 0 gives 1; 150 gives 99; an end of another kind gets neither key")
     check(out[7]["card"] == "Kept supplied, 2 days, each run 5 days more" and out[8]["card"] == "Kept supplied, 30 days",
           "O5: a place's card says \"Kept supplied, 2 days, each run 5 days more\", and with no interval \"Kept supplied, 30 days\"")
     check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True}, "begun: rung 1")
@@ -4231,8 +4744,9 @@ def the_verdict_in_words():
     mission_branch = end[:end.index("    var show = function () {")]
     check(text.count("missionLines(") == 2 and end.count("missionLines(") == 1 and mission_branch.count("missionLines(") == 1 and mission_branch.split("\n", 1)[1].lstrip().startswith("if (config.mission) {"),
           "W9: missionLines( is defined once and called once, in readEnd, only where config.mission is set")
-    check(mission_branch.count("dayEvents(") == 1 and "for (d = 1; d <= mission.last_day; d++) asks.push(dayEvents(d)" in mission_branch and "api(" not in mission_branch and "M.result" not in mission_branch,
-          "W9: what it is given is read through dayEvents for the days 1 to the last day, and through no other call of the seat")
+    check(mission_branch.count("dayEvents(") == 1 and "for (d = 1; d <= mission.last_day; d++) asks.push(dayEvents(d)" in mission_branch and "M.result" not in mission_branch
+          and mission_branch.count("api(") == 1 and "mission.measure === 'held_and_fed' ? api('list_bases')" in mission_branch,
+          "W9: what it is given is read through dayEvents for the days 1 to the last day, and for the measure held_and_fed through one call of the seat's list_bases and no other (for every_night_fed, through no other call)")
     check("'MISSION MET'" in end and "'MISSION NOT MET'" in end and "'Reading the nights.'" in end and "This game set no objectives, so the umpire gives no result." in end[end.index("    var show = function () {"):],
           "W9: the paper holds MISSION MET, MISSION NOT MET and Reading the nights., and still says there is no result for a game with no mission")
 
@@ -4295,6 +4809,603 @@ def rung_one_played_three_ways(bridge):
         check(post(bridge.table + "/new") == {"ok": True}, f"{name}: the game is put away")
 
 
+# ---- Rung 3 on the table (decision 0237). The statements are the architect's, written before the code with
+# docs/decisions/as-built/0237-the-first-three-rungs.md, "What rung 3 on the table needs beyond rung 1's (class 2)", which has the
+# entry, the two directives and the verdict's words in full. None of the five is called from main() until it is built. An expected
+# value below that the build cannot meet goes back to the architect: it is not changed to pass.
+
+RUNG_THREE = "ladder-3-men-then-food"
+RUNG_THREE_MISSION = {"measure": "held_and_fed", "last_day": 21,
+                      "places": [{"q": 3, "r": 3, "name": "Emberholt"}],
+                      "held": {"base": 2, "name": "Emberholt", "by_day": 14},
+                      "look": [{"q": 0, "r": 0}, {"q": 3, "r": 3}]}
+RUNG_THREE_MISSION_WORDS = ("Seize Emberholt, reported empty, by the end of day 14, and hold it with its men fed: it is to be ours by then, and no man "
+                            "ashore there is to go a night unfed, to the end of day 21. Men land with three nights of rations.")
+RUNG_THREE_MET = ["Mission met.", "Emberholt was taken on day 12 and held to the end of day 21.", "No man ashore there went a night unfed."]
+
+
+def rung_three_take(risk):
+    """The order to capture Emberholt as the paper sends it: base 2 (E), with task force 1, land unit 1 and base 1 (S) as its forces,
+    and its risk where that is not balanced. The engine reads the base as its hex, (3,3): the commands are the hand calculation's."""
+    limits = [{"limit": "forces", "task_forces": [1], "ships": [], "land_units": [1], "source": 1}]
+    if risk != "balanced":
+        limits.append({"limit": "risk", "risk": risk})
+    return {"command": "set_intent", "intent_kind": "take_place", "base": 2, "limits": limits}
+
+
+def rung_three_supply():
+    """The supply order as the paper sends it once Emberholt is the seat's: base 2 at a floor of 2 days and an interval of 5, with
+    ship 4 (Merrowdale) and base 1 (S) as its forces."""
+    return {"command": "set_intent", "intent_kind": "keep_supplied", "base": 2, "floor_days": 2, "interval_days": 5,
+            "limits": [{"limit": "forces", "ships": [4], "task_forces": [], "source": 1}]}
+
+
+def rung_three_on_the_list(bridge):
+    """Rung 3 on the list, its two directives, where the game opens, and the game begun.
+
+    In the files:
+    K1. The second entry of `table/scenarios.json` has the id "ladder-3-men-then-food", the name "Rung 3: Men, then food", `dates` "An
+        invented sea", `days` 21, `placeholder` true, the map "data/map/placeholder_ladder.toml", no key `start`, `islands` empty, three
+        `lines` of which the last begins "A placeholder game", `sides` with the key `allied` alone, whose words are "Seize Emberholt and
+        keep its men fed.", `directives` with the key `allied` alone, "table/directives/ladder_3_allied.json", `mission` equal to
+        RUNG_THREE_MISSION, and one pairing: {allied "person", japanese "engine", engine "absent", file
+        "data/scenarios/ladder/140_men_then_food.toml"}. It has the twelve keys rung 1's entry has and no other. The whole entry is the
+        one written in the as-built section.
+    K2. The first entry is rung 1's and the third the Eastern Solomons'. Rung 1's `mission` is RUNG_ONE_MISSION, with no key `held` or
+        `look`. Every entry but the first two has no `mission` or `placeholder`, no pairing with the engine absent, and a start (L2,
+        restated for two rungs).
+    K3. `table/directives/ladder_3_allied.json` has two directives. Number 1: `when` "start", from "Area Commander", to "Commander,
+        Saltmere", subject "Emberholt", three parts headed "1. Situation", "2. Mission" and "3. Guidance"; its mission is one paragraph,
+        RUNG_THREE_MISSION_WORDS, letter for letter; its guidance has five paragraphs, of which the third is "Then tell the staff that
+        plans launch when ready, under YOUR ORDERS, and carry on: it sails nothing without that leave, neither the men nor the food.";
+        the guidance names "Landing force", "Saltmere" and "risk", and names no day but "day 21" (it does not give the days away).
+        Number 2: `when` {"base_is_yours": 2}, from and to as number 1, subject "Emberholt is ours", the same three headings; its
+        guidance names "Merrowdale", "Saltmere" and "two numbers". Both are the ones written in the as-built section.
+    K4. Decision 0241: scenario 140 names, in the order of its file, its bases "Saltmere" and "Emberholt", its task force "Landing
+        force", its ships "Farrowby", "Gadwell", "Hestercombe" and "Merrowdale" and its land unit "Saltmere battalion"; it is marked
+        `placeholder = true`; and none of the words Emberholt, Farrowby, Gadwell and Hestercombe is in any file of `data/oob`, whatever
+        its case.
+
+    In the page's text:
+    K5. `openOnMission`, cut from the page and run in node with `placeOf` standing as {x: q, z: r} and `clampGoal` doing nothing: a
+        mission with `places` [(3,3)] and `look` [(0,0), (3,3)] gives a goal of x 1.5, z 1.5 and zoom 0.3; RUNG_ONE_MISSION, which has
+        no `look`, gives x 2.5, z 0 and zoom 0.3, as before. So rung 3 opens looking at Saltmere and Emberholt together, and rung 1 as it
+        did.
+
+    Through the bridge:
+    K6. The screen's list has the rung second, with one pairing, and names no file and no `mission`. The game begins: `/config` has
+        `seat` "allied", `start` the empty string, `islands` empty, the two directives and `mission` equal to RUNG_THREE_MISSION. The
+        seat's `list_bases` has one base, base 1 at (0,0), and one enemy base, base 2 at (3,3); the page's `cleanName` (in node) of that
+        enemy base's name is "Emberholt", which is the mission's `held.name` and the name of its one place; `held.base` is 2.
+    K7. The seat's tools include neither `trial` nor `advance` (a day is fought whole). `get_briefing` gives `heading.last_day` 21.
+        `command_state` gives `leaves.prepare` true and `leaves.launch` false before any day is fought.
+    K8. A game of rung 1 begun after it has `mission` equal to RUNG_ONE_MISSION in its `/config`.
+    Each game is put away after it."""
+
+    import re
+    print("-- rung 3 on the list", flush=True)
+    root = os.path.dirname(HERE)
+    entries = json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]
+    third = entries[1]
+    check(third["id"] == RUNG_THREE and third["name"] == "Rung 3: Men, then food" and third["dates"] == "An invented sea" and third["days"] == 21 and third["placeholder"] is True
+          and third["map"] == "data/map/placeholder_ladder.toml" and "start" not in third and third["islands"] == [],
+          "K1: the second entry is rung 3, with its id, name, dates, days, placeholder and map, no start and no islands")
+    check(len(third["lines"]) == 3 and third["lines"][2].startswith("A placeholder game") and third["sides"] == {"allied": "Seize Emberholt and keep its men fed."}
+          and third["directives"] == {"allied": "table/directives/ladder_3_allied.json"} and third["mission"] == RUNG_THREE_MISSION
+          and third["pairings"] == [{"allied": "person", "japanese": "engine", "engine": "absent", "file": "data/scenarios/ladder/140_men_then_food.toml"}]
+          and sorted(third) == sorted(entries[0]),
+          "K1: three lines, the Allied side alone in `sides` and `directives`, the mission, the one pairing with no agent and the engine absent, and the twelve keys rung 1's entry has")
+    check(entries[0]["id"] == RUNG_ONE and entries[0]["mission"] == RUNG_ONE_MISSION and "held" not in entries[0]["mission"] and "look" not in entries[0]["mission"]
+          and entries[2]["id"] == "eastern-solomons"
+          and all("mission" not in e and "placeholder" not in e and "start" in e and all(p.get("engine") != "absent" for p in e["pairings"]) for e in entries[2:]),
+          "K2: the first entry is rung 1's with its mission as it was, the third the Eastern Solomons', and no other entry has a mission, a placeholder or an absent engine")
+    both = json.load(open(os.path.join(root, third["directives"]["allied"])))["directives"]
+    one, two = both
+    check(len(both) == 2 and one["number"] == 1 and one["when"] == "start" and one["from"] == "Area Commander" and one["to"] == "Commander, Saltmere" and one["subject"] == "Emberholt"
+          and [x["heading"] for x in one["parts"]] == ["1. Situation", "2. Mission", "3. Guidance"],
+          "K3: directive 1 is at the start, from the Area Commander to the Commander, Saltmere, in three parts")
+    guidance = one["parts"][2]["text"]
+    day_words = set(re.findall(r"\bday \d+\b", " ".join(guidance), re.I))
+    check(one["parts"][1]["text"] == [RUNG_THREE_MISSION_WORDS] and len(guidance) == 5
+          and guidance[2] == "Then tell the staff that plans launch when ready, under YOUR ORDERS, and carry on: it sails nothing without that leave, neither the men nor the food."
+          and all(w in " ".join(guidance) for w in ("Landing force", "Saltmere", "risk")) and day_words == {"day 21"},
+          "K3: the mission is one paragraph, the designer's words; the guidance has five paragraphs, the third as written, names the Landing force, Saltmere and the risk, and gives no day away but day 21")
+    guidance2 = " ".join(two["parts"][2]["text"])
+    check(two["number"] == 2 and two["when"] == {"base_is_yours": 2} and two["from"] == "Area Commander" and two["to"] == "Commander, Saltmere" and two["subject"] == "Emberholt is ours"
+          and [x["heading"] for x in two["parts"]] == ["1. Situation", "2. Mission", "3. Guidance"] and all(w in guidance2 for w in ("Merrowdale", "Saltmere", "two numbers")),
+          "K3: directive 2 is received when base 2 is the seat's, with the same three headings, and its guidance names Merrowdale, Saltmere and the two numbers")
+    scen = open(os.path.join(root, "data", "scenarios", "ladder", "140_men_then_food.toml")).read()
+    named = [l.split('"')[1] for l in scen.splitlines() if l.startswith('name = "')]
+    oob = os.path.join(root, "data", "oob")
+    record = " ".join(open(os.path.join(d, f), errors="replace").read().lower() for d, _, fs in os.walk(oob) for f in fs if f.endswith((".csv", ".toml")))
+    check(named[1:] == ["Saltmere", "Emberholt", "Landing force", "Farrowby", "Gadwell", "Hestercombe", "Merrowdale", "Saltmere battalion"] and "\nplaceholder = true\n" in scen
+          and not any(w in record for w in ("emberholt", "farrowby", "gadwell", "hestercombe")),
+          "K4: scenario 140 names its bases, task force, ships and land unit as decision 0241 has them, is marked a placeholder, and its invented names are in no file of data/oob")
+    text = page_text()
+    code = cut_function(text, "  function openOnMission() {") + """
+const config = { mission: null }, goal = { x: 0, z: 0, zoom: 0 }, cur = { x: 0, z: 0, zoom: 0 };
+function placeOf(h) { return { x: h.q, z: h.r }; } function clampGoal() {}
+function main(x) { return x.map(m => { config.mission = m; goal.x = goal.z = goal.zoom = 0; openOnMission(); return [goal.x, goal.z, goal.zoom]; }); }"""
+    said = run_in_node(code, [RUNG_THREE_MISSION, RUNG_ONE_MISSION])
+    check(said == [[1.5, 1.5, 0.3], [2.5, 0, 0.3]], f"K5: rung 3 opens looking at Saltmere and Emberholt together (x 1.5, z 1.5, zoom 0.3) and rung 1 as it did ({said})")
+    listed = get(bridge.table + "/scenarios")["scenarios"]
+    check(listed[1]["id"] == RUNG_THREE and listed[1]["pairings"] == [{"allied": "person", "japanese": "engine", "engine": "absent"}] and "mission" not in listed[1] and "file" not in listed[1],
+          "K6: the screen's list has rung 3 second, with one pairing, and names no file and no mission")
+    check(begin(bridge, RUNG_THREE, "person", "engine") == {"ok": True}, "K6: rung 3 begins")
+    config = get(bridge.table + "/config")
+    check(config["seat"] == "allied" and config["start"] == "" and config["islands"] == [] and len(config["directives"]) == 2 and config["mission"] == RUNG_THREE_MISSION,
+          "K6: /config has the seat, an empty start, no islands, the two directives and the mission")
+    person = Person(bridge.table)
+    listing = person.call("list_bases")["ok"]
+    enemy = listing["enemy_bases"]
+    name = run_in_node(text[text.index("  function cleanName"):text.index("  function nameText")] + "\nfunction main(x) { return cleanName(x); }", enemy[0]["base"]["name"])
+    check([b["base"]["handle"] for b in listing["bases"]] == ["base:1"] and (listing["bases"][0]["place"]["q"], listing["bases"][0]["place"]["r"]) == (0, 0)
+          and [e["base"]["handle"] for e in enemy] == ["base:2"] and (enemy[0]["place"]["q"], enemy[0]["place"]["r"]) == (3, 3)
+          and name == "Emberholt" == RUNG_THREE_MISSION["held"]["name"] == RUNG_THREE_MISSION["places"][0]["name"] and RUNG_THREE_MISSION["held"]["base"] == 2,
+          f"K6: list_bases has base 1 at (0,0) and the enemy's base 2 at (3,3), which the page names {name}, the mission's name for its one place")
+    tools = get(bridge.table + "/tools")
+    state = person.call("command_state")["ok"]["leaves"]
+    check("trial" not in tools and "advance" not in tools and person.call("get_briefing", {"text": False})["ok"]["heading"]["last_day"] == 21
+          and state["prepare"] is True and state["launch"] is False,
+          "K7: the seat has neither trial nor advance, the briefing's last day is 21, and leave to prepare is given and leave to launch withheld")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+    check(begin(bridge, RUNG_ONE, "person", "engine") == {"ok": True} and get(bridge.table + "/config")["mission"] == RUNG_ONE_MISSION,
+          "K8: a game of rung 1 begun after it has its own mission in /config")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+def the_orders_of_rung_three(bridge):
+    """What the page can give on rung 3, and the mend to SIGNED. Tried by the architect on the page on Nov 28, 2026, before this was
+    written: every order below was given from the page but the hold of a place that is not yet the seat's, which the page does not offer
+    (as-built, "What was tried on the page").
+
+    In the page's text (none of this is changed by the build: it is what the rung rests on):
+    P1. `ends` offers for an enemy base 'Capture ' + its name + ' only' with {intent_kind 'take_place', base n} and 'Neutralise ' + its
+        name, and no hold and no supply; for a base of the seat's it offers 'Hold ' + its name, 'Keep it supplied' and 'Cover it from
+        the air'. `LIMITS_OFFERED.take_place` holds ships, land_units, source and risk, and `LIMITS_OFFERED.hold` holds ships and
+        source.
+
+    The page's own limits model, cut from its text and run in node:
+    P2. For the kind `take_place`, a draft whose ships are "only" task force 1, whose land units are "only" unit 1, whose source is
+        base 1 and whose risk is press sends, by `sentLimits`, exactly the two limits of `rung_three_take("press")`, in that order; at a
+        balanced risk it sends the forces limit alone. For the kind `hold`, a draft with ships "only" ship 4 and source base 1 sends
+        {limit "forces", task_forces [], ships [4], source 1}.
+
+    Through the bridge, in a game of rung 3 before any day is fought:
+    P3. A preview of `rung_three_take("press")` is valid and not refused; its `command` has `intent_kind` "take_place", `hex` [3, 3]
+        and `intent` 1 and no key `base`; its `shown_limits` has two entries. A preview of `rung_three_take("balanced")` is valid and
+        its `shown_limits` has one.
+    P4. A preview of `rung_three_supply()` is refused, with the reason "base:2 is not one of the side's bases" and `of_batch.position`
+        1: the supply order cannot be given while the place is the enemy's (case D of the hand calculation), and P1 is why the page
+        never asks.
+    P5. Nothing is signed (`queued` has no entry), and the game is put away.
+
+    The mend to SIGNED (found on rung 1 as `main` stands: a supply order signed from the page leaves SIGNED saying "NOT READ Could not
+    read what is signed.", because `queued` gives a supply order's command with no `intent_kind`, the default, and `signedLine` reads the
+    kind from that key alone):
+    P6. The page's `signedLine`, with what it reads, cut from its text and run in node with the stand-ins of NODE_PRELUDE and
+        `M.bases` holding base:2 named "Emberholt", on the entry {what "command", tool "set_intent", command {kind "set_intent", base 2,
+        floor_days 2, interval_days 5, intent 3}, goes_with []}: it does not throw, and its text begins "Order: Keep Emberholt supplied".
+        The same entry with `intent_kind` "hold" gives a text that begins "Order: Hold Emberholt", as before.
+    P7. Through the bridge, in the game of Y1 on the evening after day 12 with `rung_three_supply()` approved: the first entry of
+        `queued` has a `command` with `base` 2, `floor_days` 2 and `interval_days` 5 and no key `intent_kind` (the fact P6 rests on)."""
+
+    import re
+    print("-- the orders of rung 3", flush=True)
+    text = page_text()
+    ends = cut_function(text, "  function ends(target) {")
+    enemy_line = [l for l in ends.split("\n") if "target.kind === 'enemy'" in l][0]
+    own_line = [l for l in ends.split("\n") if "target.kind === 'own'" in l][0]
+    check("'Capture ' + target.name + ' only', { intent_kind: 'take_place', base: n }" in enemy_line and "'Neutralise ' + target.name" in enemy_line
+          and "hold" not in enemy_line.replace("holds", "") and "keep_supplied" not in enemy_line
+          and all(w in own_line for w in ("'Hold ' + target.name", "'Keep it supplied'", "'Cover it from the air'")),
+          "P1: an enemy base's card offers capture and neutralise, with no hold and no supply; the seat's own offers hold, keep it supplied and cover")
+    offered = text[text.index("  var LIMITS_OFFERED"):text.index("  var TARGET_KINDS")]
+    check("take_place: ['ships', 'air_groups', 'land_units', 'source', 'area', 'targets', 'landing', 'risk']" in offered and "hold: ['ships', 'air_groups', 'land_units', 'source', 'targets', 'risk']" in offered,
+          "P1: LIMITS_OFFERED for the capture holds ships, land units, source and risk, and for the hold ships and source")
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the written plan model ----")]
+    helpers = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "nm", "unitNo", "nameText", "sentLimits"))
+    code = helpers + model + """
+var hexes = [], lim = null;
+function main(x) {
+  return x.map(function (d) { lim = newLim(); lim.ships = d.ships; lim.land_units = d.land_units; lim.source = d.source; lim.risk = d.risk; return sentLimits(d.kind).map(function (p) { return p.body; }); });
+}"""
+    drafts = [{"kind": "take_place", "ships": {"mode": "only", "task_forces": [1], "ships": []}, "land_units": {"mode": "only", "list": [1]}, "source": 1, "risk": "press"},
+              {"kind": "take_place", "ships": {"mode": "only", "task_forces": [1], "ships": []}, "land_units": {"mode": "only", "list": [1]}, "source": 1, "risk": "balanced"},
+              {"kind": "hold", "ships": {"mode": "only", "task_forces": [], "ships": [4]}, "land_units": {"mode": "staff", "list": []}, "source": 1, "risk": "balanced"}]
+    sent = run_in_node(code, drafts)
+    check(sent[0] == rung_three_take("press")["limits"] and sent[1] == rung_three_take("balanced")["limits"] and sent[2] == [{"limit": "forces", "task_forces": [], "ships": [4], "source": 1}],
+          "P2: the paper's draft sends the two limits of the capture at press, the forces limit alone at balanced, and the hold's forces limit")
+    check(begin(bridge, RUNG_THREE, "person", "engine") == {"ok": True}, "begun: rung 3")
+    person = Person(bridge.table)
+    press = person.call("preview", rung_three_take("press"))["ok"]
+    balanced = person.call("preview", rung_three_take("balanced"))["ok"]
+    check(press["valid"] is True and press.get("status") != "refused" and press["command"]["intent_kind"] == "take_place" and press["command"]["hex"] == [3, 3] and press["command"]["intent"] == 1
+          and "base" not in press["command"] and len(press["shown_limits"]) == 2 and balanced["valid"] is True and len(balanced["shown_limits"]) == 1,
+          "P3: a preview of the capture is valid, takes the base as its hex (3,3) and shows two limits at press and one at balanced")
+    refused = person.call("preview", rung_three_supply())["ok"]
+    check(refused["status"] == "refused" and refused["reason"] == "base:2 is not one of the side's bases" and refused["of_batch"]["position"] == 1,
+          "P4: the supply order is refused while the place is the enemy's, as the first of its batch")
+    check(person.call("queued")["ok"]["entries"] == [] and post(bridge.table + "/new") == {"ok": True}, "P5: nothing was signed, and the game is put away")
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ("cleanName", "num", "hexDist", "nm", "unitNo", "nameText", "queuedKind", "sayIntent", "signedWith", "signedOwnLimits", "signedPlanWords", "signedLine")) + re.search(r"^  var WORD = \{.*?\};$", text, re.M).group(0) + "\n" + model + r"""
+const config = { islands: [] }; let hexRaw = false;
+function baseByNumber(n) { return M.bases.filter(b => num(b.base.handle) === n)[0] || null; }
+function rich(tag, cls, w) { return el(tag, cls, w); } function placeLink() { return el('span', '', '?'); } function refTo() { return el('span', '', '?'); } function plainWords(t) { return t; }
+function landingCap(h) { return 'Landing'; } function orderWordsOf() { return ''; } function orderFound() { return null; } function limitsLine() { return ''; } function limFromBodies() { return {}; }
+function main(x) {
+  M.bases = [{ base: { handle: 'base:2', name: 'Emberholt' } }]; M.names['base:2'] = 'Emberholt'; M.queue = { entries: [] }; M.state = { intents: [] };
+  return x.map(function (kind) {
+    const c = { kind: 'set_intent', base: 2, floor_days: 2, interval_days: 5, intent: 3 }; if (kind) c.intent_kind = kind;
+    try { return signedLine({ what: 'command', tool: 'set_intent', command: c, goes_with: [] }).textContent; } catch (e) { return 'THREW ' + e.message; }
+  });
+}"""
+    said = run_in_node(code, [None, "hold"])
+    check(said[0].startswith("Order: Keep Emberholt supplied") and said[1].startswith("Order: Hold Emberholt"),
+          f"P6: SIGNED reads a supply order with no intent_kind as \"Order: Keep Emberholt supplied\", and a hold as before ({said})")
+    full = begin(bridge, RUNG_THREE, "person", "engine")
+    person = Person(bridge.table)
+    approved = person.call("preview", rung_three_take("press"))["ok"]
+    person.call("approve", {"preview": approved["preview"]})
+    person.call("set_leave", {"leave": "launch", "given": True})
+    for _ in range(12):
+        person.call("run", {"days": 1, "stop_on": []})
+    supply = person.call("preview", rung_three_supply())["ok"]
+    person.call("approve", {"preview": supply["preview"]})
+    queued = person.call("queued")["ok"]["entries"]
+    first = queued[0]["command"]
+    check(full == {"ok": True} and first["base"] == 2 and first["floor_days"] == 2 and first["interval_days"] == 5 and "intent_kind" not in first,
+          "P7: the signed supply order is queued with base 2, floor 2 and interval 5 and no intent_kind, which is what P6 rests on")
+    check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
+
+
+def a_directive_stops_the_clock(bridge):
+    """The clock stops when a directive is received: how the player of rung 3 is told that the place is his (as-built, "How he is told
+    the place is his"). Seen by the architect on the page on Nov 28, 2026: with the capture ordered at press and leave to launch given,
+    Carry on runs from day 1 to the end of day 21 with no stop, and the verdict is six nights unfed.
+
+    In the page's text:
+    S1. The fold WHAT STOPS THE CLOCK holds a tick with the id `stop-directive` and the words "a directive from above", among the
+        table's own. `TICK_DEFAULT` has `directive: true`; its other eleven keys and their values are as they were.
+    S2. `directiveStop()` is asked wherever `eveningStop()` is asked (the pulse, day and watched loops), and the clock rests where it
+        answers. It answers with the directive where one was received since the clock was last started and the tick is set, and with
+        nothing where the tick is cleared. `startRun` forgets it.
+    S3. WHY THE CLOCK STOPPED then holds a slip whose head is 'FROM ' + the directive's `from` in capitals and whose words are
+        'Directive ' + its number + ': ' + its subject; it is kept and read again across a reload with the rest of WHY, as the stop for
+        reinforcements and the stop for evening are. The directive still opens of itself, and is still a paper under Staff.
+    S4. `directiveDue`, cut from the page and run in node with `M.bases` as given: for a directive whose `when` is {"base_is_yours":
+        2}, false where the bases are [base:1] and true where they are [base:1, base:2, base:3]; for one whose `when` is "start", true
+        for both.
+
+    Through the bridge, in a game of rung 3 with `rung_three_take("press")` approved and leave to launch given before day 1:
+    S5. `run` {days 1, stop_on []} twelve times: each answers `stopped` "days", `game_over` false and an empty `fired`. Nothing of the
+        engine's stops the clock on this path, which is why the page must.
+    S6. After the eleventh, `list_bases` has base 1 alone among the seat's bases and base 2 among the enemy's; `directiveDue` (in node,
+        on that answer's bases) is false for directive 2 of rung 3's file. After the twelfth, the seat's bases are base 1, base 2
+        ("Emberholt") and base 3, the last two at (3,3), there is no enemy base, and `directiveDue` is true for directive 2. The
+        seat's `events` of day 12 hold one event of kind `base_changed_side`, whose text begins "base:2 at (3,3) changed from the
+        Japanese side to the Allied side: ".
+    S7. On that evening a preview of `rung_three_supply()` is valid: the order the directive tells him to give can be given at that
+        stop. Nothing is signed, and the game is put away.
+
+    In the files:
+    S8. No directive file but rung 3's and the 39 days' Allied one has a directive whose `when` is not "start"; the 39 days' is
+        {"base_is_yours": 1}, as it was. (The stop is the page's for every game: in the 39 days the clock now stops when Lunga is
+        taken and directive 2 is received. `table/README.md` says so.)"""
+
+    import re
+    print("-- a directive stops the clock", flush=True)
+    text = page_text()
+    foot = text[text.index('id="sp-foot"'):text.index("</footer>", text.index('id="sp-foot"'))]
+    tick_line = [l for l in text.split("\n") if l.strip().startswith("var TICK_DEFAULT")][0]
+    ticks = dict(re.findall(r"(\w+): (true|false)", tick_line))
+    check('id="stop-directive"' in foot and "a directive from above" in foot and ticks.pop("directive") == "true"
+          and ticks == {"contact": "true", "attack": "true", "submarine": "true", "loss": "true", "strike": "false", "landing": "false", "arrive": "false", "evening": "false",
+                        "follows_other_sort": "true", "contact_lost": "true", "force_not_found": "true"},
+          "S1: the fold has the tick `stop-directive`, \"a directive from above\", set by default, and the other eleven ticks are as they were")
+    go, watch = cut_function(text, "  function go(until) {"), cut_function(text, "  function watchGo(until) {")
+    check(text.count("directiveStop()") == text.count("eveningStop()") and go.count("directiveStop()") == 2 and watch.count("directiveStop()") == 1
+          and go.count("|| word || evening ||") == 2 and "|| word || evening) {" in watch and "stopDirective = word" in go and "stopDirective = word" in watch
+          and "directivesNew = []" in cut_function(text, "  function startRun() {"),
+          "S2: directiveStop() is asked wherever eveningStop() is asked (the pulse, day and watched loops), the clock rests where it answers, and startRun forgets it")
+    code = cut_function(text, "  function directiveStop() {") + """
+var ticks = {}, directivesNew = [];
+function main(x) { return x.map(function (c) { ticks.directive = c.tick; directivesNew = c.got; var d = directiveStop(); return d ? d.number : null; }); }"""
+    said = run_in_node(code, [{"tick": True, "got": [{"number": 2}]}, {"tick": False, "got": [{"number": 2}]}, {"tick": True, "got": []}])
+    check(said == [2, None, None], f"S2: it answers with the directive received since the clock was started where the tick is set, and with nothing where it is cleared or none came ({said})")
+    why = cut_function(text, "  function showWhy() {")
+    check("slip('FROM ' + String(stopDirective.from).toUpperCase(), null, 'Directive ' + stopDirective.number + ': ' + stopDirective.subject, null, false, box)" in why
+          and "directive: stopDirective ?" in cut_function(text, "  function keepWhy() {") and "stopDirective = k.directive || null" in cut_function(text, "  function recallWhy() {")
+          and "setTimeout(function () { readDirective(fresh); }, 0)" in cut_function(text, "  function showDirectives() {"),
+          "S3: WHY THE CLOCK STOPPED holds a slip FROM the directive's sender, \"Directive N: subject\", kept and read again across a reload; the directive still opens of itself")
+    code = cut_function(text, "  function num(") + "\n" + cut_function(text, "  function directiveDue(d) {") + """
+const location = { hash: '' };
+function main(x) { return x.map(function (c) { M.bases = c.bases.map(n => ({ base: { handle: 'base:' + n } })); return directiveDue({ when: c.when }); }); }"""
+    due = run_in_node(code, [{"when": {"base_is_yours": 2}, "bases": [1]}, {"when": {"base_is_yours": 2}, "bases": [1, 2, 3]}, {"when": "start", "bases": [1]}, {"when": "start", "bases": [1, 2, 3]}])
+    check(due == [False, True, True, True], f"S4: directiveDue is false for base 2 among [1], true among [1, 2, 3], and true at the start for both ({due})")
+    check(begin(bridge, RUNG_THREE, "person", "engine") == {"ok": True}, "begun: rung 3")
+    person = Person(bridge.table)
+    shown = person.call("preview", rung_three_take("press"))["ok"]
+    person.call("approve", {"preview": shown["preview"]})
+    person.call("set_leave", {"leave": "launch", "given": True})
+    directive_two = json.load(open(os.path.join(os.path.dirname(HERE), "table", "directives", "ladder_3_allied.json")))["directives"][1]
+    after = {}
+    for day in range(1, 13):
+        answer = person.call("run", {"days": 1, "stop_on": []})["ok"]
+        check(answer["stopped"] == "days" and answer["game_over"] is False and answer["fired"] == [], f"S5: run of day {day} is stopped by the days alone, and nothing of the engine's fires")
+        if day in (11, 12):
+            listing = person.call("list_bases")["ok"]
+            after[day] = (listing, run_in_node(code, [{"when": directive_two["when"], "bases": [int(b["base"]["handle"].split(":")[1]) for b in listing["bases"]]}])[0])
+    one, two = after[11], after[12]
+    check([b["base"]["handle"] for b in one[0]["bases"]] == ["base:1"] and [b["base"]["handle"] for b in one[0]["enemy_bases"]] == ["base:2"] and one[1] is False,
+          "S6: after day 11 the seat has base 1 alone, base 2 is the enemy's, and directive 2 is not due")
+    mine = two[0]["bases"]
+    check([b["base"]["handle"] for b in mine] == ["base:1", "base:2", "base:3"] and mine[1]["base"]["name"] == "Emberholt" and [(b["place"]["q"], b["place"]["r"]) for b in mine[1:]] == [(3, 3), (3, 3)]
+          and two[0]["enemy_bases"] == [] and two[1] is True,
+          "S6: after day 12 the seat has base 1, base 2 (Emberholt) and base 3, the last two at (3,3), there is no enemy base, and directive 2 is due")
+    changes = [e for e in person.call("events", {"day": 12})["ok"]["events"] if e["event_kind"] == "base_changed_side"]
+    check(len(changes) == 1 and changes[0]["text"].startswith("base:2 at (3,3) changed from the Japanese side to the Allied side: "), "S6: the events of day 12 hold the one change of side, of base 2")
+    supply = person.call("preview", rung_three_supply())["ok"]
+    check(supply["valid"] is True and person.call("queued")["ok"]["entries"] == [] and post(bridge.table + "/new") == {"ok": True},
+          "S7: on that evening the supply order can be given at the stop (its preview is valid); nothing is signed, and the game is put away")
+    entries = json.load(open(os.path.join(HERE, "scenarios.json")))["scenarios"]
+    whens = {}
+    for entry in entries:
+        for side, file in entry.get("directives", {}).items():
+            for d in json.load(open(os.path.join(os.path.dirname(HERE), file)))["directives"]:
+                if d["when"] != "start":
+                    whens[(entry["id"], side, d["number"])] = d["when"]
+    check(whens == {(RUNG_THREE, "allied", 2): {"base_is_yours": 2}, ("guadalcanal-39-days", "allied", 2): {"base_is_yours": 1}},
+          f"S8: no directive file but rung 3's and the 39 days' Allied one has a directive whose `when` is not \"start\" ({whens})")
+
+
+def the_verdict_of_a_place_held():
+    """The verdict's words for the measure `held_and_fed`: the page's own `missionLines(mission, days, bases)`, cut from its text with
+    `commas` and run in node. It draws nothing and asks nothing. `days` is as in `the_verdict_in_words`. `bases` is the list of the
+    numbers of the seat's bases at the end, as `list_bases` gave them, or null where that was not answered. The mission is
+    RUNG_THREE_MISSION. The events are made up in the tool's shape, the texts being the engine's:
+    `fed(d, q, r, base)` is {"day": d, "event_kind": "men_fed", "pulse": "night", "text": "Allied men ashore at (q,r): 600 of 600 fed
+    from base:N, 0 unfed"}; `unfed(d, n)` is the same at (3,3) from base:2 with n of 600 unfed; `taken(d)` is {"day": d, "event_kind":
+    "base_changed_side", "pulse": null, "text": "base:2 at (3,3) changed from the Japanese side to the Allied side: 0 t of supply and 0
+    t of fuel kept, 0 t and 0 t lost"}.
+
+    `game_a` is case A as the seat is told it: fed(d, 0, 0, 1) on days 1 to 11; taken(12) on day 12 and no `men_fed`; fed(d, 3, 3, 3)
+    on days 13 and 14 and fed(d, 3, 3, 2) on days 15 to 21; `bases` [1, 2, 3].
+
+    X1. `game_a`: RUNG_THREE_MET.
+    X2. `game_a` with unfed(16, 600) in place of day 16's event: ["Mission not met.", "600 men at Emberholt went unfed on the night of
+        day 16."].
+    X3. The same on each day from 16 to 21: the second line is "600 men at Emberholt went unfed on the nights of days 16, 17, 18, 19,
+        20 and 21."
+    X4. Case F: fed(d, 0, 0, 1) on each of the 21 days, no event at (3,3), `bases` [1]: ["Mission not met.", "Emberholt was not ours
+        at the end of day 21."]. A game in which no man was ever ashore at the place is not held: never "met", never "not judged".
+    X5. Case G: fed(d, 0, 0, 1) on days 1 to 17, taken(18), fed(d, 3, 3, 3) on days 19 to 21, `bases` [1, 2, 3]: ["Mission not met.",
+        "Emberholt was taken on day 18, after the end of day 14."].
+    X6. The day itself: `game_a` with the taking on day 14 and the place's nights from day 15 gives "Mission met." and "Emberholt was
+        taken on day 14 and held to the end of day 21."; with the taking on day 15 and the nights from day 16, all fed, ["Mission not
+        met.", "Emberholt was taken on day 15, after the end of day 14."].
+    X7. Late and unfed, the place first and then the nights: the taking on day 15 and unfed(19, 200) gives ["Mission not met.",
+        "Emberholt was taken on day 15, after the end of day 14.", "200 men at Emberholt went unfed on the night of day 19."].
+    X8. The base that paid is not read: `game_a` with every night at (3,3) said "from base:3", or every one "from base:2", is
+        RUNG_THREE_MET; unfed(16, 600) and the form with no base on day 17, "Allied men ashore at (3,3): no base of the side, none of
+        600 fed, 600 unfed", are said together as "the nights of days 16 and 17". A `men_fed` at (0,0) with 600 unfed on day 5 does not
+        count: the mission's one place is (3,3).
+    X9. Taken, lost and taken again: `game_a` with, on day 15, a `base_changed_side` of base:2 "from the Allied side to the Japanese
+        side" and, on day 17, taken(17), `bases` [1, 2, 3]: the day of taking is the last, "Emberholt was taken on day 17, after the end
+        of day 14." The same with `bases` [1, 3]: "Emberholt was not ours at the end of day 21." A `base_changed_side` of another base
+        ("base:7 at (9,9) changed from ...") on any day changes nothing of `game_a`.
+    X10. Not judged, and never "met". `bases` null: ["The mission could not be judged.", "The list of our bases could not be read."].
+        Day 9 null, with `bases` null too: "Day 9 could not be read." (the days are read first, in order). A `men_fed` that does not
+        fit, as W7: "A report of the men fed on day 9 could not be read." A `base_changed_side` on day 12 whose text is "base:2
+        changed": "A report of a base changing sides on day 12 could not be read." `bases` [1, 2, 3] and no `base_changed_side` of
+        base:2 on any day: "The day Emberholt was taken could not be read." Each has "The mission could not be judged." as its first
+        line.
+    X11. Rung 1's measure is untouched: `missionLines(RUNG_ONE_MISSION, days)` and `missionLines(RUNG_ONE_MISSION, days, null)` give
+        the lines of W1 and of W2 for their days; a `base_changed_side` whose text does not fit, added to W1's days, leaves
+        RUNG_ONE_MET (the measure `every_night_fed` reads no such event and no list of bases).
+
+    In the page's text:
+    X12. `missionLines(` is still called in one place, inside `readEnd`. For a mission whose measure is `held_and_fed` what it is
+        given is read through `dayEvents` for the days 1 to the mission's `last_day` and through one call of the seat's `list_bases`,
+        made each time the paper is opened, and through no other call; for the measure `every_night_fed` no list is asked (W9,
+        restated). A call of `list_bases` that fails gives `bases` null. HOW IT ENDED stamps "MISSION MET" and "MISSION NOT MET" as it
+        does, with every other line under the stamp."""
+
+    import re
+    print("-- the verdict of a place held", flush=True)
+    text = page_text()
+
+    def fed(d, q, r, base):
+        return {"day": d, "event_kind": "men_fed", "pulse": "night", "text": f"Allied men ashore at ({q},{r}): 600 of 600 fed from base:{base}, 0 unfed"}
+
+    def unfed(d, n):
+        return {"day": d, "event_kind": "men_fed", "pulse": "night", "text": f"Allied men ashore at (3,3): {600 - n} of 600 fed from base:2, {n} unfed"}
+
+    def taken(d):
+        return {"day": d, "event_kind": "base_changed_side", "pulse": None,
+                "text": "base:2 at (3,3) changed from the Japanese side to the Allied side: 0 t of supply and 0 t of fuel kept, 0 t and 0 t lost"}
+
+    def game(first, take, upto=21, last=None, base=None, replace=None, extra=None, null=()):
+        """The days of a game: fed at (0,0) from day 1 to `first`'s days, the taking on day `take` and the place's nights after it."""
+        days = []
+        for d in range(1, upto + 1):
+            if d in null:
+                days.append(None)
+                continue
+            if take is None or d < take:
+                events = [fed(d, 0, 0, 1)]
+            elif d == take:
+                events = [taken(d)]
+            else:
+                events = [fed(d, 3, 3, base or (3 if d < 15 else 2))]
+            if replace and d in replace:
+                events = replace[d]
+            events = events + [e for day, e in (extra or []) if day == d]
+            days.append(events)
+        return days
+
+    game_a = game(None, 12)
+    cases = []
+
+    def case(days, bases, mission=RUNG_THREE_MISSION):
+        cases.append({"mission": mission, "days": days, "bases": bases})
+    case(game_a, [1, 2, 3])                                                                              # 0 X1
+    case(game(None, 12, replace={16: [unfed(16, 600)]}), [1, 2, 3])                                      # 1 X2
+    case(game(None, 12, replace={d: [unfed(d, 600)] for d in range(16, 22)}), [1, 2, 3])                 # 2 X3
+    case(game(None, None), [1])                                                                          # 3 X4
+    case(game(None, 18, base=3), [1, 2, 3])                                                                      # 4 X5
+    case(game(None, 14), [1, 2, 3])                                                                      # 5 X6 taken on 14
+    case(game(None, 15), [1, 2, 3])                                                                      # 6 X6 taken on 15
+    case(game(None, 15, replace={19: [unfed(19, 200)]}), [1, 2, 3])                                      # 7 X7
+    case(game(None, 12, base=3), [1, 2, 3])                                                              # 8 X8 from base:3
+    case(game(None, 12, base=2), [1, 2, 3])                                                              # 9 X8 from base:2
+    nobase = {"day": 17, "event_kind": "men_fed", "pulse": "night", "text": "Allied men ashore at (3,3): no base of the side, none of 600 fed, 600 unfed"}
+    case(game(None, 12, replace={16: [unfed(16, 600)], 17: [nobase]}), [1, 2, 3])                        # 10 X8 no base
+    case(game(None, 12, extra=[(5, unfed(5, 600) | {"text": "Allied men ashore at (0,0): 0 of 600 fed from base:1, 600 unfed"})]), [1, 2, 3])   # 11 X8 elsewhere
+    lost = {"day": 15, "event_kind": "base_changed_side", "pulse": None, "text": "base:2 at (3,3) changed from the Allied side to the Japanese side: 0 t of supply and 0 t of fuel kept, 0 t and 0 t lost"}
+    case(game(None, 12, extra=[(15, lost), (17, taken(17))]), [1, 2, 3])                                 # 12 X9 taken again
+    case(game(None, 12, extra=[(15, lost), (17, taken(17))]), [1, 3])                                    # 13 X9 not held
+    other = {"day": 6, "event_kind": "base_changed_side", "pulse": None, "text": "base:7 at (9,9) changed from the Japanese side to the Allied side: 0 t of supply and 0 t of fuel kept, 0 t and 0 t lost"}
+    case(game(None, 12, extra=[(6, other)]), [1, 2, 3])                                                  # 14 X9 another base
+    case(game_a, None)                                                                                   # 15 X10 no list
+    case(game(None, 12, null=(9,)), None)                                                                # 16 X10 day 9 null
+    somewhere = {"day": 9, "event_kind": "men_fed", "pulse": "night", "text": "Allied men ashore somewhere"}
+    case(game(None, 12, extra=[(9, somewhere)]), [1, 2, 3])                                              # 17 X10 men_fed does not fit
+    short = {"day": 12, "event_kind": "base_changed_side", "pulse": None, "text": "base:2 changed"}
+    case(game(None, 12, replace={12: [short]}), [1, 2, 3])                                               # 18 X10 change does not fit
+    case(game(None, None, replace={d: [fed(d, 0, 0, 1)] for d in range(1, 22)}), [1, 2, 3])             # 19 X10 held and never taken
+    code = text[text.index("  function missionLines("):text.index("  var endSeq = 0;")] + cut_function(text, "  function commas(n)") + "\nfunction main(list) { return list.map(x => missionLines(x.mission, x.days, x.bases)); }"
+    got = run_in_node(code, cases)
+    check(got[0] == RUNG_THREE_MET, "X1: case A is met: " + " ".join(got[0]))
+    check(got[1] == ["Mission not met.", "600 men at Emberholt went unfed on the night of day 16."], "X2: " + " ".join(got[1]))
+    check(got[2] == ["Mission not met.", "600 men at Emberholt went unfed on the nights of days 16, 17, 18, 19, 20 and 21."], "X3: " + " ".join(got[2]))
+    check(got[3] == ["Mission not met.", "Emberholt was not ours at the end of day 21."], "X4: case F, no man ever ashore there, is not held: " + " ".join(got[3]))
+    check(got[4] == ["Mission not met.", "Emberholt was taken on day 18, after the end of day 14."], "X5: case G: " + " ".join(got[4]))
+    check(got[5] == ["Mission met.", "Emberholt was taken on day 14 and held to the end of day 21.", "No man ashore there went a night unfed."]
+          and got[6] == ["Mission not met.", "Emberholt was taken on day 15, after the end of day 14."], "X6: taken on day 14 is in time and on day 15 is late")
+    check(got[7] == ["Mission not met.", "Emberholt was taken on day 15, after the end of day 14.", "200 men at Emberholt went unfed on the night of day 19."], "X7: the place first, then the nights: " + " ".join(got[7]))
+    check(got[8] == RUNG_THREE_MET and got[9] == RUNG_THREE_MET and got[10] == ["Mission not met.", "600 men at Emberholt went unfed on the nights of days 16 and 17."] and got[11] == RUNG_THREE_MET,
+          "X8: the base that paid is not read, the form with no base counts, and a night unfed at another hex does not")
+    check(got[12] == ["Mission not met.", "Emberholt was taken on day 17, after the end of day 14."] and got[13] == ["Mission not met.", "Emberholt was not ours at the end of day 21."] and got[14] == RUNG_THREE_MET,
+          "X9: taken, lost and taken again is the last taking; not in the list is not held; another base changing sides changes nothing")
+    check(got[15] == ["The mission could not be judged.", "The list of our bases could not be read."] and got[16] == ["The mission could not be judged.", "Day 9 could not be read."]
+          and got[17] == ["The mission could not be judged.", "A report of the men fed on day 9 could not be read."]
+          and got[18] == ["The mission could not be judged.", "A report of a base changing sides on day 12 could not be read."]
+          and got[19] == ["The mission could not be judged.", "The day Emberholt was taken could not be read."],
+          "X10: a list not answered, a day not answered, a report that does not fit and a day of taking not found are not judged, and never met")
+    # X11: rung 1's measure is untouched, called with two arguments and with a null third.
+    event = lambda d, q, r, n=0: {"day": d, "event_kind": "men_fed", "pulse": "night", "text": f"Allied men ashore at ({q},{r}): {1000 - n} of 1000 fed from base:1, {n} unfed"}
+    fourteen = [[event(d, 0, 0), event(d, 5, 0)] for d in range(1, 15)]
+    w2 = [[event(d, 0, 0), event(d, 5, 0, 1000 if d == 14 else 0)] for d in range(1, 15)]
+    garbled = [[e for e in day] + ([{"day": 4, "event_kind": "base_changed_side", "pulse": None, "text": "base:2 changed"}] if d == 4 else []) for d, day in enumerate(fourteen, 1)]
+    two_args = "\nfunction main(list) { return list.map(x => 'bases' in x ? missionLines(x.mission, x.days, x.bases) : missionLines(x.mission, x.days)); }"
+    code = code[:code.index("\nfunction main(list)")] + two_args
+    w2_lines = ["Mission not met.", "1,000 men at Thornwick went unfed on the night of day 14."]
+    one = run_in_node(code, [{"mission": RUNG_ONE_MISSION, "days": fourteen}, {"mission": RUNG_ONE_MISSION, "days": fourteen, "bases": None},
+                             {"mission": RUNG_ONE_MISSION, "days": w2}, {"mission": RUNG_ONE_MISSION, "days": w2, "bases": None},
+                             {"mission": RUNG_ONE_MISSION, "days": fourteen, "bases": [1]}, {"mission": RUNG_ONE_MISSION, "days": garbled, "bases": None},
+                             {"mission": RUNG_ONE_MISSION, "days": fourteen[:13] + [None], "bases": None}])
+    check(one[0] == RUNG_ONE_MET and one[1] == RUNG_ONE_MET and one[2] == w2_lines and one[3] == w2_lines and one[4] == RUNG_ONE_MET and one[5] == RUNG_ONE_MET
+          and one[6] == ["The mission could not be judged.", "Day 14 could not be read."],
+          "X11: rung 1's measure, with two arguments and with a null third, gives W1's and W2's lines, and reads no list of bases and no change of side")
+    end = cut_function(text, "  function readEnd(")
+    branch = end[:end.index("    var show = function () {")]
+    check(text.count("missionLines(") == 2 and end.count("missionLines(") == 1 and branch.count("dayEvents(") == 1 and branch.count("api(") == 1
+          and "mission.measure === 'held_and_fed' ? api('list_bases').then(" in branch and ".catch(function () { return null; })" in branch.split("api('list_bases')")[1].split("Promise.resolve(null)")[0]
+          and "'MISSION MET'" in end and "'MISSION NOT MET'" in end and "lines.slice(1)" in end,
+          "X12: missionLines is called once, in readEnd, on the days read through dayEvents and, for held_and_fed alone, one list_bases that gives null where it fails; the stamps are as they were")
+
+
+def rung_three_played_five_ways(bridge):
+    """Rung 3 played through the bridge to its end five times, and the verdict of each: the page's own `missionLines` in node on what
+    the seat's `events` and `list_bases` answered. The games are cases A, C, D without its refused order, F and G of the hand
+    calculation in `tests/scenario_140_men_then_food.rs` (its statements 4, 6, 7, 9 and 10), which gives both leaves on day 1; leave to
+    prepare is given when a game on the table begins, and leave to launch is given here before day 1 is fought, as the directive tells
+    the player. Case E, a hold of the place given with the landing, is not played: the page does not offer a hold of a place that is not
+    yet the seat's (as-built, "What was tried on the page").
+
+    Each game: begun from the list (rung 3, a person Allied against the engine); the first evening's orders previewed and approved, and
+    `set_leave` {leave "launch", given true}; `run` {days n} up to the evening named, again until that many days are resolved; that
+    evening's order previewed and approved; then `run` {days 21} again and again until an answer says the game is over (a stop is
+    answered by `run` again, and nothing else is ordered); then `events` {day d} for d from 1 to 21, in order, and `list_bases`.
+
+    Y1. Case A. `rung_three_take("press")` before day 1; `rung_three_supply()` on the evening after day 12 (for day 13): the lines are
+        RUNG_THREE_MET. At the end `list_bases` gives base 1 137 t of supply, base 2 9 t and base 3 3 t: the hand calculation's.
+    Y2. Case C. The same with the supply order on the evening after day 14 (for day 15): ["Mission not met.", "600 men at Emberholt
+        went unfed on the night of day 16."].
+    Y3. Press and no supply order (case D without the order the game refuses): ["Mission not met.", "600 men at Emberholt went unfed
+        on the nights of days 16, 17, 18, 19, 20 and 21."].
+    Y4. Case F. `rung_three_take("balanced")` and nothing else: ["Mission not met.", "Emberholt was not ours at the end of day 21."].
+        `list_bases` has base 1 alone among the seat's bases.
+    Y5. Case G. `rung_three_take("balanced")` before day 1; on the evening after day 16 (for day 17) a preview of {command "set_limit",
+        intent 1, limit "risk", risk "press"}, approved: ["Mission not met.", "Emberholt was taken on day 18, after the end of day
+        14."]. No night is unfed in this game: it is the game the designer's answer of Nov 28, 2026 closes.
+    Y6. In each game: the last `run` answers `game_over` true and `result` null; every one of the twenty-one `events` answers has
+        `begun` true; the check's own reading of those answers (each `men_fed` whose text does not end ", 0 unfed", by day and hex; the
+        day of the one `base_changed_side`, or none; whether `list_bases` has base 2 among the seat's) agrees with the lines; and the
+        lines are the same when the answers are asked a second time, after the end. No `run` of any of the five answers a `fired` that
+        is not empty: with leave to launch given nothing of the engine's stops the clock.
+    Each game is put away after it."""
+    import re
+    print("-- rung 3 played to its end five ways", flush=True)
+    text = page_text()
+    code = text[text.index("  function missionLines("):text.index("  var endSeq = 0;")] + cut_function(text, "  function commas(n)") + "\nfunction main(list) { return list.map(x => missionLines(x.mission, x.days, x.bases)); }"
+    risk_press = {"command": "set_limit", "intent": 1, "limit": "risk", "risk": "press"}
+    games = [("Y1", rung_three_take("press"), 12, rung_three_supply(), RUNG_THREE_MET, {}, 12, True),
+             ("Y2", rung_three_take("press"), 14, rung_three_supply(), ["Mission not met.", "600 men at Emberholt went unfed on the night of day 16."], {(3, 3): [16]}, 12, True),
+             ("Y3", rung_three_take("press"), None, None, ["Mission not met.", "600 men at Emberholt went unfed on the nights of days 16, 17, 18, 19, 20 and 21."], {(3, 3): [16, 17, 18, 19, 20, 21]}, 12, True),
+             ("Y4", rung_three_take("balanced"), None, None, ["Mission not met.", "Emberholt was not ours at the end of day 21."], {}, None, False),
+             ("Y5", rung_three_take("balanced"), 16, risk_press, ["Mission not met.", "Emberholt was taken on day 18, after the end of day 14."], {}, 18, True)]
+    for name, first, after, second, expected, unfed, taken_on, held in games:
+        check(begin(bridge, RUNG_THREE, "person", "engine") == {"ok": True}, f"{name}: rung 3 begins")
+        person = Person(bridge.table)
+        shown = person.call("preview", first)["ok"]
+        check(shown["valid"] is True and person.call("approve", {"preview": shown["preview"]})["ok"]["status"] == "queued", f"{name}: the first evening's order is previewed and approved")
+        check(person.call("set_leave", {"leave": "launch", "given": True})["ok"]["status"] == "queued", f"{name}: leave to launch is given before day 1 is fought")
+        runs = []
+        if second is not None:
+            resolved = 0
+            while resolved < after:
+                check(len(runs) < 30, f"{name}: the evening is reached")
+                run = person.call("run", {"days": after - resolved})["ok"]
+                runs.append(run)
+                check(not run.get("game_over"), f"{name}: the game is not over before the evening of day {after}")
+                resolved = run["days_resolved"]["last"]
+            shown = person.call("preview", second)["ok"]
+            check(shown["valid"] is True and person.call("approve", {"preview": shown["preview"]})["ok"]["status"] == "queued", f"{name}: the order of the evening after day {after} is previewed and approved")
+        while not runs or not runs[-1].get("game_over"):
+            check(len(runs) < 40, f"{name}: the game ends in a few runs")
+            runs.append(person.call("run", {"days": 21})["ok"])
+
+        def asked():
+            return [person.call("events", {"day": d})["ok"] for d in range(1, 22)], person.call("list_bases")["ok"]
+        answers, listing = asked()
+        bases = [int(b["base"]["handle"].split(":")[1]) for b in listing["bases"]]
+        lines = run_in_node(code, [{"mission": RUNG_THREE_MISSION, "days": [a["events"] for a in answers], "bases": bases}])[0]
+        check(lines == expected, f"{name}: the verdict is " + " ".join(lines))
+        reading, took = {}, []
+        for a in answers:
+            for e in a["events"]:
+                if e["event_kind"] == "men_fed" and not e["text"].endswith(", 0 unfed"):
+                    q, r = map(int, re.search(r"\((-?\d+),(-?\d+)\)", e["text"]).groups())
+                    reading.setdefault((q, r), []).append(a["day"])
+                if e["event_kind"] == "base_changed_side":
+                    took.append(a["day"])
+        check(runs[-1]["game_over"] is True and runs[-1]["result"] is None and all(a["begun"] is True for a in answers) and len(answers) == 21,
+              f"{name}: the last run answers game_over with no result, and every one of the twenty-one days is answered as begun")
+        check(reading == unfed and (took[-1] if took else None) == taken_on and (2 in bases) == held and (lines[0] == "Mission met.") == (not reading and held and taken_on is not None and taken_on <= 14),
+              f"{name}: the check's own reading agrees with the lines (unfed {reading or 'none'}, taken on {took or 'no day'}, base 2 {'held' if 2 in bases else 'not held'})")
+        check(all(not run["fired"] for run in runs), f"{name}: no run answers a stop of the engine's: with leave to launch given nothing of the engine's stops the clock")
+        if name == "Y1":
+            stock = {b["base"]["handle"]: b["supply_t"] for b in listing["bases"]}
+            check(stock == {"base:1": "137", "base:2": "9", "base:3": "3"}, f"Y1: at the end the bases hold 137 t, 9 t and 3 t of supply, the hand calculation's ({stock})")
+        if name == "Y4":
+            check(bases == [1], "Y4: the seat's bases at the end are base 1 alone")
+        again_answers, again_listing = asked()
+        again = run_in_node(code, [{"mission": RUNG_THREE_MISSION, "days": [a["events"] for a in again_answers], "bases": [int(b["base"]["handle"].split(":")[1]) for b in again_listing["bases"]]}])[0]
+        check(again == lines, f"{name}: asked a second time, after the end, the lines are the same")
+        check(post(bridge.table + "/new") == {"ok": True}, f"{name}: the game is put away")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--sim-cli", default="target/release/sim-cli")
@@ -4306,6 +5417,10 @@ def main():
     the_stop_paper()
     orders_and_signed()
     one_order_paper()
+    the_paper_reads_as_the_order()
+    the_face_and_the_fold()
+    the_readings_mends()
+    the_empty_floor()
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()
@@ -4316,6 +5431,7 @@ def main():
     the_intelligence_paper()
     a_force_ordered()
     the_verdict_in_words()
+    the_verdict_of_a_place_held()
     if not os.path.exists(args.sim_cli):
         sys.exit(f"{args.sim_cli} is not built: cargo build --release -p sim-cli")
     with tempfile.TemporaryDirectory() as keep:
@@ -4348,6 +5464,10 @@ def main():
             the_supply_orders_two_numbers(bridge)
             the_supply_order_signed(bridge)
             rung_one_played_three_ways(bridge)
+            rung_three_on_the_list(bridge)
+            the_orders_of_rung_three(bridge)
+            a_directive_stops_the_clock(bridge)
+            rung_three_played_five_ways(bridge)
         finally:
             bridge.stop()
         check(bridge.process.returncode is not None, "the bridge has left")

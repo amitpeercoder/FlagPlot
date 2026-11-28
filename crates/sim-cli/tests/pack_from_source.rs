@@ -8,7 +8,7 @@
 //! hand calculation: every expected value is what the load from the disk
 //! gives on the same commit.
 //!
-//! 1. For each of the eleven scenario files in which the table offers a person
+//! 1. For each of the twelve scenario files in which the table offers a person
 //!    against the engine, named in the test itself, a scenario loaded from its
 //!    pack has the same state hash at the start as the one loaded from the
 //!    disk, names the same data files in the same order with the same hashes,
@@ -28,9 +28,9 @@ use std::path::{Path, PathBuf};
 use sim_cli::{pack, save};
 use sim_data::{Disk, LoadOptions, Noting, Pack, Scenario};
 
-/// The eleven scenario files in which the table offers a person against the
+/// The twelve scenario files in which the table offers a person against the
 /// engine (`table/scenarios.json`), written out here as the record says.
-const OFFERED: [&str; 11] = [
+const OFFERED: [&str; 12] = [
     "data/scenarios/second-proof/05c_eastern_solomons.toml",
     "data/scenarios/second-proof/05e_eastern_solomons.toml",
     "data/scenarios/table-boats/03b_coral_sea_both_oilers_submarines.toml",
@@ -42,6 +42,7 @@ const OFFERED: [&str; 11] = [
     "data/scenarios/table-rear-bases/07b_slice_submarines.toml",
     "data/scenarios/table-rear-bases/07c_slice_submarines.toml",
     "data/scenarios/ladder/138_one_ship.toml",
+    "data/scenarios/ladder/140_men_then_food.toml",
 ];
 
 fn repo_root() -> PathBuf {

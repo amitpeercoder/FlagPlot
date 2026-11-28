@@ -166,11 +166,8 @@ impl Chain {
             }
             current_text = source.read_text(&next).map_err(|message| {
                 DataError::in_file(
-                    path,
-                    format!(
-                        "built on {}, which cannot be read: {message}",
-                        next.display()
-                    ),
+                    &next,
+                    format!("{message}; {} is built on it", path.display()),
                 )
             })?;
             let below = strike(&prefixes[prefixes.len() - 1].join(folder_of(Path::new(&name))));

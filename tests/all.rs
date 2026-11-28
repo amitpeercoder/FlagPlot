@@ -193,6 +193,8 @@ mod scenario_138_one_ship;
 mod scenario_13a_target_priority;
 #[path = "scenario_13b_afternoon_base_strike.rs"]
 mod scenario_13b_afternoon_base_strike;
+#[path = "scenario_140_men_then_food.rs"]
+mod scenario_140_men_then_food;
 #[path = "scenario_14a_experience.rs"]
 mod scenario_14a_experience;
 #[path = "scenario_15a_unready_fire.rs"]

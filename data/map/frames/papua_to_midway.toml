@@ -1,0 +1,40 @@
+# The frame of the map from Papua to Midway, data/map/papua_to_midway.csv
+# (decision 0242, rules 1 to 4 and 7). Read by the map tool alone, which makes
+# the map from it and writes its projection and extent in the map's header;
+# every other reader takes the frame from that header. Every quantity is a
+# string. Longitudes are west negative, as data/oob/place_positions.csv gives
+# them: the eastern edge, 153 W, is -153, and the tool counts it on across the
+# date line as 207.
+
+title = "Flag Plot map of the Pacific from Papua to Midway (decision 0242)."
+date = "2026-11-28"
+
+# A map about a centre: hex (0,0) is centred at 4 N, 174 30 E, and the scale
+# is 0.964, chosen so that the worst reading among the named places is
+# smallest (decision 0242, rule 4).
+kind = "about a centre"
+centre_lat = "4"
+centre_lon = "174.5"
+scale = "0.964"
+
+# Every hex whose centre lies from 38 N to 30 S and from 142 E to 153 W.
+north = "38"
+south = "-30"
+west = "142"
+east = "-153"
+
+# The places that hold a base and whose hex has no lattice point of land,
+# made coast with land percentage 0 (decision 0199's land mark; decision
+# 0242, rule 7). Each position is its row's, as the row gives it. A place
+# with no row of position is not marked until research gives it one.
+[[land_mark]]
+name = "midway"
+lat = "28.232"
+lon = "-177.370"
+row = "5100"
+
+[[land_mark]]
+name = "wake"
+lat = "19.299"
+lon = "166.624"
+row = "5107"
