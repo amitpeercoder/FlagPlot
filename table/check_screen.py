@@ -5020,7 +5020,7 @@ function main(x) {
     supply = person.call("preview", rung_three_supply())["ok"]
     person.call("approve", {"preview": supply["preview"]})
     queued = person.call("queued")["ok"]["entries"]
-    first = [e for e in queued if e["command"].get("kind") == "set_intent"][0]["command"]
+    first = queued[0]["command"]
     check(full == {"ok": True} and first["base"] == 2 and first["floor_days"] == 2 and first["interval_days"] == 5 and "intent_kind" not in first,
           "P7: the signed supply order is queued with base 2, floor 2 and interval 5 and no intent_kind, which is what P6 rests on")
     check(post(bridge.table + "/new") == {"ok": True}, "the game is put away")
@@ -5220,7 +5220,7 @@ def the_verdict_of_a_place_held():
     case(game(None, 12, replace={16: [unfed(16, 600)]}), [1, 2, 3])                                      # 1 X2
     case(game(None, 12, replace={d: [unfed(d, 600)] for d in range(16, 22)}), [1, 2, 3])                 # 2 X3
     case(game(None, None), [1])                                                                          # 3 X4
-    case(game(None, 18), [1, 2, 3])                                                                      # 4 X5
+    case(game(None, 18, base=3), [1, 2, 3])                                                                      # 4 X5
     case(game(None, 14), [1, 2, 3])                                                                      # 5 X6 taken on 14
     case(game(None, 15), [1, 2, 3])                                                                      # 6 X6 taken on 15
     case(game(None, 15, replace={19: [unfed(19, 200)]}), [1, 2, 3])                                      # 7 X7
@@ -5260,14 +5260,21 @@ def the_verdict_of_a_place_held():
           and got[18] == ["The mission could not be judged.", "A report of a base changing sides on day 12 could not be read."]
           and got[19] == ["The mission could not be judged.", "The day Emberholt was taken could not be read."],
           "X10: a list not answered, a day not answered, a report that does not fit and a day of taking not found are not judged, and never met")
-    # X11: rung 1's measure is untouched.
-    event = lambda d, q, r: {"day": d, "event_kind": "men_fed", "pulse": "night", "text": f"Allied men ashore at ({q},{r}): 1000 of 1000 fed from base:1, 0 unfed"}
+    # X11: rung 1's measure is untouched, called with two arguments and with a null third.
+    event = lambda d, q, r, n=0: {"day": d, "event_kind": "men_fed", "pulse": "night", "text": f"Allied men ashore at ({q},{r}): {1000 - n} of 1000 fed from base:1, {n} unfed"}
     fourteen = [[event(d, 0, 0), event(d, 5, 0)] for d in range(1, 15)]
+    w2 = [[event(d, 0, 0), event(d, 5, 0, 1000 if d == 14 else 0)] for d in range(1, 15)]
     garbled = [[e for e in day] + ([{"day": 4, "event_kind": "base_changed_side", "pulse": None, "text": "base:2 changed"}] if d == 4 else []) for d, day in enumerate(fourteen, 1)]
-    one = run_in_node(code, [{"mission": RUNG_ONE_MISSION, "days": fourteen, "bases": None}, {"mission": RUNG_ONE_MISSION, "days": fourteen, "bases": [1]}, {"mission": RUNG_ONE_MISSION, "days": garbled, "bases": None},
+    two_args = "\nfunction main(list) { return list.map(x => 'bases' in x ? missionLines(x.mission, x.days, x.bases) : missionLines(x.mission, x.days)); }"
+    code = code[:code.index("\nfunction main(list)")] + two_args
+    w2_lines = ["Mission not met.", "1,000 men at Thornwick went unfed on the night of day 14."]
+    one = run_in_node(code, [{"mission": RUNG_ONE_MISSION, "days": fourteen}, {"mission": RUNG_ONE_MISSION, "days": fourteen, "bases": None},
+                             {"mission": RUNG_ONE_MISSION, "days": w2}, {"mission": RUNG_ONE_MISSION, "days": w2, "bases": None},
+                             {"mission": RUNG_ONE_MISSION, "days": fourteen, "bases": [1]}, {"mission": RUNG_ONE_MISSION, "days": garbled, "bases": None},
                              {"mission": RUNG_ONE_MISSION, "days": fourteen[:13] + [None], "bases": None}])
-    check(one[0] == RUNG_ONE_MET and one[1] == RUNG_ONE_MET and one[2] == RUNG_ONE_MET and one[3] == ["The mission could not be judged.", "Day 14 could not be read."],
-          "X11: rung 1's measure reads no list of bases and no change of side, and its lines are what they were")
+    check(one[0] == RUNG_ONE_MET and one[1] == RUNG_ONE_MET and one[2] == w2_lines and one[3] == w2_lines and one[4] == RUNG_ONE_MET and one[5] == RUNG_ONE_MET
+          and one[6] == ["The mission could not be judged.", "Day 14 could not be read."],
+          "X11: rung 1's measure, with two arguments and with a null third, gives W1's and W2's lines, and reads no list of bases and no change of side")
     end = cut_function(text, "  function readEnd(")
     branch = end[:end.index("    var show = function () {")]
     check(text.count("missionLines(") == 2 and end.count("missionLines(") == 1 and branch.count("dayEvents(") == 1 and branch.count("api(") == 1
