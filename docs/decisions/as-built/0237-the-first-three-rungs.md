@@ -658,3 +658,169 @@ Built as planned, read at commit cc43426a: `shipsNamed` and `learnNamed` beside 
 - **Reported by the developer:** `python3 table/check_screen.py` ends "all held (1454 checks)".
 - **Seen on the page, in pictures, on rung 1:** SIGNED after the supply order is signed, and again on a page loaded fresh, reads "Order: Keep Thornwick supplied · Ships and forces: Merrowdale · Supplied from: Saltmere"; THE ORDERS on the evening after day 1 reads "Ships and forces: Merrowdale · Supplied from: Saltmere".
 - **Not tried:** rung 3's supply order on the page, and a protected ship.
+
+## Rung 2: the figures settled, and its game as planned (Nov 28, 2026)
+
+### The designer's account of rung 1
+
+The record's step 4 reads "The designer plays rung 1. His account decides whether 5 and 6 go on as planned", and rung 2's figures waited for it ("Rung 3 before rung 2", above). On Nov 28, 2026 the manager asked him "Did playing rung 1 show anything that should change rung 2?" and his words in reply were "No, go on". That is his account, and the gate is open for rung 2. What is the architect's own is written here: the figures, the scenario file and the hand calculation. Three things found in settling them are his to answer ("Three questions for the designer", below), and the first is in the mission's words. The section was amended on an independent review the same day ("Amended on review", below), and he answered all three that day, each as recommended ("Answered", under the questions): the figures are settled and no longer at risk, and the game may be briefed to a developer. Nothing is merged and nothing goes on the table's list by this section: the manager briefs the developer and opens the pull request.
+
+### The problem, and the choice
+
+The record's "Not yet tried widely": with the right ships, a floor of 1 day and an interval of 5 on both orders leaves the far garrison unfed on the night of day 9, so a right answer of rung 1 fails rung 2 for a reason its verdict does not name. The record gives two ways out: move the figures until the ships alone decide for every pair that passes rung 1, or have the directive say in days what each ship carries to each place.
+
+**The cause.** The fast transport's round trip to the far place takes six days: a day to load, two out, a day to unload and two back, in whole days as the staff reckons them (chapter 8, The doctrine, A new run). A run feeds the place for the floor's days and the interval's less one, so an order whose two numbers sum to 6 has food for five nights after each landing and a ship that comes every six. Run 1 lands on day 3 and feeds the nights of days 4 to 8; run 2 lands on day 9, after that night's meal. Of rung 1's nine right answers only 1 and 5 sums to 6.
+
+**Chosen: the figures are moved, and the one that moves is the game's length, 8 days in place of 14.** Over 8 days the second run is never the one that matters, and the ships alone decide for every pair of the band on each order.
+
+**Why not another figure.** The six days come from the map's 560 nm and the class's 16 kn. The map's bytes are in rung 1's pins and the class is reference data that the 39 days read, so neither moves for a rung. The far garrison's stock, its men and the ship's room change the first landing and not the six days. A second fast ship would close it and make the rung a choice among three ships.
+
+**Why not the directive.** Telling him that the round trip takes six days hands him a second sum to do, on a rung whose one decision is the ships, and a game lost on it reads "400 men at Dunmarrow went unfed on the night of day 9", which the verdict gives no reason for. That is the fault the record names, said aloud and not removed.
+
+**What 8 days costs.** The mission's words change, "to the end of day 8", which is the designer's to confirm (question 1 below). The game is decided by the night of day 4 and runs four days more. Nothing else of the record's rung 2 moves.
+
+### The figures as settled
+
+`data/scenarios/ladder/139_two_mouths.toml`, placeholder data by the architect, on the ladder's map, whose file is untouched. The hand calculation is in `tests/scenario_139_two_mouths.rs` and nowhere else.
+
+| | As the record tried it | As settled | Why |
+| --- | --- | --- | --- |
+| The game | 14 days | **8 days** | Above |
+| The near place, T | 1,000 men, 25 t, five days | The same | "Rung 1's near garrison as it was" |
+| The far place, U | 400 men, 2 t a day, 6 t, three days | The same | Three days is the one stock at which the fast ship is in time and the slow one is not: she lands on day 3 and the freighter on day 4 |
+| Ship 1 | Placeholder cargo ship, class 3: 3,000 t, 10 kn | The same, tanks full (1,000 t) | |
+| Ship 2 | The fast transport of rung 1, class 12: 30 t, 16 kn | The same, tanks full (500 t) | |
+| The source, S | "Supply and fuel to spare" | 500 t of supply, no fuel, no men | The largest loads of the band are 30 t and 18 t. The fuel is in the ships, as on rung 3, so no ship fuels in the game. No garrison at S: the mission's "both" are T and U |
+
+**The names** (decision 0241): Saltmere, Thornwick and Merrowdale as in rung 1; the far place is Dunmarrow, its men the Dunmarrow garrison, and the freighter is Halberry. None is in `data/oob`.
+
+**One reading of the record made.** "Rung 1 with two sides to fail on" ends "rung 2 is cut again on the same source when it is planned in detail". It is read as leave to cut rung 2 again on Saltmere, and not as an instruction that Saltmere keep rung 1's 1,000 men and its scarcity: with a source that can run short, too much sent fails again and the ships would not decide alone, which is the opposite of what "Not yet tried widely" asks. If the designer meant the garrison to stay, it can stand at Saltmere with the stock to spare and change nothing below.
+
+### What was tried, and what is proved
+
+Runs of `sim-cli run` on the file as written, on `origin/main` at `c73a84b9`, with both leaves given on day 1. "Proved" is worked by hand in the test's doc comment and checked on the engine; "tried" is a run of the engine and no more. The band is rung 1's nine right answers: 1 and 5, 2 and 5, 3 and 5, 4 and 5, 5 and 4, 6 and 3, 6 and 4, 8 and 1, 8 and 2.
+
+| Ships named | The pairs | Nights unfed | Standing |
+| --- | --- | --- | --- |
+| Right: Halberry to Thornwick, Merrowdale to Dunmarrow | Each of the nine on each order, 81 games | None | Proved (case F, by a general argument; cases A, B and C in full: 2 and 5, 1 and 5, 8 and 2) |
+| Exchanged | The same 81 | Dunmarrow, the night of day 4, and no other; Thornwick none | Proved (case F; case D in full, 2 and 5) |
+| Both ships to both orders, Thornwick's order given first | 2 and 5 | Dunmarrow day 4; Thornwick days 6, 7 and 8 | Proved (case E1) |
+| The same | 4 and 5 | None | Proved (case E2) |
+| Both to both, Dunmarrow's order given first | 4 and 5 | Dunmarrow day 4 | Proved (case E3) |
+| Both to both, Thornwick's first | The 81 | None in 54 (Thornwick's floor 4 or more); Dunmarrow day 4 in 9 (its floor 3); Dunmarrow day 4 and Thornwick days 6 to 8 in 18 (its floor 1 or 2) | Tried |
+| Both to both, Dunmarrow's first | The 81 | Dunmarrow day 4 in all; Thornwick days 6 to 8 as well in 27 (its floor 1 to 3) | Tried |
+| Right ships, both orders given on day 2 | 2 and 5 | Dunmarrow day 4 | Proved (case I) |
+| Right ships, Thornwick's order on day 1 and Dunmarrow's on day 2 | 2 and 5 | Dunmarrow day 4 | Tried |
+| Exchanged on day 1, the limits set right on day 2 | 2 and 5 | Dunmarrow day 4; Thornwick days 6 to 8 | Tried |
+| Merrowdale named to both orders, Halberry to neither | The nine, the same pair on both | Dunmarrow's order first: Thornwick days 6 to 8, in all nine. Thornwick's first: the same at a floor of 1 to 3; at 4 or more Thornwick takes her and Dunmarrow goes unfed from day 4 to day 7 or to the end | Tried |
+| Two holds, with the right ships | No number | Dunmarrow day 4 | Proved (case H) |
+| No command | | Dunmarrow days 4 to 8; Thornwick days 6 to 8 | Proved (case G) |
+| Right ships, over 14 days | The nine, the same pair on both | None, but 1 and 5: Dunmarrow day 9 | Tried: the record's finding, on these figures |
+| Right ships, 8 days, wider | Floors 1 to 14 by intervals 1 to 14, the same pair on both | None wherever the two numbers sum to 6 or more; below that Dunmarrow first, then Thornwick | Tried |
+| Exchanged, wider | The same | Dunmarrow day 4 in every game, and more nights where the two numbers sum to less than 5 | Tried |
+| Leave to launch given on day 2 | The nine, right ships and exchanged | As with leave on day 1 | Tried |
+| Leave to launch given on day 3 | The nine | Right ships: Dunmarrow day 4. Exchanged: days 4 and 5 | Tried |
+| Leave to launch withheld, right ships; plan 2 approved on day 2 and plan 1 on day 2 or day 4 | 2 and 5 | None; the game is case A's | Tried, by commands in the file and not through the seat's tools |
+| The same, plan 2 approved on day 3 | 2 and 5 | Dunmarrow day 4 | Tried, the same way |
+| The same, nothing approved | 2 and 5 | Dunmarrow days 4 to 8; Thornwick days 6 to 8. The notice "waits for leave to launch" is first handed in on day 2 | Tried, the same way |
+| Each of the nine ways to name one or both ships to each order, either order first | The nine pairs, the same on both | Met in every game where Merrowdale alone is named to Dunmarrow and Halberry is among Thornwick's. Otherwise met only where Dunmarrow's order names both ships and Thornwick's is given first, names Halberry and has a floor of 4 days or more | Tried |
+
+### Seven things found
+
+1. **Both ships named to both orders is not a choice of ships: the outcome turns on which order he gave first.** The staff takes a pool's free ships in number order, for whichever order needs a run first that morning, and serves the orders in number order. Dunmarrow needs a run on day 1 whatever its floor. Thornwick needs one on day 1 only at a floor of 4 days or more. So with Thornwick's order first and its floor at 4 or more, Thornwick takes the freighter, Dunmarrow is left the fast ship, and the mission is met with no decision made; in every other game Dunmarrow takes the freighter and its men go unfed, and at a low floor the staff then sends the fast ship to Dunmarrow as well and Thornwick starves too. **No figure of the scenario closes it.** With the ships numbered the other way the corner turns inside out: it fails only where Thornwick's order is first with a floor of 4 or more, and is met everywhere else, which is worse. For the outcome not to turn on the order of the orders, the two must never both need a run on day 1, and that takes ten days of food at Thornwick, which then needs nothing in 8 days. It is put to the designer (question 2).
+2. **The staff says "cannot meet" in a game that is won.** The fast ship comes to Dunmarrow every six days and the order asks for more, so with the right ships the staff hands in the notice from the first morning a second run is wanted and she is not free: day 6 with 2 and 5 (proved, case A), and from day 3 with 8 and 2, at both places (tried). The clock stops on it. The mission is safe each time. The table's section must have the directive say so, as rung 1's does of day 13.
+3. **A hold is no answer, by one day.** Two holds with the right ships have the staff form the supply on day 1 and order the runs on day 2, and the fast ship lands on day 4 (case H). It reads as the exchanged ships read, "400 men at Dunmarrow went unfed on the night of day 4". That is the designer's answer to question 6 of the record, a hold counts on rung 3 only; the directive must tell him to order the places kept supplied.
+4. **Leave to launch has one evening to spare in the engine, and by reading none on the table.** The first run loads on day 1 and sails on day 2, so leave given on day 1 or on day 2 plays the same game; given on day 3 the far garrison goes unfed with the right ships. With the leave withheld, as a game on the table begins, the staff first hands in "plan 2 waits for leave to launch" on day 2, the morning the run would have sailed. On rung 3 a stop answered that evening acted a day later than proved ("What was tried on the page", 7). If that holds here, his approval at the stop is a command of day 3 and the game is lost with the right ships. So the switch WHEN READY on the first evening is not a convenience on this rung. **A condition of the table's pull request:** the path through the stop is tried through the seat's tools, and the directive is written to what it shows.
+5. **Either ship feeds Thornwick.** The fast transport's 30 t cover every load the band asks for there. So the decision is which ship goes far. Of the two ways to name one ship to each order, the wrong one always reads the night of day 4 at Dunmarrow. A ship named to both orders reads otherwise: Merrowdale to both starves Thornwick on the nights of days 6 to 8, or Dunmarrow to the end, by which order was given first (the table above).
+6. **Dunmarrow has no day to spare, and no figure gives it one.** The right ships ordered on day 2 fail as the wrong ships do: 400 unfed at Dunmarrow on the night of day 4 (case I). The two ships are one day apart there, the fast one landing on the second day after she is ordered and the slow one on the third. With three days of food the fast ship is in time on day 1 alone and the slow one never. With four the fast ship has a day to spare, and the slow one ordered on day 1 is in time, so there is no decision. With more than that the staff, which times each run to its ship, orders either in time. The choice of ships decides only where there is no slack: it is the rung's idea and not a figure of it. So both orders, the right ships and leave to launch must all be given on the first evening, and any one of them a day late reads the same line as the wrong ships. Rung 1's directive says "take your time"; this one must say the opposite. It is put to the designer (question 3).
+7. **A wrong choice cannot be mended in the game.** After the ships exchanged, the limits set right on day 2 leave Halberry at sea for Dunmarrow, committed to day 8; the staff sends Merrowdale there too, still a day late, and Thornwick has no ship: Dunmarrow unfed on the night of day 4 and Thornwick on the nights of days 6 to 8. Nothing stops the clock before the loss in the exchanged game: the staff's reason of day 1 says the run is due on day 4 and no notice is handed in. The directive's "if it goes badly, begin again" is the way out. In that game the staff also hands in, each morning from day 3, a commitment of ship 1 that the engine refuses ("ship:1 is not in the intent's pool"): no outcome turns on it, and it is noted for a mend of its own.
+
+### The mission's words
+
+For the directive's second part, and for the card in brief "Keep both garrisons fed.":
+
+"Keep both garrisons fed. Every man at Thornwick and at Dunmarrow is to be fed every night to the end of day 8. Thornwick holds five days of food and Dunmarrow three. The freighter Halberry carries all that either place can need and is slow; the fast transport Merrowdale is quick and small, and carries fifteen days of Dunmarrow's food or six of Thornwick's. Saltmere has stock to spare and both ships have the fuel they need."
+
+They are the record's with the day, the names and the two loads in days. For the table's section, which is not written here, the directive must carry these, in its own words:
+
+- **The miles and the knots, and the two facts that make them come out right.** Thornwick is 200 miles and Dunmarrow 560; Halberry makes 10 knots and Merrowdale 16. Miles and knots alone mislead: Halberry is 56 hours from Dunmarrow, less than its three days of food. She is late because a run ordered this evening is loaded tomorrow and sails the morning after, and because a night's meal is eaten before anything is landed that day. With those two facts, as rung 3's second directive gives its two, Merrowdale lands on day 3 for the night of day 4 and Halberry on day 4, after it. The landing days themselves are the answer and are left for him to count.
+- **Two orders, each to keep a place supplied and not to hold it, each naming one ship, and not the same ship** (findings 1, 3 and 5).
+- **All of it this evening, before the clock runs:** both orders and the word that plans launch when ready. Dunmarrow cannot wait a day (findings 4 and 6).
+- **The staff will say that it cannot meet the order while the mission is safe** (finding 2), and a game that goes wrong is begun again and not mended (finding 7).
+
+### Three questions for the designer
+
+**1. Is rung 2 a game of 8 days?** Courses:
+
+- **(a) 8 days,** as written. Every right answer of rung 1 is a right answer here with the right ships, and a wrong choice of ships always fails the same way.
+- **(b) 14 days, and the directive says that the fast ship's round trip to Dunmarrow takes six days.** One right answer of rung 1, 1 and 5, then fails on the night of day 9 with the right ships. The file changes in one figure; the hand calculation is written again for the longer game.
+
+**The architect recommends (a),** for the reasons under "The problem, and the choice".
+
+**2. What of both ships named to both orders?** By finding 1 it is met or failed by which order he gave first. Courses:
+
+- **(a) The directive says to name one ship to each order, and not the same ship to both, and nothing is built.** A player who names two ships to an order, or one ship to both, gets the staff's choice, and is told so by the staff's reasons; cases E1 to E3 prove what it does with both ships on both orders.
+- **(b) On the ladder's rungs the order paper lets a ship be named to one order only.** A change to the table, for these games alone; class 2, planned with the table's section.
+
+**The architect recommends (a).** The game is built the same under either; the answer is needed before rung 2 goes on the table.
+
+**3. Is a rung with no day to spare what he wants?** By finding 6 the right ships win only if both orders and leave to launch are given on the first evening, and a day's delay in any of them reads as the wrong ships read. No figure changes that. Courses:
+
+- **(a) The directive says it plainly, and nothing else changes.** "All of it this evening": the urgency is part of the mission he is given, as a mission from above would have it.
+- **(b) As (a), and the scenario file gives leave to launch itself,** one command in the file, so that of the three things only the two orders are left to be late. The file and the hand calculation's words on the leaves change; no number does. It is the course rung 1 declined, where the switch was the lesson.
+- **(c) The rung is cut again so that the wrong ship fails by her room and not by her speed:** a near mouth too big for the small ship. A failure by room has days to spare. It is a new plan with new figures, and the far place and the slow ship then decide nothing.
+
+**The architect recommends (a),** and asks that the path through the stop be tried through the seat's tools before the table is built (finding 4): if approving at the stop loses the game, (b) is the mend.
+
+**Answered on Nov 28, 2026, each as the architect recommended.** The manager put the three to the designer with the recommended course first, and he chose it each time.
+
+1. **The length:** "8 days (Recommended)". Course (a): the game is 8 days and the mission reads "to the end of day 8".
+2. **Naming ships:** "Directive says it (Recommended)". Course (a): the directive tells him to name one ship to each order and not the same ship to both, and nothing is built.
+3. **No day to spare:** "Directive says it (Recommended)". Course (a): the directive says plainly that both orders and the leave are given this evening, and nothing else changes. If the trial through the seat's tools shows that approving at the stop loses the game, the scenario giving leave to launch itself, course (b), is the mend.
+
+So the figures, the file and the hand calculation stand as written, and rung 2's game goes to a developer on the brief below. The trial through the seat's tools stays a condition of the table's pull request (finding 4).
+
+### The brief for rung 2's game (class 3)
+
+For one developer, briefed by the manager. The designer's answers are in: the file, the thirteen statements and the ten pins are final. Work in a worktree on a branch from `main` with the architect's commit merged; one pull request.
+
+- **Read first:** `docs/engineering/roles-and-tests.md`; `tests/scenario_139_two_mouths.rs`, whole; `tests/scenario_138_one_ship.rs`, which is the model for every helper, and `tests/scenario_140_men_then_food.rs` for a test with more than two bases; `data/scenarios/ladder/139_two_mouths.toml`; this section.
+- **Fill the thirteen tests** of `tests/scenario_139_two_mouths.rs`, each asserting its statement exactly, and remove each `#[ignore]` as it is filled. Load as scenario 138's test does: the file's text with the case's commands added at the mark `# orders`, through `common::from_text_with` and `LoadOptions::default()`, played by `common::played::play`. Read runs, their days, their plans and the ships committed from what the staff handed in (`AddRun`, `CommitShips`), stocks and fuel from the truth after each day, the men fed from `MenFed` by hex, intents formed from `FormIntent`, notices from the hand-ins. The two hexes whose nights are read are T's, (5,0), and U's, (0,14): scenario 138's helper `fed` reads S and T and is not to be copied as it stands.
+- **The commands of each case** are in the hand calculation: both leaves on day 1 in every case but G, which is the file as given with no command at all, not even a leave; "keep base 2 supplied" as intent 1 and "keep base 3 supplied" as intent 2, each with its floor and interval and a forces limit of its ships and source base 1; in case E3 the two the other way round; in case H "hold base 2" as intent 1 and "hold base 3" as intent 2 with the same limits; in case I case A's two orders and their limits as commands of day 2, the leaves still on day 1. Scenario 138's test shows a supply order's commands and a hold's.
+- **Case F** is 162 games of 8 days: play each and read the nights unfed, in one test.
+- **Pin** the last day's hash of each game of statement 12 in `tests/golden/pinned_hashes.txt`, as `scenario_139_a`, `_b`, `_c`, `_d`, `_e1`, `_e2`, `_e3`, `_g`, `_h` and `_i`, the way scenario 138's are pinned.
+- **Change the doc comment's "Not built" paragraph** to "Built", in scenario 138's words. Change nothing else in the doc comment.
+- **Not to be changed:** any expected number, statement or case; the scenario file; the map; any crate's `src`; any figure; any other test; `docs/rules/` and the glossary (no rule changes). Nothing under `table/` or `web/`, and no entry on the list: that is the table's pull request.
+- **If a number does not come out,** stop and send the architect the case, the day, what the engine gave and the events of that day. Do not change the number, the file or the commands to pass.
+- **Before the commit:** `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`.
+- **The architect is shown:** the diff; the output of `cargo test -p scenario-tests -- scenario_139`; the ten pins; and `git diff --stat` against `main`, which names the test file and the pins file and nothing else.
+
+### Not written
+
+Rung 2 on the table (class 2): the entry, the directive, the screen check, the pin of offered files, the browser's check and the pack. It is planned in a section of its own, to the designer's three answers and to the list of what the directive must carry under "The mission's words"; its first step is the trial of the stop through the seat's tools.
+
+### Amended on review (Nov 28, 2026)
+
+An independent review ran the engine on the file at commit `d37bb378`. It reproduced every expected value of cases A to H, the 81 and 81 games of case F and the rows marked tried; it disputed no number and found no rule of `CLAUDE.md` broken. Each finding was checked by the architect against the rulebook and by runs of his own.
+
+| | The finding | Ruling | What changed here |
+| --- | --- | --- | --- |
+| 1 | The right ships given a day late fail exactly as the wrong ships do; rung 1 said "take your time" | Accepted; run again and so. No figure gives Dunmarrow a day to spare and keeps the slow ship late: the two are one day apart. The directive carries it, and whether a rung with no slack is wanted is the designer's | Finding 6; case I and statement 13 of the hand calculation; the table of what was tried; what the directive must carry; question 3 |
+| 2 | Miles and knots point to the wrong answer: 56 hours against three days of food | Accepted. The directive gives, with them, the two facts that make the sum come out: a run is loaded the day after it is ordered and sails the morning after, and a night's meal comes before anything is landed. Declined in one part: the landing days are not given outright, since they are the answer | What the directive must carry |
+| 3 | Mending the ships on day 2 makes the loss worse, and nothing stops the clock before it | Accepted; run again and so. Nothing is built for it: a lost game is begun again, and the directive says so | Finding 7; the table of what was tried |
+| 4 | "A wrong answer always reads the night of day 4 at Dunmarrow" is false where one ship is named to both orders or both to one | Accepted. The sentence was true of the two ways to name one ship to each order and was written of all | Finding 5 restated; the table of what was tried; question 2's course (a) |
+| 5 | Leave to launch approved at the stop is untried, and there is no slack | Accepted, and made sharper: tried by commands in the file, approval on day 2 wins and on day 3 loses, and the notice is first handed in on day 2. It is a condition of the table's pull request that the path is tried through the seat's tools | Finding 4; the table of what was tried; question 3 |
+| 6 | The staff's reasons say "fuelled by hour 107.7 (0.7 hours at 200 t an hour)" though Saltmere has no fuel and nothing is fuelled | Accepted as a fact and declined as this plan's. The staff reckons a ship's free day from the hours of fuelling at the port's rate (chapter 8, A new run, Its days) and does not read the source's fuel; rung 3's game says the same of the same source. No day and no outcome turns on it here. A wording or a rule of the staff's, for a mend of its own if the manager wants one | Nothing |
+| 7 | The brief says every case gives both leaves, and case G gives none; scenario 138's `fed` reads S and T | Accepted | The hand calculation's words on the commands and on case G; the brief |
+
+**No expected value moved.** Case I and statement 13 are new, with a tenth pin. Not changed: the figures, the choice of 8 days, cases A to H and their statements.
+
+### The architect's reading of pull request 801 (Nov 28, 2026)
+
+Rung 2's game as built, read at commit `eb83d61b`: the developer's commit `e8df3f13` on the architect's three, with `main` merged in.
+
+- **What the developer changed.** `tests/scenario_139_two_mouths.rs` and `tests/golden/pinned_hashes.txt`, and nothing else. In the doc comment only the paragraph "Not built" changed, to "Built" in scenario 138's words: no case, statement or expected number moved, compared line by line against commit `3fee1b29`. The scenario file and the map are as written.
+- **Each test against its statement.** All thirteen were read against their words and none is filled short. Where a statement says "and no other" of runs, the test holds the whole list of runs or their count; where it says so of nights, it holds the whole list of unfed nights, on one `MenFed` record a night at each of (5,0) and (0,14). Runs are read with their plan, ships, load and four days, and commitments with their ships and days, from what the staff handed in. Statement 1 holds two things more than its words ask, the hex of base 3 and that no task force exists; statement 12 holds every day's hash of each of the ten games played twice. Case G is played on the file as given, with no leave, as the brief says.
+- **What was run.** `cargo test -p scenario-tests -- scenario_139`: 13 passed, none ignored, with no golden file rewritten, so the ten pins are the engine's after the merge of `main`. Eight of them (A, B, C, D, E1, E2, E3 and H) are the last-day hashes the architect's own trial runs gave on Nov 28, 2026 before any test was filled; G and I were not noted then and rest on the test. `cargo fmt --all -- --check` and `cargo clippy --workspace --all-targets -- -D warnings` are clean. The merge of `main` touched nothing under `data/scenarios/ladder`, `data/map`, `data/reference`, `crates/sim-core` or `crates/sim-staff`.
+- **Not run by the architect:** the whole of `cargo test --workspace` after the merge; CI runs it on the pushed commit. On the architect's first commit two tests that this change does not touch failed and then passed when run alone, `scenario_36_one_convoy::a_game_saved_in_the_middle_replays_and_the_staff_checks` and `scenario_42_interrupts_and_runs::d_a_save_under_another_doctrine_version_still_replays`; both write saves and call `sim-cli`. If CI shows either, it is theirs and not rung 2's.
+- **Nothing to mend.** Sound to merge once CI reports success on the pushed commit. Still open, and not this pull request's: rung 2 on the table, whose first step is the trial of the stop through the seat's tools.

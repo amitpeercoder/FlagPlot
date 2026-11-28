@@ -189,6 +189,8 @@ mod scenario_137_a_plan_the_commander_writes;
 mod scenario_137b_the_draft_as_one;
 #[path = "scenario_138_one_ship.rs"]
 mod scenario_138_one_ship;
+#[path = "scenario_139_two_mouths.rs"]
+mod scenario_139_two_mouths;
 #[path = "scenario_13a_target_priority.rs"]
 mod scenario_13a_target_priority;
 #[path = "scenario_13b_afternoon_base_strike.rs"]
