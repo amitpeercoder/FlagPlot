@@ -314,3 +314,5 @@ Written by the architect on main at `d521db26`, after pull request C was merged 
 **Shown to the architect:** `check_screen.py` passing whole, with U10 and R3 unchanged and passing; the diff, which holds the lines above in `table/index.html` and the "Built" lines here and nothing in `table/check_screen.py`; and anything filled otherwise than written, which comes back before it is changed.
 
 **Recorded in `docs/open-work.md`, "Open from step 3", and not mended here:** SIGNED's "another order" for an `After` on a landing not yet in force (C's filling 5); `approve`'s note that the staff gives no order for an order with no forces limit ("Not B's", above); and a `dry_run` that names no size the page knows ("Noted after the sizes were built", above).
+
+**Built: the follow-up to C (Nov 28, 2026).** `limitLinks(reasons, intoRoot, own)` takes the line's number as an argument; `whyView` passes `t.n` and `reasonView` passes null; `WHY_OWN` and its comment are gone from the page. Only `table/index.html` and this paragraph changed.

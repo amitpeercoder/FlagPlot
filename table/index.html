@@ -3243,10 +3243,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     go();
   }
   // The block YOUR LIMITS: one link for each distinct limit the reasons speak of, with the order it is set on where that is not this paper's.
-  // `WHY_OWN` is the number of the task whose WHY is being drawn, given by `whyView` for the one call that follows and read once here.
-  var WHY_OWN = null;
-  function limitLinks(reasons, intoRoot) {
-    var own = typeof WHY_OWN === 'undefined' ? null : WHY_OWN; WHY_OWN = null;
+  // `own` is the number of the task whose line the block is drawn under, or null under no task's line.
+  function limitLinks(reasons, intoRoot, own) {
     var seen = {}, out = [];
     (reasons || []).forEach(function (r) { (r.limits || []).forEach(function (l) { var k = l.kind + '|' + (l.kind === 'reserve' ? l.base : l.intent); if (!seen[k]) { seen[k] = 1; out.push(l); } }); });
     return out.map(function (l) {
@@ -3325,7 +3323,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     }
     if ((r.binding || []).length) { var b = el('div', 'rmeta', ''); b.appendChild(el('span', '', 'Held by ')); b.appendChild(rich('span', '', reasonMarked(r.binding.join('; '), undefined, false, true) + '.')); into.appendChild(b); }
     if ((r.would_change || []).length) { var c = el('div', 'rmeta', ''); c.appendChild(el('span', '', 'Would change with ')); c.appendChild(rich('span', '', reasonMarked(r.would_change.join('; '), undefined, false, true) + '.')); into.appendChild(c); }
-    var yl = limitLinks([r], null); if (yl.length) { into.appendChild(el('div', 'wsub', 'YOUR LIMITS')); var yu = el('ul', 'rpoints', ''); yl.forEach(function (f) { var li = document.createElement('li'); li.appendChild(f()); yu.appendChild(li); }); into.appendChild(yu); }
+    var yl = limitLinks([r], null, null); if (yl.length) { into.appendChild(el('div', 'wsub', 'YOUR LIMITS')); var yu = el('ul', 'rpoints', ''); yl.forEach(function (f) { var li = document.createElement('li'); li.appendChild(f()); yu.appendChild(li); }); into.appendChild(yu); }
   }
   // The staff's working, laid out to be read: a sentence a line, what it
   // put in brackets as notes beneath, a list where it gave a list, and
@@ -3703,7 +3701,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
       });
       d.appendChild(ul);
     }
-    var weighed = [], chose = [], held = [], would = []; WHY_OWN = t.n;
+    var weighed = [], chose = [], held = [], would = [];
     // A search's threats, where the arc did not give them, are read from the reason that drew it.
     if (!t.threats) t.reasons.some(function (r) { return (r.evidence || []).concat([{ what: r.worked }]).some(function (e) { t.threats = threatsOf(e.what); return !!t.threats; }); });
     if (t.threats) { var tl = el('span', ''); tl.appendChild(document.createTextNode('The threats: ')); var parts = t.threats.list.map(function (x) { return refTo(x.h, x.name); }); parts.forEach(function (p, k) { if (k) tl.appendChild(document.createTextNode(k === parts.length - 1 && !t.threats.waters ? ' and ' : ', ')); tl.appendChild(p); }); if (t.threats.waters) tl.appendChild(document.createTextNode((parts.length ? ' and ' : '') + 'the waters to deny')); weighed.push(tl); }
@@ -3722,7 +3720,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     });
     t.chose.forEach(function (s) { if (!seen['c' + s]) { seen['c' + s] = 1; chose.push(s); } });
     t.nothing.forEach(function (s) { held.push(oneFact(s, t.n)); });
-    block('WEIGHED', weighed); block('CHOSE', chose); block('HOLDS IT BACK', held); block('WOULD CHANGE WITH', would); block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT)); block('YOUR PLAN', planLinks(t.reasons, t.n));
+    block('WEIGHED', weighed); block('CHOSE', chose); block('HOLDS IT BACK', held); block('WOULD CHANGE WITH', would); block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT, t.n)); block('YOUR PLAN', planLinks(t.reasons, t.n));
     if (!any) return null;
     d.addEventListener('toggle', function () { if (d.open && t.arcs.length) paperOpen[t.n] = t.arcs.map(paperArc).filter(Boolean); else delete paperOpen[t.n]; paperArcsDraw(); });
     return d;
