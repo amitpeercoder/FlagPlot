@@ -140,3 +140,17 @@ Looked at and found to take none of the three new `.csv` files for something the
 - `cargo run -p sim-cli -- export data/scenarios/04a_night_action.toml`: ran.
 - `sh scripts/regenerate.sh --check`: "every generated file is what the engine gives".
 - `data/map/south_pacific.csv` and `data/map/midway.csv` are not changed.
+
+## The architect's reading of step 2
+
+Made on Nov 28, 2026 on reading the build.
+
+1. **The hand calculation holds as written.** The map has the 10,395 hexes of step 1's part 3; the two marks are in the hexes worked; all 113 rows of the located file are in the hexes the architect worked apart from the tool, compared by him again line by line.
+2. **The measure of rule 5, from the rows.** At each of the 30 places with a preferred row of position, a leg of 250 miles on the map in 24 directions reads within 3.6 in 100 of the true leg (`scripts/wide-map/projection_error.py`'s measure, on the rows' positions). The worst is 3.6 short, along a line through the centre, as the plan's rule 5 says. Midway reads 3.6 short to 0.4 short, Rabaul 3.6 to 0.8 short, Lunga Point 3.6 to 1.7 short, Port Moresby 3.6 short to 1.1 long, Saipan 3.6 short to 1.1 long. Pearl Harbor, Brisbane and the other places of the plan's table have no row of position yet.
+3. **French Frigate Shoals and Lisianski are not marked.** No base is wanted at either, and they are names only on the Midway map too (decision 0199, rule 29). Point Luck and Point ZED are points at sea. A mark is added when a scenario bases something at a place and a row gives its position.
+4. **Johnston, Palmyra, Canton, Wotje, Maloelap, Eniwetok and Nauru are not marked,** for want of a row of position. They wait on the research (`prompts-1942.md`, W07). Until then nothing can be based at them on this map.
+5. **Espiritu Santo's anchorage does not steer its hex here.** On this map's lattice the water at the anchorage's position is a body of one point, under the five decision 0017 asks, so the hex stands for its largest body. It is left so and looked at again when a scenario puts a force there; Milne Bay's anchorage does steer its hex, as on the south-west Pacific map.
+6. **Lae and Townsville fall in land hexes.** That is the plan's rule 9: the record that plans the first scenario on the map says which coast hex stands for each.
+7. **The located file follows its rows.** A row of position added inside the extent means the file is made again in the same pull request; `docs/engineering/layout.md` says so. The research rows of Nov 28, 2026 added none.
+8. **Five tests that save a game failed in the developer's full run and passed alone** (scenarios 36, 40, 41 and 42). They read no map of this change and are reported to fail together on `main` too. Not this change; reported to the designer as a fault to look at.
+
