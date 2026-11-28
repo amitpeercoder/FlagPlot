@@ -721,6 +721,12 @@ fn landed_on_day_twelve_with_three_nights() {
         })
         .collect();
     assert_eq!(formed, vec![(12, E, e_hex(), Side::Allied)]);
+    assert!(g
+        .scenario
+        .world
+        .events()
+        .iter()
+        .all(|e| !(e.day == 12 && matches!(e.kind, EventKind::MenFed { .. }))));
     assert_eq!(g.stock_of(11, 2), n(0));
     assert!(!g.truth[11].bases.contains_key(&base(E)));
     assert_eq!(g.stock_of(12, E), n(9));
