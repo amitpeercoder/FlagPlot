@@ -144,6 +144,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::n;
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -176,10 +177,6 @@ fn text() -> String {
 
 fn from(source: &str) -> Scenario {
     common::from_text(source, &path()).expect("the variant loads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
 }
 
 fn tf(raw: u32) -> TaskForceId {

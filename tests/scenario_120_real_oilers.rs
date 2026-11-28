@@ -98,10 +98,12 @@ use crate::common;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+use crate::common::replace_once as changed;
+use crate::common::values::{force, fx, ship};
 use sim_core::events::{Event, EventKind, FuelOrderEnd};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{ShipClassId, ShipId, TaskForceId};
+use sim_core::ids::{ShipClassId, TaskForceId};
 use sim_core::objectives::{score, tallies};
 use sim_core::orders::{OrderKind, TaskForceOrder};
 use sim_core::refdata::{ShipClass, ShipKind};
@@ -156,24 +158,8 @@ fn load_text(text: &str, path: &Path) -> Scenario {
     Scenario::from_text(text, path).expect("the altered scenario loads")
 }
 
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
 fn t(n: i64) -> Fixed {
     Fixed::from_int(n)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
 }
 
 fn fuel(scenario: &Scenario, raw: u32) -> Fixed {

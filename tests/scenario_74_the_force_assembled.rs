@@ -152,7 +152,7 @@ use sim_core::command::{
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{BaseId, LandUnitId, ShipId, TaskForceId};
 use sim_core::orders::{
     Cargo, LandUnitOrder, OrderKind, Posture, Readiness, Stance, TaskForceOrder,
 };
@@ -162,6 +162,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{assert_says, command_table, fx, intent, n, text_of};
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const A: Hex = Hex { q: 0, r: 0 };
@@ -175,24 +177,8 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
 fn half() -> Fixed {
     Fixed::from_ratio(1, 2)
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 /// The frozen step 1 figures. The scenario names its own ground figures,
@@ -680,31 +666,6 @@ impl Played {
     fn nothing_refused(&self) {
         assert!(self.refused().is_empty(), "{:?}", self.refused());
     }
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
-}
-
-fn assert_says(all: &str, parts: &[&str]) {
-    for part in parts {
-        assert!(all.contains(part), "the reason says {part:?}: {all}");
-    }
-}
-
-/// A command table of the Allied side, added to the end of the file.
-fn command_table(day: u32, body: &str) -> String {
-    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
 }
 
 fn with(extra: &str) -> String {

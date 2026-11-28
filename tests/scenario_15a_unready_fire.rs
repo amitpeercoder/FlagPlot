@@ -154,6 +154,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{fx, within_four_sigma};
 use sim_core::events::{Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{EventId, TaskForceId};
@@ -176,10 +177,6 @@ fn scenario_path() -> PathBuf {
 
 fn path_of_4a() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../data/scenarios/04a_night_action.toml")
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
 }
 
 /// The frozen figures with the share at the working value of 0.5, and the
@@ -487,15 +484,6 @@ fn night_salvos(run: &Run, battle: &[u32]) -> Vec<Salvo> {
         .into_iter()
         .filter(Salvo::night)
         .collect()
-}
-
-/// Whether k out of n is within four standard deviations of probability `p`
-/// (in millionths), in exact integer arithmetic: (k - np)^2 <= 16np(1 - p).
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 /// The full gun salvo of a cruiser: 8 guns x 3 rounds a gun a minute x 5

@@ -318,7 +318,7 @@ use sim_core::events::{
 };
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, AircraftTypeId, BaseId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, AircraftTypeId, BaseId, TaskForceId};
 use sim_core::objectives::tallies;
 use sim_core::orders::Reach;
 use sim_core::side_events::SideEventKind;
@@ -328,25 +328,10 @@ use sim_core::{SimConfig, World};
 use sim_data::{LoadOptions, Scenario};
 
 use crate::common;
+use crate::common::values::{fx, group, n, ship};
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const SCENARIO: &str = "16_all_together.toml";
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(value: i64) -> Fixed {
-    Fixed::from_int(value)
-}
-
-fn group(id: u32) -> AirGroupId {
-    AirGroupId::new(id)
-}
-
-fn ship(id: u32) -> ShipId {
-    ShipId::new(id)
-}
 
 const FIELD: BaseId = BaseId::new(1);
 const CARRIER_A: u32 = 1;

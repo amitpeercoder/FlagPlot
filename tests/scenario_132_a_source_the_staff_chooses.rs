@@ -139,6 +139,7 @@ use crate::common;
 
 use std::collections::BTreeMap;
 
+use crate::common::values::{at, base, force, intent};
 use sim_core::command::PlanId;
 use sim_core::command::{
     CommandKind, CommandState, IntentKind, Limit, Maker, PlanState, Reason, StaffDecisions,
@@ -167,12 +168,6 @@ fn without(text: &str, name: &str) -> String {
         .find("# MARK:")
         .map_or(text.len(), |at| start + at);
     format!("{}{}", &text[..start], &text[end..])
-}
-
-/// `what` added at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    common::replace_once(text, &mark, &format!("{what}{mark}"))
 }
 
 fn command(day: u32, body: &str) -> String {
@@ -306,17 +301,6 @@ fn play(text: &str, days: u32) -> Played {
         refusals,
     }
 }
-
-fn base(n: u32) -> BaseId {
-    BaseId::new(n)
-}
-fn force(n: u32) -> TaskForceId {
-    TaskForceId::new(n)
-}
-fn intent(n: u32) -> IntentId {
-    IntentId::new(n)
-}
-
 fn words(reason: &Reason) -> String {
     let evidence: Vec<&str> = reason.evidence.iter().map(|e| e.what.as_str()).collect();
     format!("{} | {}", reason.worked, evidence.join(" | "))

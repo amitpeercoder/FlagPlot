@@ -126,6 +126,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 
 use crate::common;
+use crate::common::values::{at, group, hex, intent};
 
 // ------------------------------------------------- Statement 12: the record
 
@@ -276,7 +277,7 @@ use sim_core::choices::{Moment, PulsePhase};
 use sim_core::command::{CommandRefusal, Reason, StaffDecisions, StaffOrder};
 use sim_core::events::{Event, EventKind};
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, IntentId};
+use sim_core::ids::AirGroupId;
 use sim_core::orders::{AirGroupOrder, AirMission, OrderKind, TaskForceOrder};
 use sim_core::refdata::ShipKind;
 use sim_core::state::Side;
@@ -291,25 +292,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex { q, r }
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
-/// Adds `what` at the mark `# MARK: name` of the scenario's text; the mark
-/// stays, so that more can be added.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    common::replace_once(text, &mark, &format!("{what}{mark}"))
 }
 
 fn command(body: &str) -> String {

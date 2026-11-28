@@ -139,10 +139,11 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{base, fx, n, unit};
 use sim_core::events::{Cause, Event, EventKind, LandFatigueChange, MarchStop, SupplyUse};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, EntityRef, LandUnitId, OrderId};
+use sim_core::ids::{BaseId, EntityRef, OrderId};
 use sim_core::orders::{Posture, RejectReason};
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, TruthState};
@@ -166,22 +167,6 @@ fn text() -> String {
 
 fn from(source: &str) -> Scenario {
     common::from_text(source, &path()).expect("the variant loads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 /// What a side believed at the end of a day, as its view gives it.

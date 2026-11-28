@@ -249,7 +249,7 @@ use sim_core::command::{
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, LandUnitId, ShipId};
+use sim_core::ids::{BaseId, LandUnitId, ShipId};
 use sim_core::orders::{Cargo, LandUnitOrder, OrderKind, TaskForceOrder};
 use sim_core::state::{Side, TruthState};
 use sim_core::time::Pulse;
@@ -257,6 +257,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{assert_says, fx, intent, n, text_of};
 
 const A: Hex = Hex { q: 0, r: 0 };
 const D: Hex = Hex { q: 4, r: 0 };
@@ -268,22 +270,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 /// The frozen step 1 figures; the scenario names its own ground figures
@@ -699,26 +685,6 @@ impl Played {
             .iter()
             .map(|m| m.as_ref().map_or(0, |m| m.days_controlled))
             .collect()
-    }
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
-}
-
-fn assert_says(all: &str, parts: &[&str]) {
-    for part in parts {
-        assert!(all.contains(part), "the reason says {part:?}: {all}");
     }
 }
 

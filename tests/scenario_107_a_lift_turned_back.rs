@@ -145,7 +145,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use sim_core::command::{
-    InterruptRef, NoticeKind, PlanState, Reason, StaffDecisions, StaffOrder, Staffs, StandingKind,
+    InterruptRef, NoticeKind, PlanState, StaffDecisions, StaffOrder, Staffs, StandingKind,
 };
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
@@ -157,6 +157,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{assert_says, at, text_of};
 
 const S: Hex = Hex { q: 0, r: 0 };
 const P: Hex = Hex { q: 14, r: 0 };
@@ -175,17 +177,6 @@ fn load(text: &str) -> Scenario {
 
 fn load_with(text: &str, options: &sim_data::LoadOptions) -> Scenario {
     common::from_text_with(text, &path(), options).expect("the scenario loads")
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-/// Adds `what` at the mark `# MARK: name` of the scenario's text; the mark
-/// stays, so that more can be added.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    changed(text, &mark, &format!("{what}{mark}"))
 }
 
 fn contact(q: i32, r: i32, kind: &str, age: u32) -> String {
@@ -390,26 +381,6 @@ fn given(o: &StaffOrder) -> Given {
             order: TaskForceOrder::NoCargoWork,
         } => Given::NoCargoWork(target.raw()),
         other => Given::Other(format!("{other:?}")),
-    }
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
-}
-
-fn assert_says(all: &str, parts: &[&str]) {
-    for part in parts {
-        assert!(all.contains(part), "the reason says {part:?}: {all}");
     }
 }
 

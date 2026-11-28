@@ -225,6 +225,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{millionths, within_four_sigma};
 use sim_core::events::{Cause, EngagementEndReason, Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -245,10 +246,6 @@ const DESTINATION: Hex = Hex::new(10, 0);
 
 fn fx(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 /// 0.5 and 0.25: the night sighting chance with and without the alert
@@ -902,15 +899,6 @@ fn opening(fight: &Fight) -> Opening {
         (true, true) => Opening::BothFire,
         (false, false) => unreachable!("a round with a success"),
     }
-}
-
-/// Whether k out of n is within four standard deviations of probability
-/// `p` (in millionths), in exact integer arithmetic.
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 // ---------------------------------------------------------------------

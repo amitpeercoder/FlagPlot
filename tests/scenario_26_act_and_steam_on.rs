@@ -117,10 +117,11 @@ use crate::common;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
+use crate::common::values::{base, n, ship};
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, OrderId, ShipId, TaskForceId};
+use sim_core::ids::{OrderId, TaskForceId};
 use sim_core::orders::{OrderKind, TaskForceOrder};
 use sim_core::state::{HaltWork, Side, TaskForceStatus, TruthState};
 use sim_core::time::Pulse;
@@ -163,20 +164,8 @@ fn from(source: &str) -> Scenario {
     common::from_text(source, &path()).expect("the variant loads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
 fn tf(raw: u32) -> TaskForceId {
     TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 /// The text of the order that gives task force 1 its speed.

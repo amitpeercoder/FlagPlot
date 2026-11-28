@@ -166,10 +166,12 @@ use crate::common;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::replace_once as changed;
+use crate::common::values::{force, fx, ship};
 use sim_core::events::{Cause, Event, EventKind, FuelOrderEnd};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{EventId, ShipId, TaskForceId};
+use sim_core::ids::EventId;
 use sim_core::orders::{OrderKind, RejectReason, SpeedSetting, TaskForceOrder};
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, TaskForceStatus};
@@ -185,10 +187,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 /// The four figures of the setting, as the hand calculation gives them.
@@ -241,20 +239,8 @@ fn events(scenario: &Scenario) -> Vec<Event> {
     scenario.world.events().iter().cloned().collect()
 }
 
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
 fn t(n: i64) -> Fixed {
     Fixed::from_int(n)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
 }
 
 fn fuel(scenario: &Scenario, raw: u32) -> Fixed {

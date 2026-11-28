@@ -573,7 +573,7 @@ use sim_core::command::{
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{IntentId, TaskForceId};
+use sim_core::ids::TaskForceId;
 use sim_core::orders::{AirGroupOrder, AirMission, OrderKind, SpeedSetting, TaskForceOrder};
 use sim_core::refdata::ShipKind;
 use sim_core::state::Side;
@@ -582,6 +582,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{command_table, hex, intent, n};
 
 fn path_of(file: &str) -> PathBuf {
     common::data_dir()
@@ -591,22 +593,6 @@ fn path_of(file: &str) -> PathBuf {
 
 fn text_of(file: &str) -> String {
     std::fs::read_to_string(path_of(file)).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex { q, r }
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 /// The frozen figures with the reports made exact: no error of position, no
@@ -755,11 +741,6 @@ fn play_with(
 
 fn same(text: String) -> String {
     text
-}
-
-/// A command of the Allied commander at the head of `day`.
-fn command_table(day: u32, body: &str) -> String {
-    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
 }
 
 /// The command that gives the order of game A, B, D, E, G or P as a shadow.

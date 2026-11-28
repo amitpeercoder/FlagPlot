@@ -57,6 +57,7 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{hex, n};
 use sim_core::command::{CommandKind, HoldTarget};
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
@@ -283,14 +284,6 @@ impl Run {
             })
             .collect()
     }
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
 }
 
 /// The miles steamed when the force enters each hex, from the setup,

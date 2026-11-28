@@ -92,6 +92,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::millionths;
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -129,10 +130,6 @@ const ALLOWED_AT_LEAST_ONE: (i64, i64) = (881, 951);
 
 fn nm(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 fn scenario_path() -> PathBuf {

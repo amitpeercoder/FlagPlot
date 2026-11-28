@@ -99,7 +99,7 @@ use std::path::PathBuf;
 use sim_core::command::{NoticeKind, Reason, StaffDecisions, StaffOrder};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, ShipId, TaskForceId};
+use sim_core::ids::TaskForceId;
 use sim_core::orders::{OrderKind, Readiness, SpeedSetting, TaskForceOrder};
 use sim_core::state::{Side, TruthState};
 use sim_data::Scenario;
@@ -107,6 +107,8 @@ use sim_staff::stand::{margin, THREAT_HEXES};
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{at, base, force, hex, n, ship};
 
 /// Where G begins, B and its neighbours.
 const START: Hex = Hex { q: 0, r: 0 };
@@ -118,37 +120,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex { q, r }
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-/// Adds `what` at the mark `# MARK: name` of the scenario's text; the mark
-/// stays, so that more can be added.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    changed(text, &mark, &format!("{what}{mark}"))
 }
 
 /// The station X of the file, (4,0), moved to `q` hexes east of G.

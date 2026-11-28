@@ -141,11 +141,11 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{group, n};
 use sim_core::choices::Moment;
 use sim_core::events::{Event, EventKind, SortieKind, SupplyUse};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::AirGroupId;
 use sim_core::orders::{AirGroupOrder, OrderKind, OrderRequest, Origin, RejectReason};
 use sim_core::state::Side;
 use sim_core::time::Pulse;
@@ -161,10 +161,6 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
 /// A decimal figure of the hand calculation, such as `"0.25"`.
 fn d(text: &str) -> Fixed {
     text.parse().expect("a decimal figure")
@@ -174,10 +170,6 @@ fn d(text: &str) -> Fixed {
 const C1: Hex = Hex::new(3, 0);
 const C2: Hex = Hex::new(0, 4);
 const C3: Hex = Hex::new(22, 0);
-
-fn group(id: u32) -> AirGroupId {
-    AirGroupId::new(id)
-}
 
 /// What the side held at a moment, and what the strike question answered.
 #[derive(Default, Clone, Debug)]

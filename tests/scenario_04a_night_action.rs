@@ -278,6 +278,7 @@ use std::path::PathBuf;
 use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
+use crate::common::values::{millionths, within_four_sigma};
 use sim_core::events::{Cause, DamageTrack, EngagementEndReason, Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -327,10 +328,6 @@ const TORPEDO_NO_SYSTEM_P: i64 = 0;
 
 fn fx(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 /// What a system in a state multiplies, written out from the hand
@@ -1409,15 +1406,6 @@ fn ammo_cuts(an: &Analysed) -> Vec<AmmoCut> {
         }
     }
     cuts
-}
-
-/// Whether k out of n is within four standard deviations of probability
-/// `p` (in millionths), in exact integer arithmetic.
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 fn total_flotation(run: &RunData, force: usize) -> i64 {

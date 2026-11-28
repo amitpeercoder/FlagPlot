@@ -178,6 +178,7 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{fx, n};
 use sim_core::events::{Cause, Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -193,14 +194,6 @@ const CARGO: u32 = 3;
 const TOUGH_CRUISER: u32 = 7;
 
 const SEED: u64 = 1942;
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(value: i64) -> Fixed {
-    Fixed::from_int(value)
-}
 
 // ---------------------------------------------------------------------
 // The fight, built from text. Force X (task force 1, Japanese) lies stopped

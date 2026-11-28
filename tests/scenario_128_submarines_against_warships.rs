@@ -213,6 +213,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::fx;
 use sim_core::events::{Event, EventKind, SubmarineLeftReason};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{EntityRef, EventId, ShipId, SubmarineId, TaskForceId};
@@ -230,10 +231,6 @@ const SEEDS: u64 = 1000;
 fn scenario_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../data/scenarios/128_submarines_against_warships.toml")
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a fixed number")
 }
 
 /// The scenario's map, with its strip of sea made longer to the west so that

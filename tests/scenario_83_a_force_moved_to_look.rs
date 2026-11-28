@@ -167,7 +167,7 @@ use sim_core::command::{
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, IntentId, LandUnitId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, LandUnitId, TaskForceId};
 use sim_core::orders::{
     AirGroupOrder, AirMission, Cargo, LandUnitOrder, OrderKind, Posture, Readiness, Stance,
     StragglerInstruction, TaskForceOrder,
@@ -179,6 +179,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs, SupplyStaff};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{command_table, fx, intent, n};
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const A: Hex = Hex { q: 0, r: 0 };
@@ -191,27 +193,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn intent(raw: u32) -> IntentId {
-    IntentId::new(raw)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-/// A command table of the Allied side, added to the end of the file.
-fn command_table(day: u32, body: &str) -> String {
-    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
 }
 
 /// Scenario 73's figures: scenario 53's table of aircraft for each ship,

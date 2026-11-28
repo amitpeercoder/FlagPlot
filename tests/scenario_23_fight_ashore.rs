@@ -200,10 +200,11 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{base, fx, n, unit};
 use sim_core::events::{Cause, Event, EventKind, LandFatigueChange};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, EntityRef, LandUnitId, ShipId, TaskForceId};
+use sim_core::ids::{AirGroupId, BaseId, EntityRef, ShipId, TaskForceId};
 use sim_core::objectives::{tallies, Level, Outcome};
 use sim_core::orders::{Posture, RejectReason};
 use sim_core::side_events::{SideEvent, SideEventKind};
@@ -231,22 +232,6 @@ fn load() -> Scenario {
 
 fn from(source: &str) -> Scenario {
     common::from_text(source, &path()).expect("the variant loads")
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn unit(id: u32) -> LandUnitId {
-    LandUnitId::new(id)
-}
-
-fn base(id: u32) -> BaseId {
-    BaseId::new(id)
 }
 
 /// A run of a scenario: the truth at the start and at the end of each day,

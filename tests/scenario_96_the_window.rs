@@ -256,6 +256,7 @@ use crate::common;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::n;
 use sim_core::believed::Standing;
 use sim_core::command::{CommandKind, HoldTarget, IntentKind, Leave, Limit, StaffOrder};
 use sim_core::events::EventKind;
@@ -321,10 +322,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
 }
 
 fn load(text: &str) -> Scenario {

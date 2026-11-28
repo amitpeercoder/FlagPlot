@@ -65,6 +65,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{fx, n};
 use sim_core::events::EventKind;
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AirGroupId, ShipId};
@@ -110,14 +111,6 @@ fn run(seed: u64) -> World {
     let mut scenario = load_text(&scenario_text(), seed);
     scenario.run_to_end().expect("the run resolves");
     scenario.world
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(value: i64) -> Fixed {
-    Fixed::from_int(value)
 }
 
 fn result_of(world: &World) -> GameResult {

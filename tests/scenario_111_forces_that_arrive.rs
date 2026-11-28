@@ -131,6 +131,8 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{at, hex, n};
 
 const A: Side = Side::Allied;
 const J: Side = Side::Japanese;
@@ -157,16 +159,6 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-/// Adds `what` at the mark `# MARK: name`; the mark stays.
-fn at(text: &str, name: &str, what: &str) -> String {
-    let mark = format!("# MARK: {name}\n");
-    changed(text, &mark, &format!("{what}{mark}"))
-}
-
 fn load(text: &str) -> Scenario {
     common::from_text(text, &path()).expect("the scenario loads")
 }
@@ -176,14 +168,6 @@ fn load_error(text: &str) -> String {
         Ok(_) => panic!("the scenario is refused"),
         Err(error) => error.message,
     }
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
 }
 
 /// A game played to its end: the events, the daily hashes, the truth at the

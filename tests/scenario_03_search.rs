@@ -171,6 +171,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{millionths, within_four_sigma};
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -208,10 +209,6 @@ fn load() -> Scenario {
 
 fn nm(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 /// Resolves the next day and returns its number and its events.
@@ -594,15 +591,6 @@ fn sightings_fall_where_the_hand_calculation_says() {
         );
     }
     assert!((872..=944).contains(&by_end_of_day_2));
-}
-
-/// Whether k out of n is within four standard deviations of probability
-/// `p` (in millionths), in exact integer arithmetic.
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 #[test]

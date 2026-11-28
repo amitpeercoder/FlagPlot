@@ -260,6 +260,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::common::values::{base, command_table, force, fx, n, ship};
 use sim_core::choices::Moment;
 use sim_core::command::{
     CommandKind, HeldSetting, HoldMaker, HoldTarget, PlanId, PlanState, Reason, RunDays,
@@ -268,7 +269,7 @@ use sim_core::command::{
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
-use sim_core::ids::{BaseId, IntentId, ShipId, TaskForceId};
+use sim_core::ids::{IntentId, ShipId, TaskForceId};
 use sim_core::orders::{BaseOrder, OrderKind, RejectReason, TaskForceOrder};
 use sim_core::state::{ShipLocation, Side, TaskForceStatus, TruthState};
 use sim_core::view::SideView;
@@ -311,26 +312,6 @@ fn text_a() -> String {
     read(&path_a())
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
 fn plan(raw: u32) -> PlanId {
     PlanId::new(raw)
 }
@@ -342,11 +323,6 @@ fn head_of(text: &str) -> String {
         .next()
         .expect("a head")
         .to_string()
-}
-
-/// A command table as the scenario states it.
-fn command_table(day: u32, body: &str) -> String {
-    format!("\n[[command]]\nday = {day}\nside = \"allied\"\n{body}\n")
 }
 
 /// The commands of day 1 that 41a and 36 share: the intent, the forces limit

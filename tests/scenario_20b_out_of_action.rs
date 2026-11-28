@@ -177,6 +177,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::fx;
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{BaseId, ShipId, TaskForceId};
@@ -214,10 +215,6 @@ fn run_text(source: &str) -> Scenario {
     let mut scenario = common::from_text(source, &path()).expect("the variant loads");
     scenario.run_to_end().expect("the variant runs");
     scenario
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
 }
 
 fn sh(n: u32) -> ShipId {

@@ -129,11 +129,13 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::replace_once as changed;
+use crate::common::values::{force, fx, hex, ship};
 use sim_core::events::{Cause, EngagementEndReason, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
 use sim_core::ids::EntityRef;
-use sim_core::ids::{ShipId, TaskForceId};
+use sim_core::ids::TaskForceId;
 use sim_core::orders::RejectReason;
 use sim_core::side_events::SideEventKind;
 use sim_core::state::{Side, TaskForceStatus};
@@ -149,26 +151,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn ship(raw: u32) -> ShipId {
-    ShipId::new(raw)
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
 }
 
 fn load(text: &str) -> Scenario {

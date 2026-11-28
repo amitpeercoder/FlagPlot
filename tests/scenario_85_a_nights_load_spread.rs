@@ -175,6 +175,8 @@ use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{assert_says, n, text_of};
 
 const A: Hex = Hex { q: 0, r: 0 };
 const B: Hex = Hex { q: 4, r: 0 };
@@ -195,18 +197,10 @@ fn text_b() -> String {
     std::fs::read_to_string(path_b()).expect("the scenario file reads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
 /// The passage of 160 nm at 36 kn, by the engine's own arithmetic: the hand
 /// calculation's "4 hours 26 minutes 40 seconds", 4.444444 hours.
 fn fast() -> Fixed {
     n(160) / n(36)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 fn load_with(text: &str, options: &LoadOptions) -> Scenario {
@@ -483,26 +477,6 @@ fn refused_in(events: &[Event]) -> Vec<&Event> {
             )
         })
         .collect()
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
-}
-
-fn assert_says(all: &str, parts: &[&str]) {
-    for part in parts {
-        assert!(all.contains(part), "the reason says {part:?}: {all}");
-    }
 }
 
 fn risk(level: &str) -> String {

@@ -103,7 +103,7 @@ use sim_core::choices::Moment;
 use sim_core::command::{Reason, StaffDecisions, StaffOrder};
 use sim_core::events::{Event, EventKind};
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, TaskForceId};
+use sim_core::ids::{BaseId, TaskForceId};
 use sim_core::pictures::CommandRef;
 use sim_core::refdata::ShipKind;
 use sim_core::state::Side;
@@ -114,6 +114,7 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::values::{base, force, group, hex};
 
 const LEVELS_LINE: &str = "command_levels = true\n";
 
@@ -135,22 +136,6 @@ fn text_58() -> String {
 /// The same text with command levels off.
 fn off(text: &str) -> String {
     common::replace_once(text, LEVELS_LINE, "")
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex { q, r }
 }
 
 fn tf(raw: u32) -> CommandRef {

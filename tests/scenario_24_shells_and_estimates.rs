@@ -182,6 +182,7 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{fx, n};
 use sim_core::belief::GroundEstimate;
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
@@ -213,14 +214,6 @@ fn load() -> Scenario {
 
 fn from(source: &str) -> Scenario {
     common::from_text(source, &path()).expect("the variant loads")
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
 }
 
 fn with_seed(source: &str, seed: u32) -> String {

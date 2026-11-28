@@ -160,6 +160,7 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::{base, fx, n, unit};
 use sim_core::events::{Cause, Event, EventKind, LandFatigueChange, SupplyUse};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -192,22 +193,6 @@ fn text() -> String {
 /// 30 as the calculation says.
 fn from(source: &str) -> Scenario {
     common::from_text(source, &path()).expect("the variant loads on the frozen figures")
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn unit(raw: u32) -> LandUnitId {
-    LandUnitId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
 }
 
 /// A run of a scenario: the truth at the start (day 0) and at the end of

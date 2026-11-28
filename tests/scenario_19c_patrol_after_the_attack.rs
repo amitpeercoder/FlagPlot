@@ -238,6 +238,7 @@ use crate::common;
 use std::fs;
 use std::path::PathBuf;
 
+use crate::common::values::hundredths;
 use sim_core::events::{AirFirer, AirTarget, Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{AirGroupId, EntityRef, EventId, ShipId};
@@ -255,10 +256,6 @@ const SHARES: [&str; 3] = ["1", "0.4", "0"];
 
 fn fx(n: i64) -> Fixed {
     Fixed::from_int(n)
-}
-
-fn hundredths(n: i64) -> Fixed {
-    Fixed::from_ratio(n, 100)
 }
 
 /// One case of the hand calculation: the patrol's first group, the raid's

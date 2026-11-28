@@ -184,6 +184,7 @@ use crate::common;
 
 use std::path::PathBuf;
 
+use crate::common::values::hex;
 use serde_json::{json, Value};
 use sim_agent::{list_contacts, Post, Seat, Session};
 use sim_core::command::SubmarineDoctrine;
@@ -296,10 +297,6 @@ fn world_after(game: &Game, days: u32) -> World {
             .expect("the game has the day");
     }
     scenario.world
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
 }
 
 /// The estimate of one side's own picture, as the tool's function makes it.

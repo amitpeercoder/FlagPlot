@@ -274,6 +274,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use crate::common::values::hex;
 use sim_core::events::{Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -289,10 +290,6 @@ use std::collections::BTreeMap;
 const TASK_FORCE: TaskForceId = TaskForceId::new(1);
 const CRUISER: ShipId = ShipId::new(1);
 const DESTROYER: ShipId = ShipId::new(2);
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex::new(q, r)
-}
 
 fn nm(value: i64) -> Fixed {
     Fixed::from_int(value)

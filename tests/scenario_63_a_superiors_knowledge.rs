@@ -128,7 +128,7 @@ use sim_core::events::{Arrival, Direction, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::held::{AsOf, HeldState};
 use sim_core::hex::Hex;
-use sim_core::ids::{AirGroupId, BaseId, ShipId, TaskForceId};
+use sim_core::ids::ShipId;
 use sim_core::orders::{
     AirGroupOrder, AirMission, OrderKind, OrderRequest, Origin, Reach, Readiness, SpeedSetting,
     Stance, StragglerInstruction, TaskForceOrder,
@@ -144,6 +144,7 @@ use sim_data::Scenario;
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::values::{base, force, fx, group, hex, n};
 
 const LEVELS_LINE: &str = "command_levels = true\n";
 const REPORTS_LINE: &str = "reports = \"../reference/reports_placeholder_scenario_63.toml\"\n";
@@ -155,30 +156,6 @@ fn path() -> PathBuf {
 
 fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn group(raw: u32) -> AirGroupId {
-    AirGroupId::new(raw)
-}
-
-fn force(raw: u32) -> TaskForceId {
-    TaskForceId::new(raw)
-}
-
-fn base(raw: u32) -> BaseId {
-    BaseId::new(raw)
-}
-
-fn hex(q: i32, r: i32) -> Hex {
-    Hex { q, r }
 }
 
 fn tf(raw: u32) -> CommandRef {

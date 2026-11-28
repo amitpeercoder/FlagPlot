@@ -155,6 +155,7 @@ use crate::common;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::{fx, within_four_sigma};
 use sim_core::events::{Event, EventKind, Weapon};
 use sim_core::fixed::Fixed;
 use sim_core::ids::{EventId, TaskForceId};
@@ -234,10 +235,6 @@ fn run_seed(base: &Scenario, seed: u64) -> Scenario {
     let mut run = base.with_seed(seed).expect("a seed can be set");
     run.run_to_end().expect("the run resolves");
     run
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
 }
 
 // ---------------------------------------------------------------------
@@ -429,15 +426,6 @@ fn night(run: &Run) -> (Vec<Roll>, Vec<Salvo>) {
         .filter(|s| s.pulse == Some(Pulse::Night))
         .collect();
     (rolls, salvos)
-}
-
-/// Whether k out of n is within four standard deviations of probability `p`
-/// (in millionths), in exact integer arithmetic: (k - np)^2 <= 16np(1 - p).
-fn within_four_sigma(k: i64, n: i64, p: i64) -> bool {
-    let (k, n, p) = (i128::from(k), i128::from(n), i128::from(p));
-    let scale = 1_000_000;
-    let off = k * scale - n * p;
-    off * off <= 16 * n * p * (scale - p)
 }
 
 // ---------------------------------------------------------------------

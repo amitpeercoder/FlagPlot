@@ -215,6 +215,7 @@ use crate::common;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use crate::common::values::{fx, n};
 use sim_core::choices::Moment;
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -238,14 +239,6 @@ fn path(file: &str) -> PathBuf {
 
 fn text(file: &str) -> String {
     std::fs::read_to_string(path(file)).expect("the scenario file reads")
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
-}
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
 }
 
 /// 35a's figures: the frozen ones with the weight strength of the

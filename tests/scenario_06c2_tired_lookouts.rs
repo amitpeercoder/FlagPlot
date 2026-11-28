@@ -125,6 +125,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+use crate::common::values::millionths;
 use sim_core::events::{Cause, Event, EventKind, ForceFatigueChange};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -149,10 +150,6 @@ const REST: i64 = 3;
 
 fn fx(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn millionths(value: i64) -> Fixed {
-    Fixed::from_raw(value)
 }
 
 /// The chance written as the hand calculation writes it: a decimal.

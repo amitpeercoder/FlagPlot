@@ -187,6 +187,8 @@ use sim_data::{LoadOptions, Scenario};
 use sim_staff::{as_staffs, staffs};
 
 use crate::common;
+use crate::common::replace_once as changed;
+use crate::common::values::{assert_says, n, text_of};
 
 const COMMANDS_MARKER: &str = "# The Allied commander's commands";
 const A: Hex = Hex { q: 0, r: 0 };
@@ -201,10 +203,6 @@ fn text() -> String {
     std::fs::read_to_string(path()).expect("the scenario file reads")
 }
 
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
-
 /// Hours and tenths: x(1365) is 136.5.
 fn x(tenths: i64) -> Fixed {
     Fixed::from_ratio(tenths, 10)
@@ -214,10 +212,6 @@ fn x(tenths: i64) -> Fixed {
 /// hand calculation's "6 hours 40 minutes", 6.666666 hours.
 fn fast() -> Fixed {
     n(240) / n(36)
-}
-
-fn changed(text: &str, original: &str, replacement: &str) -> String {
-    common::replace_once(text, original, replacement)
 }
 
 fn load_with(text: &str, options: &LoadOptions) -> Scenario {
@@ -455,26 +449,6 @@ impl Played {
                 )
             })
             .collect()
-    }
-}
-
-fn text_of(reason: &Reason) -> String {
-    format!(
-        "{} | {} | {}",
-        reason.worked,
-        reason.binding.join("; "),
-        reason
-            .evidence
-            .iter()
-            .map(|e| e.what.clone())
-            .collect::<Vec<_>>()
-            .join("; ")
-    )
-}
-
-fn assert_says(all: &str, parts: &[&str]) {
-    for part in parts {
-        assert!(all.contains(part), "the reason says {part:?}: {all}");
     }
 }
 

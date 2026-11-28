@@ -328,6 +328,7 @@ use crate::common;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+use crate::common::values::fx;
 use sim_core::events::{Cause, Event, EventKind};
 use sim_core::fixed::Fixed;
 use sim_core::hex::Hex;
@@ -374,10 +375,6 @@ fn edited(edit: impl Fn(&str) -> String) -> String {
     let changed = edit(&original);
     assert_ne!(original, changed, "the edit changed nothing");
     changed
-}
-
-fn fx(text: &str) -> Fixed {
-    text.parse().expect("a decimal")
 }
 
 fn sh(n: u32) -> ShipId {

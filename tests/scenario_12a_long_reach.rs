@@ -111,6 +111,7 @@ use sim_core::{SimConfig, World};
 use sim_data::Scenario;
 
 use crate::common;
+use crate::common::values::hundredths;
 
 const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 const SCENARIO: &str = "12a_long_reach.toml";
@@ -302,10 +303,6 @@ fn bombers_ready(world: &World) -> u32 {
 
 fn bombers_pilots(world: &World) -> Option<u32> {
     world.umpire().air_groups[&BOMBERS].pilots
-}
-
-fn hundredths(value: i64) -> Fixed {
-    Fixed::from_ratio(value, 100)
 }
 
 /// Whether `k` is within 10 in 100 of `expected` (a relative tolerance of 10

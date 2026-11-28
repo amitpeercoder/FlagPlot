@@ -136,6 +136,7 @@ use crate::common;
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::common::values::hundredths;
 use sim_core::command::{CommandState, Hold, HoldMaker};
 use sim_core::events::{Cause, Event};
 use sim_core::fixed::Fixed;
@@ -172,10 +173,6 @@ fn full_slice() -> Scenario {
 
 fn tons(value: i64) -> Fixed {
     Fixed::from_int(value)
-}
-
-fn hundredths(value: i64) -> Fixed {
-    Fixed::from_ratio(value, 100)
 }
 
 /// A value in words. An order's and an event's number show as `_` outside

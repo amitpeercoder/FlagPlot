@@ -115,6 +115,7 @@
 
 use crate::common;
 
+use crate::common::values::n;
 use sim_core::command::NoticeKind;
 use sim_core::fixed::Fixed;
 use sim_core::ids::LandUnitId;
@@ -129,10 +130,6 @@ use common::stage_4::{
 const NAME: &str = "case_r_preparation";
 const ALLIED: Side = Side::Allied;
 const A: sim_core::hex::Hex = sim_core::hex::Hex { q: 0, r: 0 };
-
-fn n(whole: i64) -> Fixed {
-    Fixed::from_int(whole)
-}
 
 /// The six commands of the course, all on `day`: intent 1, take the place
 /// at (4,0); its forces limit; its risk, press; "not before day 9"; leave
