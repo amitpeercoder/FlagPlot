@@ -12,6 +12,10 @@
 //! positions of the places a passage names, and nothing else under
 //! `data/oob`. The simulation never reads it. No float anywhere: a position
 //! becomes a hex in whole numbers (see [`hex_of`]).
+//!
+//! On a map about a centre (decision 0242) nothing is worked into a hex here:
+//! each end is a row, and its hex is read from the map's file of located
+//! positions (see [`Placer`]).
 
 use std::collections::BTreeMap;
 use std::fmt::Write;
@@ -151,18 +155,16 @@ struct Frame {
 }
 
 impl Frame {
-    /// From a map's frame as `sim-data` reads it: `Fixed` is millionths, and
-    /// a degree here is 10^8 units, so each is a hundred times its raw value.
-    ///
-    /// A map about a centre (decision 0242) is not read here: its positions
-    /// are read from the map's file of located positions (rule 15), which is
-    /// not built yet.
-    fn of(frame: &sim_data::MapFrame) -> Result<Frame, String> {
+    /// From a map's frame of one factor as `sim-data` reads it: `Fixed` is
+    /// millionths, and a degree here is 10^8 units, so each is a hundred
+    /// times its raw value. A map about a centre (decision 0242) has no
+    /// `Frame` here: see [`Placer`].
+    fn of(frame: &sim_data::MapFrame) -> Option<Frame> {
         let units = |value: sim_core::fixed::Fixed| i128::from(value.raw()) * (UNIT / MILLION);
         let sim_data::MapProjection::OneFactor { factor } = frame.projection else {
-            return Err("this map is about a centre: its positions are read from the map's file of located positions (decision 0242, rule 15), which is not built yet".to_string());
+            return None;
         };
-        Ok(Frame {
+        Some(Frame {
             origin_lat: units(frame.centre_lat),
             origin_lon: units(frame.centre_lon),
             factor_millionths: i128::from(factor.raw()),
@@ -277,6 +279,91 @@ fn hex_of(frame: &Frame, lat: i128, lon: i128) -> Hex {
         i32::try_from(x).expect("a hex within 360 degrees fits"),
         i32::try_from(z).expect("a hex within 360 degrees fits"),
     )
+}
+
+// ------------------------------------------- where an end's hex comes from
+
+/// How a passage's ends become hexes.
+///
+/// On a map of one factor a position is worked into a hex here, in whole
+/// numbers (`hex_of`). On a map about a centre (decision 0242, rule 15) it is
+/// not: only the map tool works a position into a hex there, and it wrote the
+/// answer, once, to the map's file of located positions. The check reads that
+/// file as text and whole numbers, by the row of the place positions file the
+/// passage names. The file is under `data/map`, and is read here, as
+/// `place_positions.csv` is, because this is the umpire's tool and no more
+/// than three of its columns are wanted; `sim-data` has no reader of it.
+enum Placer {
+    Flat(Frame),
+    Located {
+        hexes: BTreeMap<u64, Hex>,
+        /// The located file's path, for the messages.
+        file: String,
+    },
+}
+
+/// The located file beside a map: `<the map file's stem>_located.csv` in the
+/// same folder.
+fn located_path(map_path: &str) -> PathBuf {
+    let path = Path::new(map_path);
+    let stem = path
+        .file_stem()
+        .map_or(String::new(), |s| s.to_string_lossy().into_owned());
+    path.with_file_name(format!("{stem}_located.csv"))
+}
+
+/// Reads a located file: lines that start with `#` are comments; the columns
+/// used are `row`, `q` and `r`, all whole numbers.
+fn read_located(text: &str) -> Result<BTreeMap<u64, Hex>, String> {
+    let mut reader = csv::ReaderBuilder::new()
+        .comment(Some(b'#'))
+        .flexible(true)
+        .from_reader(text.as_bytes());
+    let headers = reader.headers().map_err(|e| e.to_string())?.clone();
+    let column = |name: &str| {
+        headers
+            .iter()
+            .position(|h| h == name)
+            .ok_or_else(|| format!("it has no column \"{name}\""))
+    };
+    let (row, q, r) = (column("row")?, column("q")?, column("r")?);
+    let mut hexes = BTreeMap::new();
+    for record in reader.records() {
+        let record = record.map_err(|e| e.to_string())?;
+        let get = |i: usize| record.get(i).unwrap_or("").trim().to_string();
+        let whole = |i: usize| -> Result<i32, String> {
+            get(i)
+                .parse()
+                .map_err(|_| format!("\"{}\" is not a whole number", get(i)))
+        };
+        let id: u64 = get(row)
+            .parse()
+            .map_err(|_| format!("row \"{}\" is not a whole number", get(row)))?;
+        if hexes.insert(id, Hex::new(whole(q)?, whole(r)?)).is_some() {
+            return Err(format!("row {id} is used twice"));
+        }
+    }
+    Ok(hexes)
+}
+
+impl Placer {
+    /// For a map: its frame as `sim-data` reads it (`None` for a map with no
+    /// frame, measured in the present map's frame as before decision 0199).
+    fn of(map_path: &str, frame: &sim_data::MapFrame) -> Result<Placer, String> {
+        if let Some(flat) = Frame::of(frame) {
+            return Ok(Placer::Flat(flat));
+        }
+        let path = located_path(map_path);
+        let shown = path.display().to_string();
+        let bytes = fs::read(&path).map_err(|e| {
+            format!(
+                "{map_path}: this map is about a centre, so its ends are read from its file of located positions, {shown}, which is wanted beside it and is not readable ({e})"
+            )
+        })?;
+        let text = String::from_utf8(bytes).map_err(|_| format!("{shown}: not text"))?;
+        let hexes = read_located(&text).map_err(|e| format!("{shown}: {e}"))?;
+        Ok(Placer::Located { hexes, file: shown })
+    }
 }
 
 // ------------------------------------------------------ the calculation
@@ -408,7 +495,7 @@ pub struct Request<'a> {
 }
 
 fn end_of(
-    frame: &Frame,
+    placer: &Placer,
     passage: &Passage,
     which: &str,
     places: &BTreeMap<u64, PlaceRow>,
@@ -449,6 +536,20 @@ fn end_of(
                     )));
                 }
             }
+            if let Placer::Located { hexes, file } = placer {
+                let hex = *hexes.get(&row).ok_or_else(|| {
+                    bad(format!(
+                        "row {row} is not in the file of located positions {file}"
+                    ))
+                })?;
+                return Ok(End {
+                    hex,
+                    text: format!("row {row}, {}, ({},{})", found.place, hex.q, hex.r),
+                });
+            }
+            let Placer::Flat(frame) = placer else {
+                unreachable!("a located placer returned above")
+            };
             let (la, lo) = (
                 parse_degrees(&found.lat).ok_or_else(|| {
                     bad(format!(
@@ -469,7 +570,13 @@ fn end_of(
                 text: format!("row {row}, {}, ({},{})", found.place, hex.q, hex.r),
             })
         }
+        (None, Some(_), Some(_)) if matches!(placer, Placer::Located { .. }) => {
+            Err(bad("on a map about a centre an end is a row of the place positions file, since only the map tool works a position into a hex there".to_string()))
+        }
         (None, Some(lat), Some(lon)) => {
+            let Placer::Flat(frame) = placer else {
+                unreachable!("a located placer returned above")
+            };
             let (la, lo) = (
                 parse_degrees(lat)
                     .ok_or_else(|| bad(format!("latitude \"{lat}\" is not a decimal")))?,
@@ -519,7 +626,7 @@ pub fn command(request: &Request) -> Result<(), String> {
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("{MAP}: the present map has no frame in its header"))?,
     };
-    let frame = Frame::of(&frame).map_err(|e| format!("{map_path}: {e}"))?;
+    let placer = Placer::of(map_path, &frame)?;
     let places_bytes = fs::read(places_path).map_err(|e| format!("{places_path}: {e}"))?;
     let places_hash = crate::save::hash_hex(&places_bytes);
     let places_text =
@@ -573,8 +680,8 @@ pub fn command(request: &Request) -> Result<(), String> {
             }
             last = *minute;
         }
-        let from = end_of(&frame, passage, "from", &places)?;
-        let to = end_of(&frame, passage, "to", &places)?;
+        let from = end_of(&placer, passage, "from", &places)?;
+        let to = end_of(&placer, passage, "to", &places)?;
         let short = passage.to_short_by_nm.unwrap_or(0);
         let speed = speed_words(passage.speed_kn, &passage.speed_changes);
         let record = record_text(passage.record_low, passage.record_high);
@@ -649,7 +756,7 @@ mod tests {
                 .unwrap()
                 .expect("the map has a frame"),
         )
-        .unwrap()
+        .expect("one factor")
     }
 
     /// 50 positions and the hexes `map-tool locate` gave them, made with
@@ -773,7 +880,8 @@ mod tests {
     #[test]
     fn a_hex_centre_on_the_midway_map_is_in_its_own_hex() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/map/midway.csv");
-        let frame = Frame::of(&sim_data::read_map_frame(&path).unwrap().expect("a frame")).unwrap();
+        let frame = Frame::of(&sim_data::read_map_frame(&path).unwrap().expect("a frame"))
+            .expect("one factor");
         assert!(frame.crosses);
         let text = fs::read_to_string(&path).unwrap();
         let mut west_of_the_line = 0;
