@@ -823,16 +823,46 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
 
   // ---- the chart, drawn from the game's own map ----
   var config = { islands: [], start: '', seat: 'allied' }, hexes = [], hexAt = {};
-  var TW = 10, TD = 8, K = 1, lonMid = 0, latMid = 0, HEXR = 0.05, PX = 200;
-  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false, coast = null, chartNames = null, mapFrame = null, FX = 1;
+  var TW = 10, TD = 8, K = 1, KP = 1, eMid = 0, nMid = 0, HEXR = 0.05, PX = 200;
+  var chartCanvas = document.createElement('canvas'), baseCanvas = document.createElement('canvas'), g, chartTex, chartMesh, paintBase = function () {}, showHexes = false, coast = null, chartNames = null, mapFrame = null;
   try { showHexes = localStorage.getItem('flagplot.hexes') === '1'; } catch (e) {}
-  // The map's own frame (decision 0199): the factor for longitude (FX, 1 with no frame), so that the
-  // hexes are drawn true, and the run, in which a longitude west of the frame's western edge has 360
-  // added where the map crosses the date line. Every longitude is brought into the run before it is drawn.
+  // The map's own frame (decisions 0199 and 0242): of one factor, or about a centre, or none; and the run, in which a longitude
+  // west of the frame's western edge has 360 added where the map crosses the date line. Every longitude is brought into the run
+  // before it is drawn. The chart is laid out in the map's plane (below), not in degrees.
   function runLon(lon) { return mapFrame && mapFrame.east > 180 && lon < mapFrame.west ? lon + 360 : lon; }
   function dmLon(v) { return dm(v > 180 ? v - 360 : v, 'E', 'W'); }
   function lonLabel(v) { return v > 180 ? (360 - v) + '\u00B0 W' : v < 0 ? (-v) + '\u00B0 W' : v === 180 ? '180\u00B0' : v + '\u00B0 E'; }
-  function world(lat, lon, y) { return new THREE.Vector3((lon - lonMid) * K * FX, y || 0, (latMid - lat) * K); }
+  // The map's plane (decision 0242, rules 3, 10 and 17): east and north in nautical miles from the centre of hex (0,0), the
+  // longitude in the frame's run. A frame of one factor: east is the difference of longitude times 60 times the factor, north the
+  // difference of latitude times 60 (decision 0017). A frame about a centre: the distance from the centre as an angle (from its
+  // sine and cosine) times 3437.746771 times the scale, on the bearing from the centre; east is that distance times the sine of the
+  // bearing and north times the cosine. A map with no frame (a hand-written one) has a degree of latitude and of longitude of the same
+  // length, 60 miles. A bearing on the plane is the grid's, north being up the page and the direction of decreasing r.
+  var MILES_RADIAN = 3437.746771, HEX_MILES = 40, ROW_MILES = 34.641016;
+  function aboutCentre() { return !!mapFrame && mapFrame.kind === 'about a centre'; }
+  function plane(lat, lon) {
+    if (!mapFrame) return [lon * 60, lat * 60];
+    if (!aboutCentre()) return [(lon - mapFrame.centre_lon) * 60 * mapFrame.factor, (lat - mapFrame.centre_lat) * 60];
+    var rad = Math.PI / 180, p0 = mapFrame.centre_lat * rad, p = lat * rad, dl = (lon - mapFrame.centre_lon) * rad,
+        cosc = Math.sin(p0) * Math.sin(p) + Math.cos(p0) * Math.cos(p) * Math.cos(dl),
+        ex = Math.sin(dl) * Math.cos(p), ny = Math.cos(p0) * Math.sin(p) - Math.sin(p0) * Math.cos(p) * Math.cos(dl), sinc = Math.sqrt(ex * ex + ny * ny);
+    if (sinc === 0) return [0, 0];
+    var dist = Math.atan2(sinc, cosc) * MILES_RADIAN * mapFrame.scale;
+    return [dist * ex / sinc, dist * ny / sinc];
+  }
+  // The hex whose centre is nearest a point of the plane, as [q, r]: a hex's centre is 40 * (q + r / 2) miles east and 34.641016 * r miles south of hex (0,0)'s.
+  function hexOfPlane(east, north) {
+    var r0 = Math.round(-north / ROW_MILES), best = null, bd = 1e18;
+    for (var r = r0 - 1; r <= r0 + 1; r++) {
+      var q0 = Math.round(east / HEX_MILES - r / 2);
+      for (var q = q0 - 1; q <= q0 + 1; q++) { var dx = east - HEX_MILES * (q + r / 2), dy = north + ROW_MILES * r, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = [q, r]; } }
+    }
+    return best;
+  }
+  // A place on the table: the plane point of a position, centred on the board and scaled to it; or, from a position, a point so many
+  // miles east and north of it in the plane (a ring's edge, a search arc's rim).
+  function world(lat, lon, y) { var p = plane(lat, lon); return new THREE.Vector3((p[0] - eMid) * KP, y || 0, (nMid - p[1]) * KP); }
+  function worldOff(lat, lon, east, north, y) { var p = plane(lat, lon); return new THREE.Vector3((p[0] + east - eMid) * KP, y || 0, (nMid - (p[1] + north)) * KP); }
   function cpx(v) { return [(v.x + TW / 2) * PX, (v.z + TD / 2) * PX]; }
   // Where a place lies on the table. A place given by its hex alone is found
   // through the chart; one that cannot be found is no place, so that nothing
@@ -846,10 +876,16 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
 
   function layChart() {
-    var lo = 1e9, hi = -1e9, la = 1e9, ha = -1e9, step = 1;
-    hexes.forEach(function (h) { lo = Math.min(lo, h[4]); hi = Math.max(hi, h[4]); la = Math.min(la, h[3]); ha = Math.max(ha, h[3]); hexAt[h[0] + ',' + h[1]] = h; });
-    var a = hexAt['0,0'], b = hexAt['1,0']; if (a && b) step = Math.abs(b[4] - a[4]);
-    K = TW / ((hi - lo + step) * FX); lonMid = (lo + hi) / 2; latMid = (la + ha) / 2; TD = (ha - la + step) * K; HEXR = step * FX * K / Math.sqrt(3);
+    var emin = 1e18, emax = -1e18, nmin = 1e18, nmax = -1e18, lo = 1e9, hi = -1e9, la = 1e9, ha = -1e9, hw = 60;
+    hexes.forEach(function (h) { var p = plane(h[3], h[4]); emin = Math.min(emin, p[0]); emax = Math.max(emax, p[0]); nmin = Math.min(nmin, p[1]); nmax = Math.max(nmax, p[1]); lo = Math.min(lo, h[4]); hi = Math.max(hi, h[4]); la = Math.min(la, h[3]); ha = Math.max(ha, h[3]); hexAt[h[0] + ',' + h[1]] = h; });
+    var a = hexAt['0,0'], b = hexAt['1,0']; if (a && b) { var pa = plane(a[3], a[4]), pb = plane(b[3], b[4]); hw = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]); }
+    // The board's width and depth and a hex's radius come from the plane's coordinates of the hexes: the width is the hexes' span of
+    // east and a hex's width over, the depth their span of north and a hex's width over, and K is board lengths to a degree of
+    // latitude. On the maps of the first two kinds the depth has always been padded by one hex's width in degrees of longitude,
+    // taken as degrees of latitude, which is a hex's width over the factor in miles; it is kept so, so that those charts stay as they were.
+    var pad = mapFrame && !aboutCentre() ? hw / mapFrame.factor : hw;
+    KP = TW / (emax - emin + hw); K = KP * 60; eMid = (emin + emax) / 2; nMid = (nmin + nmax) / 2; TD = (nmax - nmin + pad) * KP; HEXR = hw * KP / Math.sqrt(3);
+    var latMid = (la + ha) / 2, lonMid = (lo + hi) / 2, wide = aboutCentre();
     PX = Math.min(200, Math.floor(4096 / Math.max(TW, TD)));
     [chartCanvas, baseCanvas].forEach(function (c) { c.width = Math.round(TW * PX); c.height = Math.round(TD * PX); });
     paintBase = function () {
@@ -860,10 +896,26 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     b2.strokeStyle = 'rgba(40,75,100,0.14)'; b2.lineWidth = 3; b2.beginPath(); b2.moveTo(W / 2, 0); b2.lineTo(W / 2, H); b2.moveTo(0, H / 2); b2.lineTo(W, H / 2); b2.stroke();
     // a line every two degrees
     b2.strokeStyle = 'rgba(45,85,110,0.32)'; b2.lineWidth = 1.2; b2.fillStyle = '#2f5268'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
-    for (var lon = Math.ceil(lo / 2) * 2; mapFrame && lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lonLabel(lon), x + 6, H - 14); }
-    for (var lat = Math.ceil(la / 2) * 2; mapFrame && lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
-    // the scale along the border: a short tick each half degree, a long one each degree
+    for (var lon = Math.ceil(lo / 2) * 2; mapFrame && !wide && lon <= hi; lon += 2) { var x = cpx(world(latMid, lon))[0]; b2.beginPath(); b2.moveTo(x, 0); b2.lineTo(x, H); b2.stroke(); b2.fillText(lonLabel(lon), x + 6, H - 14); }
+    for (var lat = Math.ceil(la / 2) * 2; mapFrame && !wide && lat <= ha; lat += 2) { var y = cpx(world(lat, lonMid))[1]; b2.beginPath(); b2.moveTo(0, y); b2.lineTo(W, y); b2.stroke(); b2.fillText(Math.abs(lat) + '° ' + (lat < 0 ? 'S' : 'N'), W - 70, y - 6); }
+    // On a map about a centre the lines of latitude and longitude are curves: each is sampled every half degree through the plane,
+    // kept where it is on the board, and a line every ten degrees on a map so wide, lettered where it leaves the board at the foot
+    // (a meridian) or at the east (a parallel). The letters are set after the part outside every hex is painted, with a halo.
+    var graticule = [];
+    if (wide) {
+      b2.strokeStyle = 'rgba(45,85,110,0.32)'; b2.lineWidth = 1.2;
+      var gs = Math.max(hi - lo, ha - la) > 30 ? 10 : 2, onBoard = function (c) { return c[0] >= 0 && c[0] <= W && c[1] >= 0 && c[1] <= H; };
+      var curve = function (at, from, to, text, foot) {
+        var pen = false, last = null; b2.beginPath();
+        for (var t = from; t <= to + 1e-9; t += 0.5) { var c = cpx(world.apply(null, at(t))); if (onBoard(c)) { b2[pen ? 'lineTo' : 'moveTo'](c[0], c[1]); pen = true; if (!last || (foot ? c[1] >= last[1] : c[0] >= last[0])) last = c; } else pen = false; }
+        b2.stroke(); if (last) graticule.push({ text: text, x: foot ? last[0] + 6 : Math.min(last[0], W - 70), y: foot ? Math.min(last[1], H - 14) : last[1] - 6 });
+      };
+      for (var gl = Math.ceil(lo / gs) * gs; gl <= hi; gl += gs) curve(function (t) { return [t, gl]; }, Math.max(-85, la - 8), Math.min(85, ha + 8), lonLabel(gl), true);
+      for (var gp = Math.ceil(la / gs) * gs; gp <= ha; gp += gs) curve(function (t) { return [gp, t]; }, lo - 8, hi + 8, Math.abs(gp) + '\u00B0 ' + (gp < 0 ? 'S' : 'N'), false);
+    }
+    // the scale along the border: a short tick each half degree, a long one each degree; none on a map about a centre, whose edges are not lines of latitude or longitude
     var border = function () {
+      if (wide) return;
       b2.strokeStyle = '#3f3b31'; b2.lineWidth = 2;
       for (var tl = Math.ceil(lo * 2) / 2; mapFrame && tl <= hi; tl += 0.5) { var tx = cpx(world(latMid, tl))[0], len = tl % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(tx, 14); b2.lineTo(tx, 14 + len); b2.moveTo(tx, H - 14); b2.lineTo(tx, H - 14 - len); b2.stroke(); }
       for (var ta = Math.ceil(la * 2) / 2; mapFrame && ta <= ha; ta += 0.5) { var ty = cpx(world(ta, lonMid))[1], ln = ta % 1 === 0 ? 22 : 12; b2.beginPath(); b2.moveTo(14, ty); b2.lineTo(14 + ln, ty); b2.moveTo(W - 14, ty); b2.lineTo(W - 14 - ln, ty); b2.stroke(); }
@@ -896,6 +948,16 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
       c2.filter = 'none'; c2.clearRect(0, 0, mw, mh); c2.putImageData(img, 0, 0);
       b2.imageSmoothingEnabled = true; b2.drawImage(m2, 0, 0, mw, mh, 0, 0, mw * q, mh * q);
       border();
+    }
+    if (wide) {
+      // On a map about a centre the board is a rectangle and the hexes do not fill it: the part outside every hex of the map is
+      // painted in one plain, darker tone, so that a player sees where the map ends, and the lines are lettered over it.
+      var out = document.createElement('canvas'), oc, Ro = HEXR * PX; out.width = W; out.height = H; oc = out.getContext('2d');
+      oc.fillStyle = '#4b6371'; oc.fillRect(0, 0, W, H); oc.globalCompositeOperation = 'destination-out'; oc.fillStyle = '#000'; oc.strokeStyle = '#000'; oc.lineWidth = 1.5;
+      hexes.forEach(function (h) { var c = cpx(world(h[3], h[4])); oc.beginPath(); for (var k = 0; k < 6; k++) { var an = Math.PI / 6 + k * Math.PI / 3; oc[k ? 'lineTo' : 'moveTo'](c[0] + Ro * Math.cos(an), c[1] + Ro * Math.sin(an)); } oc.closePath(); oc.fill(); oc.stroke(); });
+      b2.drawImage(out, 0, 0);
+      b2.save(); b2.fillStyle = '#2f5268'; b2.strokeStyle = 'rgba(232,242,246,0.85)'; b2.lineWidth = 4; b2.lineJoin = 'round'; b2.font = "600 20px 'Barlow Condensed', sans-serif";
+      graticule.forEach(function (l) { b2.strokeText(l.text, l.x, l.y); b2.fillText(l.text, l.x, l.y); }); b2.restore();
     }
     if (showHexes) {
       // The hexes laid over the chart, as the game plays on them: every hex
@@ -1016,9 +1078,9 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
         asks.push(api('order', { intent: i.number }).then(function (o) { if (o && o.expected_ashore != null) tk.label = 'TAKE \u00B7 ASHORE ' + (dateOf(o.expected_ashore - 1) || 'DAY ' + o.expected_ashore); else if (o) { var stage = {}; (o.phases || []).forEach(function (ph) { stage[ph.name] = ph.stage; }); if (stage.land === 'done') tk.label = 'TAKEN'; else if (stage.move === 'done') tk.label = 'TAKE \u00B7 MEN ASHORE'; } }).catch(function () {})); } }
       if (i.kind === 'hold' && (b = baseOf(i.base))) mark(placeOf(b.place), 24, 'HOLD', pending(i), i);
       if (i.kind === 'neutralise' && (b = baseOf(i.target))) mark(placeOf(b.place), 22, 'NEUTRALISE', pending(i), i);
-      if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: world(h[3] + i.distance * hexMiles() / 60, h[4]), label: 'DENY', dash: true, order: orderOf(i) }); }
+      if (i.kind === 'deny' && i.hex && i.distance) { var h = hexAt[i.hex[0] + ',' + i.hex[1]]; if (h) marks.rings.push({ v: world(h[3], h[4]), edge: worldOff(h[3], h[4], i.distance * hexMiles(), 0), label: 'DENY', dash: true, order: orderOf(i) }); }
       // A patrol: its waters, and each boat the staff has on it to her station.
-      if (i.kind === 'patrol' && i.hex) { var ph = hexAt[i.hex[0] + ',' + i.hex[1]]; if (ph) { if (i.distance) marks.rings.push({ v: world(ph[3], ph[4]), edge: world(ph[3] + (+i.distance + 0.5) * hexMiles() / 60, ph[4]), label: 'PATROL', dash: true, order: orderOf(i) }); else mark(world(ph[3], ph[4]), 22, 'PATROL', pending(i), i); }
+      if (i.kind === 'patrol' && i.hex) { var ph = hexAt[i.hex[0] + ',' + i.hex[1]]; if (ph) { if (i.distance) marks.rings.push({ v: world(ph[3], ph[4]), edge: worldOff(ph[3], ph[4], (+i.distance + 0.5) * hexMiles(), 0), label: 'PATROL', dash: true, order: orderOf(i) }); else mark(world(ph[3], ph[4]), 22, 'PATROL', pending(i), i); }
         (M.boats || []).forEach(function (bt) { if (bt.hands && bt.hands.by === 'staff' && bt.hands.intent === i.number && bt.station && boatOnMap(bt)) boatTo(bt, [bt.station.q, bt.station.r], i); }); }
       if (i.kind === 'keep_supplied' && (b = baseOf(i.base))) { var src = baseOf(i.limits_read_up && i.limits_read_up.forces && i.limits_read_up.forces.source); if (src) marks.moves.push({ pts: [placeOf(src.place), placeOf(b.place)], label: 'Supply from ' + src.base.name, kind: 'supply', dash: pending(i), order: orderOf(i) }); }
     });
@@ -1089,7 +1151,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // air group's card is drawn firm; what a card's groups are already set to do, faint.
   var airReach = null, cardSerial = 0;
   function reachShape(a, faint, u) {
-    var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(world(a.lat + d * Math.cos(rad) / 60, a.lon + d * Math.sin(rad) / (60 * FX))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
+    var at = function (b, d) { var rad = b * Math.PI / 180; return cpx(worldOff(a.lat, a.lon, d * Math.sin(rad), d * Math.cos(rad))); }, c = at(0, 0), w = a.from === a.to ? 360 : ((a.to - a.from) % 360 + 360) % 360;
     g.save(); g.beginPath(); if (w < 360) g.moveTo(c[0], c[1]); for (var k = 0; k <= w; k += 5) { var p = at(a.from + k, a.range); g[k || w < 360 ? 'lineTo' : 'moveTo'](p[0], p[1]); } g.closePath();
     if (!a.ring || a.fill) { g.fillStyle = a.red ? 'rgba(163,33,26,0.07)' : faint ? 'rgba(31,78,140,0.06)' : 'rgba(31,78,140,0.13)'; g.fill(); }
     g.strokeStyle = a.red ? 'rgba(163,33,26,0.35)' : faint ? 'rgba(18,51,92,0.4)' : 'rgba(18,51,92,0.7)'; g.lineWidth = (faint ? 1.6 : 2) * u; g.setLineDash(a.dash ? a.dash.map(function (x) { return x * u; }) : a.ring ? [3 * u, 6 * u] : [7 * u, 5 * u]); g.stroke(); g.setLineDash([]);
@@ -2279,7 +2341,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function compassWord(from, to) {
     var a = hexAt[from.q + ',' + from.r], b = hexAt[to.q + ',' + to.r]; if (!a || !b) return '';
-    var dy = b[3] - a[3], dx = (b[4] - a[4]) * Math.cos(a[3] * Math.PI / 180), ang = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+    var pa = plane(a[3], a[4]), pb = plane(b[3], b[4]), dy = pb[1] - pa[1], dx = pb[0] - pa[0], ang = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
     return ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'][Math.round(ang / 45) % 8];
   }
   var JOBS = [['airfield', 'Airfield'], ['port', 'Port'], ['aircraft', 'Aircraft'], ['defences', 'Defences']];
@@ -2378,7 +2440,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // A distance the game counts in hexes, as a chart gives it: in nautical
   // miles, or in hexes where the hexes are shown. A hex's width is read
   // from the map itself.
-  function hexMiles() { var a = hexAt['0,0'], b = hexAt['1,0']; if (!a || !b) return 40; var rad = Math.PI / 180, dlat = (b[3] - a[3]) * rad, dlon = (b[4] - a[4]) * rad, h = Math.pow(Math.sin(dlat / 2), 2) + Math.cos(a[3] * rad) * Math.cos(b[3] * rad) * Math.pow(Math.sin(dlon / 2), 2); return Math.round(2 * 3440.065 * Math.asin(Math.sqrt(h)) / 5) * 5; }
+  // A hex's width in miles, in the plane, to the nearest five (40 on every map: decision 0017).
+  function hexMiles() { var a = hexAt['0,0'], b = hexAt['1,0']; if (!a || !b) return 40; var pa = plane(a[3], a[4]), pb = plane(b[3], b[4]); return Math.round(Math.hypot(pb[0] - pa[0], pb[1] - pa[1]) / 5) * 5; }
   function round(n) { return showHexes ? n + ' hexes round' : 'within ' + n * hexMiles() + ' miles'; }
   // A place on a card: its latitude and longitude with the hex in brackets,
   // and a press turns the chart to it.
@@ -6481,8 +6544,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     var tall = camera.aspect < 1 ? Math.min(28, (1 - camera.aspect) * 50) * (1 - e) : 0, elv = ((32 + tall + 38 * e) * (1 - flat) + 89.9 * flat) * Math.PI / 180;
     camera.position.set(cur.x, camDist * Math.sin(elv), cur.z + camDist * Math.cos(elv)); camera.lookAt(cur.x, 0, cur.z - (1 - e) * 0.6 * (1 - flat));
   }
-  var ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-  function onTable(cx, cy) { var r = canvas.getBoundingClientRect(); ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera); var p = new THREE.Vector3(); return ray.ray.intersectPlane(plane, p) ? p : null; }
+  var ray = new THREE.Raycaster(), tablePlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  function onTable(cx, cy) { var r = canvas.getBoundingClientRect(); ray.setFromCamera({ x: ((cx - r.left) / r.width) * 2 - 1, y: -((cy - r.top) / r.height) * 2 + 1 }, camera); var p = new THREE.Vector3(); return ray.ray.intersectPlane(tablePlane, p) ? p : null; }
   var ptrs = {}, pinch0 = 0, zoom0 = 0, downAt = null;
   canvas.addEventListener('pointerdown', function (e) {
     canvas.setPointerCapture(e.pointerId); ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; downAt = { x: e.clientX, y: e.clientY }; canvas.classList.add('dragging');
@@ -6646,7 +6709,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   reach('/config').then(function (c) {
     if (c.screen) { onScreen = true; showScreen(); return; }
     return Promise.all([c, reach('/map'), reachIfAny('/coast'), reachIfAny('/names'), reachIfAny('/frame')]).then(function (a) {
-    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; mapFrame = a[4]; FX = mapFrame ? mapFrame.factor : 1;
+    config = a[0]; hexes = a[1]; coast = a[2] && a[2].rings; mapFrame = a[4];
     // The hexes and the names are brought into the frame's run; the coast file is stored in it already.
     hexes.forEach(function (h) { h[4] = runLon(h[4]); }); chartNames = a[3] && a[3].map(function (n) { return { name: n.name, kind: n.kind, lat: n.lat, lon: runLon(n.lon) }; }); headSeat();
     var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
