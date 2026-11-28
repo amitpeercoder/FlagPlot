@@ -109,7 +109,7 @@ button:disabled { opacity: 0.45; cursor: default; }
 #paper input[type=number]:focus-visible { outline: 3px solid #f0c36a; outline-offset: 1px; }
 #paper .pp .pl { font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--paper-dim); }
 #p-staff, #p-force, #p-unit { display: flex; flex-direction: column; gap: 8px; }
-#p-summary:empty, #p-costs:empty, #p-says:empty, #o-dry-says:empty { display: none; }
+#p-summary:empty, #p-face:empty, #p-costs:empty, #p-says:empty, #o-dry-says:empty { display: none; }
 #p-costs { color: var(--paper-dim); }
 #paper .frow .fl { flex-basis: 64px; }
 #paper .frow input[type=range] { flex: 1 1 90px; min-width: 90px; }
@@ -123,23 +123,25 @@ button:disabled { opacity: 0.45; cursor: default; }
 #paper #o-supply .sval { flex: 1 1 auto; text-align: left; }
 #p-limits summary, #p-plan summary { cursor: pointer; min-height: 30px; display: flex; align-items: center; font-family: var(--f-ui); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--paper-dim); }
 #p-limits summary:focus-visible, #p-plan summary:focus-visible { outline: 3px solid #f0c36a; outline-offset: 1px; }
+#p-face { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+#p-face .needs .limhead .fl { flex: 0 0 auto; }
 #p-limits-body, #p-plan-body { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
-#p-limits .limline, #p-plan .limline { display: flex; flex-direction: column; gap: 2px; padding-left: 8px; border-left: 2px solid #cfc6a8; }
-#p-limits .limline.notsent, #p-plan .limline.notsent { border-left-color: var(--enemy); }
-#p-limits .limline.focus, #p-plan .limline.focus { border-left-color: #f0c36a; outline: 2px solid #f0c36a; outline-offset: 2px; }
+#p-limits .limline, #p-plan .limline, #p-face .limline { display: flex; flex-direction: column; gap: 2px; padding-left: 8px; border-left: 2px solid #cfc6a8; }
+#p-limits .limline.notsent, #p-plan .limline.notsent, #p-face .limline.notsent { border-left-color: var(--enemy); }
+#p-limits .limline.focus, #p-plan .limline.focus, #p-face .limline.focus { border-left-color: #f0c36a; outline: 2px solid #f0c36a; outline-offset: 2px; }
 .sheet .doc .ordl.focus { outline: 2px solid #f0c36a; outline-offset: 2px; }
-#p-limits .limhead, #p-plan .limhead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
-#p-limits .limhead .fl, #p-plan .limhead .fl { flex: 0 0 100%; font-size: 12px; color: var(--paper-dim); letter-spacing: 0.08em; }
-#p-limits .limlist, #p-plan .limlist { display: flex; flex-direction: column; padding-left: 14px; max-height: 190px; overflow-y: auto; }
-#p-limits .limlist label, #p-plan .limlist label { min-height: 30px; }
-#p-limits .limkind, #p-plan .limkind { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; }
-#p-limits .limkind label, #p-plan .limkind label { flex: 1 1 auto; min-height: 30px; }
-#p-limits .limkind button, #p-plan .limkind button { min-height: 30px; min-width: 34px; padding: 0 6px; font-size: 14px; }
-#p-limits select, #p-plan select, #p-limits input[type=number], #p-plan input[type=number] { min-height: 34px; font: inherit; max-width: 100%; }
-#p-limits input[type=number], #p-plan input[type=number] { width: 4.5em; }
-#p-limits .limkind button, #p-plan .limkind button { font-size: 14px; letter-spacing: 0; }
-#p-limits button.quiet, #p-plan button.quiet { align-self: flex-start; min-height: 26px; padding: 2px 0; border: 0; background: none; color: var(--own); font-size: 12px; letter-spacing: 0.1em; text-decoration: underline; text-underline-offset: 3px; }
-#p-limits .sval, #p-plan .sval { font-variant-numeric: tabular-nums; }
+#p-limits .limhead, #p-plan .limhead, #p-face .limhead { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
+#p-limits .limhead .fl, #p-plan .limhead .fl, #p-face .limhead .fl { flex: 0 0 100%; font-size: 12px; color: var(--paper-dim); letter-spacing: 0.08em; }
+#p-limits .limlist, #p-plan .limlist, #p-face .limlist { display: flex; flex-direction: column; padding-left: 14px; max-height: 190px; overflow-y: auto; }
+#p-limits .limlist label, #p-plan .limlist label, #p-face .limlist label { min-height: 30px; }
+#p-limits .limkind, #p-plan .limkind, #p-face .limkind { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; }
+#p-limits .limkind label, #p-plan .limkind label, #p-face .limkind label { flex: 1 1 auto; min-height: 30px; }
+#p-limits .limkind button, #p-plan .limkind button, #p-face .limkind button { min-height: 30px; min-width: 34px; padding: 0 6px; font-size: 14px; }
+#p-limits select, #p-plan select, #p-limits input[type=number], #p-plan input[type=number], #p-face select, #p-face input[type=number] { min-height: 34px; font: inherit; max-width: 100%; }
+#p-limits input[type=number], #p-plan input[type=number], #p-face input[type=number] { width: 4.5em; }
+#p-limits .limkind button, #p-plan .limkind button, #p-face .limkind button { font-size: 14px; letter-spacing: 0; }
+#p-limits button.quiet, #p-plan button.quiet, #p-face button.quiet { align-self: flex-start; min-height: 26px; padding: 2px 0; border: 0; background: none; color: var(--own); font-size: 12px; letter-spacing: 0.1em; text-decoration: underline; text-underline-offset: 3px; }
+#p-limits .sval, #p-plan .sval, #p-face .sval { font-variant-numeric: tabular-nums; }
 #p-plan .planrow { display: flex; flex-direction: column; gap: 6px; padding-left: 8px; border-left: 2px solid #8d8672; }
 #p-plan .planrow.notsent { border-left-color: var(--enemy); }
 #p-plan .planrow.focus { border-left-color: #f0c36a; outline: 2px solid #f0c36a; outline-offset: 2px; }
@@ -632,11 +634,6 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
         <div class="frow"><label class="fl" for="o-floor">Never below</label><input type="number" id="o-floor" min="1" max="99" step="1" value="30" aria-label="Days of supply never to fall below"><span class="fl">days of supply</span></div>
         <div class="frow"><label class="fl" for="o-interval">Each run brings</label><input type="number" id="o-interval" min="1" max="99" step="1" aria-label="Days more each run brings"><span class="fl">days more</span><span class="sval" id="o-interval-out"></span></div>
       </div>
-      <fieldset id="o-risk"><legend>RISK</legend>
-        <label><input type="radio" name="risk" id="o-risk-preserve" value="preserve"> Preserve</label>
-        <label><input type="radio" name="risk" id="o-risk-balanced" value="balanced" checked> Balanced</label>
-        <label><input type="radio" name="risk" id="o-risk-press" value="press"> Press</label>
-      </fieldset>
     </div>
     <div id="p-force" hidden>
       <div class="frow"><span class="fl">Speed</span><span class="seg">
@@ -667,14 +664,15 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
       <fieldset id="f-join" hidden><legend>JOIN</legend></fieldset>
     </div>
     <div id="p-unit" hidden></div>
+    <div id="p-face"></div>
     <div id="p-summary" class="asum"></div>
     <div id="p-costs" class="costs"></div>
   </div>
   <div class="pp" id="p-hands" hidden><span class="pl">IN WHOSE HANDS</span><span id="p-hands-t"></span></div>
-  <details class="pp" id="p-limits" hidden><summary id="p-limits-sum">LIMITS</summary><div id="p-limits-body"></div></details>
-  <details class="pp" id="p-plan" hidden><summary id="p-plan-sum">YOUR PLAN</summary><div id="p-plan-body"></div></details>
   <details class="pv" id="o-pv" open hidden><summary id="o-pv-sum">THE STAFF'S READING</summary><div id="o-preview" aria-live="polite">Asking the staff.</div></details>
   <div id="o-dry-says" class="pv" aria-live="polite"></div>
+  <details class="pp" id="p-limits" hidden><summary id="p-limits-sum">LIMITS</summary><div id="p-limits-body"></div></details>
+  <details class="pp" id="p-plan" hidden><summary id="p-plan-sum">YOUR PLAN</summary><div id="p-plan-body"></div></details>
   <div id="p-says" aria-live="polite"></div>
   <div class="pfoot" id="p-foot">
     <div id="p-acts-t"></div>
@@ -3210,7 +3208,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (l.kind === 'reserve') return true;
     if (isDraftNo(l.intent)) {
       var dk = limKind(); if (!dk || !lim) return false;
-      if (l.kind === 'risk') return offers(dk, 'risk') && !!chosen('risk') && chosen('risk') !== 'balanced';
+      if (l.kind === 'risk') return offers(dk, 'risk') && !!lim.risk && lim.risk !== 'balanced';
       return limitPlan(dk, lim).some(function (x) { return x.body.limit === l.kind || (l.kind === 'source' && x.body.limit === 'forces' && x.body.source != null); });
     }
     var i = ((M.state || {}).intents || []).filter(function (x) { return x.number === l.intent; })[0];
@@ -3227,10 +3225,11 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (isDraftNo(l.intent)) {
       var key = l.kind === 'forces' ? FORCES_LINES.filter(function (k) { return offers(limKind(), k); })[0] : l.kind;
       if (l.kind === 'priority' || !key) return;
-      limMarked = null; $('p-limits').hidden = false; $('p-limits').open = true; drawLimits();
-      var box = $('p-limits-body'), row = (l.kind === 'forces' ? FORCES_LINES : [key]).map(function (k) { return box.querySelector('[data-key="' + k + '"]'); }).filter(Boolean)[0] || (l.kind === 'risk' ? $('o-risk') : null);
+      limMarked = null; drawLimits();
+      var boxes = [$('p-face'), $('p-limits-body')], row = (l.kind === 'forces' ? FORCES_LINES : [key]).map(function (k) { return boxes.map(function (b) { return b.querySelector('[data-key="' + k + '"]'); }).filter(Boolean)[0]; }).filter(Boolean)[0];
       if (!row) return;
-      Array.prototype.forEach.call(box.querySelectorAll('.focus'), function (x) { x.classList.remove('focus'); }); row.classList.add('focus'); row.scrollIntoView({ block: 'nearest' });
+      if ($('p-limits-body').contains(row)) $('p-limits').open = true;
+      boxes.forEach(function (b) { Array.prototype.forEach.call(b.querySelectorAll('.focus'), function (x) { x.classList.remove('focus'); }); }); row.classList.add('focus'); row.scrollIntoView({ block: 'nearest' });
       var c = row.querySelector('input:checked, select, input, button'); if (c) c.focus({ preventScroll: true }); return;
     }
     var found = orderFound(l.intent); if (!found) return;
@@ -5349,7 +5348,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   function dropPaper() {
     if (!paper) return;
     paper = null; previewIntent = null; force = null; draft = null; endMarch(); arcDraft = null; previewSeq += 1; document.body.classList.remove('papered');
-    clearTimeout(limTimer); clearTimeout(limDraw); limSeq += 1; lim = null; limCtx = null; limEnt = {}; $('paper').classList.remove('abovesheet'); limMarked = null; $('p-limits').hidden = true; $('p-limits').open = false; $('p-limits-body').textContent = '';
+    clearTimeout(limTimer); clearTimeout(limDraw); limSeq += 1; lim = null; limCtx = null; limEnt = {}; $('paper').classList.remove('abovesheet'); limMarked = null; $('p-limits').hidden = true; $('p-limits').open = false; $('p-limits-body').textContent = ''; $('p-face').textContent = '';
     $('p-plan').hidden = true; $('p-plan').open = false; $('p-plan-body').textContent = ''; planReset();
     if (picking === 'route' || picking === 'station' || picking === 'area') { picking = false; canvas.classList.remove('picking'); }
     stationDraft = null; patrolStations = null; stationPicked = null;
@@ -5427,7 +5426,6 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (paper.kind === 'staff' && e.type === 'input' && e.target.id === 'o-interval') showSupply();
     if (paper.kind === 'staff' && e.type === 'change' && e.target.id === 'o-dist') { showPatrol(); askPreview(); }
     else if (paper.kind === 'staff' && e.type === 'change' && (e.target.id === 'o-floor' || e.target.id === 'o-interval')) { showSupply(); askPreview(); }
-    else if (paper.kind === 'staff' && e.type === 'change' && e.target.name === 'risk') { limSummary(); limAsk(); }
     paper.dirty = true; $('p-says').textContent = ''; paperShow();
   }
   $('paper').addEventListener('input', paperTouched); $('paper').addEventListener('change', paperTouched);
@@ -5720,6 +5718,41 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (kind === 'targets') return v != null && !(v.kinds && !v.kinds.length);
     return v != null;
   }
+  // ---- the face and the fold of an order's paper (decision 0240, stage B) ----
+  // The lines of a kind that stand on the face of its paper, under the heading: what an order of that kind needs, and the one line of a kind
+  // whose fold would hold only it. The rest are in the fold, the risk first.
+  function faceKeys(kind) {
+    return kind === 'keep_supplied' ? ['ships', 'source'] : kind === 'patrol' ? ['submarines'] : kind === 'stand_at' ? ['risk'] : [];
+  }
+  function hasFold(kind) {
+    return kind !== 'patrol' && kind !== 'stand_at';
+  }
+  // What the order of that kind still needs before the staff can be asked, in the order of the face: for a supply order a ship and a source.
+  function missing(kind, lim) {
+    var out = [];
+    if (kind === 'keep_supplied') {
+      if (!(lim.ships.mode === 'only' && (lim.ships.task_forces.length || lim.ships.ships.length))) out.push('ships');
+      if (lim.source == null) out.push('source');
+    }
+    return out;
+  }
+  // The bases a source may be chosen from: the side's own, each as [number as a string, name]; a supply order is not supplied from its own place.
+  function sourceChoices(kind, bases, place) {
+    return (bases || []).map(function (b) { return [String(num(b.base.handle)), nm(b.base.handle)]; }).filter(function (c) { return !(kind === 'keep_supplied' && place != null && parseInt(c[0], 10) === place); });
+  }
+  // The fold's closed line, without its label: the risk, then what is set in the fold; what is on the face is not said again.
+  function foldLine(kind, lim) {
+    var rest = {}, k, on = faceKeys(kind), m = newLim();
+    for (k in lim) rest[k] = lim[k];
+    if (on.indexOf('ships') >= 0) { rest.ships = m.ships; rest.in_place = false; }
+    if (on.indexOf('source') >= 0) rest.source = null;
+    if (on.indexOf('submarines') >= 0) rest.submarines = m.submarines;
+    rest.risk = 'balanced';
+    var w = limitsLine(kind, rest), parts = [];
+    if (offers(kind, 'risk')) parts.push(LINE_NAME.risk + ': ' + (lim.risk || 'balanced'));
+    parts.push(w === STAFF_ALL ? 'the rest the staff’s choice' : w);
+    return parts.join(' · ');
+  }
   // ---- end of the limits model ----
 
   // ---- a plan the commander writes: the model (decision 0232, step 3, rules 27 to 29) ----
@@ -5868,10 +5901,11 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function limSummary() {
     if (limCtx && lim) { var ps = limCtx.keys.map(function (k) { return limPart(limCtx.kind, lim, k); }).filter(Boolean); $('p-limits-sum').textContent = 'LIMITS · ' + (ps.length ? ps.join(' · ') : STAFFS); return; }
-    var kind = limKind(); if (!lim || !kind) return; lim.risk = offers(kind, 'risk') ? chosen('risk') || 'balanced' : 'balanced'; $('p-limits-sum').textContent = 'LIMITS · ' + limitsLine(kind, lim); }
+    var kind = limKind(); if (!lim || !kind) return; $('p-limits-sum').textContent = 'LIMITS · ' + foldLine(kind, lim); }
   // The staff reads the order again, a moment after the last change; the old reading may not be signed meanwhile.
   function limAsk() {
-    previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-dry-says').textContent = ''; $('o-preview').textContent = 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
+    var wait = paper && paper.kind === 'staff' && draft && limKind() && missing(limKind(), lim).length;
+    previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-dry-says').textContent = ''; $('o-preview').textContent = wait ? '' : 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
     clearTimeout(limTimer); limTimer = setTimeout(function () { limTimer = 0; askPreview(); }, 300);
   }
   // A change: what the player did, then the part drawn again, the summary said again and the staff asked again.
@@ -5993,8 +6027,30 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (value !== '') row.appendChild(limBack(key, name, 'lim-' + key + '-sel', reset));
     return row;
   }
+  // A supply order's two blanks on its face (decision 0240, rule N): the ships to tick and the base it is supplied from, each starting empty
+  // and with no choice of the staff's, and beside an empty one that it is not named yet.
+  function needLine(key, name, kind) {
+    var row = limRow(key, name), head = limHead(name), empty = missing(kind, lim).indexOf(key) >= 0, n = empty ? el('span', '', key === 'ships' ? 'No ship named yet.' : 'No source named yet.') : null;
+    if (n) n.id = key === 'ships' ? 'need-ships' : 'need-source';
+    row.className += ' needs';
+    if (key === 'source') {
+      var opts = sourceChoices(kind, M.bases, draft && draft.base ? num(draft.base.base.handle) : null);
+      head.appendChild(limSelect('source', name, [['', '']].concat(opts), lim.source == null ? '' : String(lim.source), function (v) { limSet('source', function () { lim.source = v === '' ? null : parseInt(v, 10); }, 'lim-source-sel'); }));
+    }
+    if (n) head.appendChild(n);
+    row.appendChild(head);
+    if (key === 'ships') {
+      var box = el('div', 'limlist');
+      limShips().forEach(function (it, i) {
+        box.appendChild(limCheck('lim-ships-' + i, it.label, (/^task_force/.test(it.h) ? lim.ships.task_forces : lim.ships.ships).indexOf(num(it.h)) >= 0, function (on) { limSet('ships', function () { toggled(/^task_force/.test(it.h) ? lim.ships.task_forces : lim.ships.ships, num(it.h), on); }, 'lim-ships-' + i); }));
+      });
+      row.appendChild(box);
+    }
+    return row;
+  }
   function limLine(key, kind) {
     var o = function (k) { return offers(kind, k); };
+    if (!limCtx && kind === 'keep_supplied' && (key === 'ships' || key === 'source')) return needLine(key, key === 'ships' ? 'Ships' : 'From', kind);
     if (key === 'ships' && o('ships')) return kindLine('ships', lim.ships.mode, function (m) { lim.ships.mode = m; }, limShips(),
       function (h) { return (/^task_force/.test(h) ? lim.ships.task_forces : lim.ships.ships).indexOf(num(h)) >= 0; }, function (h, on) { toggled(/^task_force/.test(h) ? lim.ships.task_forces : lim.ships.ships, num(h), on); });
     if (key === 'in_place' && o('in_place') && lim.ships.mode === 'only' && lim.ships.task_forces.length) {
@@ -6006,7 +6062,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (key === 'air_groups' && o('air_groups')) return kindLine('air_groups', lim.air_groups.mode, function (m) { lim.air_groups.mode = m; }, limAir(kind), function (h) { return lim.air_groups.list.indexOf(num(h)) >= 0; }, function (h, on) { toggled(lim.air_groups.list, num(h), on); });
     if (key === 'land_units' && o('land_units')) return kindLine('land_units', lim.land_units.mode, function (m) { lim.land_units.mode = m; }, M.units.map(function (u) { return { h: u.land_unit.handle, label: nm(u.land_unit.handle) }; }).sort(byName), function (h) { return lim.land_units.list.indexOf(num(h)) >= 0; }, function (h, on) { toggled(lim.land_units.list, num(h), on); });
     if (key === 'submarines' && o('submarines')) return kindLine('submarines', lim.submarines.mode, function (m) { lim.submarines.mode = m; }, (M.boats || []).filter(function (b) { return b.state !== 'sunk' && b.state !== 'home'; }).map(function (b) { return { h: b.submarine.handle, label: nm(b.submarine.handle) }; }).sort(byName), function (h) { return lim.submarines.list.indexOf(num(h)) >= 0; }, function (h, on) { toggled(lim.submarines.list, num(h), on); });
-    if (key === 'source' && o('source')) return chooseLine('source', M.bases.map(function (b) { return [String(num(b.base.handle)), nm(b.base.handle)]; }), lim.source == null ? '' : String(lim.source), function (v) { limSet('source', function () { lim.source = v === '' ? null : parseInt(v, 10); }, 'lim-source-sel'); }, function () { lim.source = null; });
+    if (key === 'source' && o('source')) return chooseLine('source', sourceChoices(kind, M.bases, null), lim.source == null ? '' : String(lim.source), function (v) { limSet('source', function () { lim.source = v === '' ? null : parseInt(v, 10); }, 'lim-source-sel'); }, function () { lim.source = null; });
     if (key === 'area' && o('area')) return areaLine();
     if (key === 'targets' && o('targets')) return targetsLine(kind);
     if (key === 'protected' && o('protected')) return protectedLine();
@@ -6043,11 +6099,14 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function drawLimits(focusId) {
     if (!paper || !lim || !(paper.kind === 'limit' ? limCtx : paper.kind === 'staff' && draft)) return;
-    var kind = limKind(), box = $('p-limits-body'), keep = focusId || (box.contains(document.activeElement) ? document.activeElement.id : null), shown = 0;
-    box.textContent = '';
-    (limCtx ? limCtx.keys : LINES).forEach(function (key) { var row = key === 'risk' ? riskLine() : limLine(key, kind); if (!row) return; if (limMarked === key) row.classList.add('notsent'); box.appendChild(row); shown += 1; });
-    if (!shown) box.appendChild(el('div', '', 'Nothing to set.'));
-    var f = keep && $(keep); if (!f && keep) { var m = /^lim-([^-]+)-/.exec(keep), row = m && box.querySelector('[data-key="' + m[1] + '"]'); f = row && row.querySelector('input, select, button'); }
+    var kind = limKind(), fold = $('p-limits-body'), face = $('p-face'), at = document.activeElement, keep = focusId || ((fold.contains(at) || face.contains(at)) ? at.id : null), shown = 0, onFace = limCtx ? null : faceKeys(kind);
+    fold.textContent = ''; face.textContent = '';
+    (limCtx ? limCtx.keys : (offers(kind, 'risk') ? ['risk'] : []).concat(LINES)).forEach(function (key) {
+      var row = key === 'risk' ? riskLine() : limLine(key, kind); if (!row) return; if (limMarked === key) row.classList.add('notsent');
+      (!onFace || onFace.indexOf(key) >= 0 ? face : fold).appendChild(row); shown += 1;
+    });
+    if (!shown) (limCtx ? face : fold).appendChild(el('div', '', 'Nothing to set.'));
+    var f = keep && $(keep); if (!f && keep) { var m = /^lim-([^-]+)-/.exec(keep), row = m && (fold.querySelector('[data-key="' + m[1] + '"]') || face.querySelector('[data-key="' + m[1] + '"]')); f = row && row.querySelector('input, select, button'); }
     if (f && !f.disabled) f.focus({ preventScroll: true });
   }
   // ---- the YOUR PLAN part of the order paper (decision 0232, step 3, rule 27) ----
@@ -6157,8 +6216,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // them where it makes one (and says so), and then the staff reads the order.
   function endChanged() {
     if (!draft) return; var e = draft.ends[draft.end], kind = e[1].intent_kind, mine = ++limSeq;
-    lim = newLim(); limMarked = null; limEnt = {}; planReset(); drawPlan(); if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); }
-    $('o-risk').hidden = !offers(kind, 'risk'); $('p-limits').hidden = false; drawLimits(); limSummary();
+    lim = newLim(); if (kind === 'keep_supplied') lim.ships.mode = 'only'; limMarked = null; limEnt = {}; planReset(); drawPlan(); if (picking === 'area') { picking = false; canvas.classList.remove('picking'); showPrompt('', ''); }
+    $('p-limits').hidden = !hasFold(kind); drawLimits(); limSummary();
     previewSeq += 1; previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('o-preview').textContent = 'Asking the staff.'; $('o-pv-sum').textContent = 'THE STAFF\'S READING'; clearTimeout(limTimer);
     var go = function () { if (mine === limSeq && draft) askPreview(); };
     go();
@@ -6207,9 +6266,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   function openDraft(best, first) {
     draft = best; draft.ends = ends(best); picking = false; canvas.classList.remove('picking');
     draft.end = first || 0; $('p-title').textContent = draftHeading(draft.ends[draft.end], best); $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
-    $('o-risk-balanced').checked = true; $('o-dist').value = '2'; $('o-floor').value = '30'; $('o-interval').value = ''; patrolStations = null; showPatrol(); showSupply(); drawMarks(); endChanged();
+    $('o-dist').value = '2'; $('o-floor').value = '30'; $('o-interval').value = ''; patrolStations = null; showPatrol(); showSupply(); drawMarks(); endChanged();
   }
-  function chosen(name) { var r = document.querySelector('#paper input[name="' + name + '"]:checked'); return r ? r.value : ''; }
   // The draft as an order in force would be read, so that the plan's functions can draw its tree: its number is the next free one, and in
   // the words of the reading it is "this order".
   function draftTop(e, p) {
@@ -6238,7 +6296,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
   // What the staff reads is the order with its limits: those the paper sets, and the risk where it is not balanced.
   function sentLimits(kind) {
-    var plan = limitPlan(kind, lim), risk = chosen('risk');
+    var plan = limitPlan(kind, lim), risk = lim.risk;
     if (offers(kind, 'risk') && risk && risk !== 'balanced') plan.push({ body: { limit: 'risk', risk: risk }, key: 'risk' });
     return plan;
   }
@@ -6246,8 +6304,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   function reasonOf(p) { var r = p.reason; return r && typeof r === 'object' ? r.text || p.summary || '' : r || p.summary || ''; }
   // A limit refused: the LIMITS part is opened at its line, marked, and in view.
   function limitRefused(key) {
-    limMarked = key; var part = $('p-limits'); part.open = true; drawLimits();
-    var row = key === 'risk' && !limCtx ? $('o-risk') : $('p-limits-body').querySelector('[data-key="' + key + '"]'); if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+    limMarked = key; var part = $('p-limits'), face = !!limCtx || faceKeys(limKind()).indexOf(key) >= 0; if (!face) part.open = true; drawLimits();
+    var row = (face ? $('p-face') : $('p-limits-body')).querySelector('[data-key="' + key + '"]'); if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
   }
   // Where the staff refused a draft: its position in the batch (1 is the order, then its limits, then each landing followed by its own limits)
   // names the order, one of its limits or a landing and one of its lines.
@@ -6274,7 +6332,9 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (paper && paper.kind === 'giveback') return askGiveBack();
     if (paper && paper.kind === 'landing') return askLanding();
     if (!draft) return; var again = arguments[0] === true, seq = ++previewSeq, out = $('o-preview'), e = draft.ends[draft.end], kind = e[1].intent_kind;
-    previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; out.textContent = 'Asking the staff.'; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
+    previewNo = null; $('p-sign').disabled = true; $('p-dry').disabled = true; $('p-dry').hidden = !OFFERED.trial; $('o-dry-says').textContent = ''; $('o-pv').open = true; $('o-pv-sum').textContent = 'THE STAFF\'S READING';
+    if (lim && missing(kind, lim).length) { $('o-preview').textContent = ''; return; }
+    out.textContent = 'Asking the staff.';
     var args = { command: 'set_intent' }; Object.keys(e[1]).forEach(function (k) { args[k] = e[1][k]; }); if (e[1].intent_kind === 'patrol') args.distance = patrolDistance(); addSupplyNumbers(args);
     var sent = sentLimits(kind); if (sent.length) args.limits = sent.map(function (x) { return x.body; });
     // The landings he wrote are numbered from the order's number as the last reading gave it, and sent with the order as one.
@@ -6317,9 +6377,9 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (!paper || paper.kind !== 'limit') return; $('p-title').appendChild(orderLink(root)); $('paper').classList.add('abovesheet');
     var l = limFromState(top.limits); if (back) limReset(l, key);
     limCtx = { root: root, top: top, kind: top.kind, key: key, group: group, keys: keys }; lim = l; limMarked = null; limEnt = {};
-    $('p-limits').hidden = false; $('p-limits').open = true; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
+    $('p-limits').hidden = true; $('o-pv').hidden = false; $('p-dry').hidden = !OFFERED.trial;
     drawLimits(); limSummary(); limAsk(); if (g) drawMarks();
-    setTimeout(function () { if (paper && limCtx) { var f = $('p-limits-body').querySelector('input:checked, select, input, button'); if (f) f.focus({ preventScroll: true }); } }, 0);
+    setTimeout(function () { if (paper && limCtx) { var f = $('p-face').querySelector('input:checked, select, input, button'); if (f) f.focus({ preventScroll: true }); } }, 0);
   }
   // The staff's order is signed in one step: the preview is approved, and the risk and the limits went with it. A refusal says which
   // line it is; the count of limits that went is checked against the count sent.
