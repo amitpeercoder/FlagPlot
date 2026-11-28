@@ -13,6 +13,7 @@ mod game_file_pin;
 mod mcp;
 mod pack_from_source;
 mod passages;
+mod passages_about_a_centre;
 mod saved_games;
 mod seat;
 mod serve;

@@ -276,3 +276,71 @@ Made on Nov 28, 2026 on reading the build and opening the table.
 6. **Chapter 3 of the rulebook** gains the sentence that a bearing is the grid's, by the architect, in the same pull request.
 7. **Not run here:** the web build and its check (the tool that makes it is not on this machine). CI runs both.
 
+
+## Step 4: the other readers (Nov 28, 2026)
+
+What step 4 makes. The check of passages, the viewer and its check, and CI's viewer step learn the map about a centre. No rule of the simulation changes and nothing in `sim-core`, `sim-staff` or `sim-trial`. No map file, scenario, golden file, pin or recorded game is changed.
+
+### What changed, by file
+
+- **`crates/sim-cli/src/validate/passages.rs`.** An end's hex now comes from a `Placer`. For a map of one factor it is the `Frame` of whole numbers it was, and nothing else is read. For a map about a centre it is the map's file of located positions, `<the map file's stem>_located.csv` in the map's folder, read as text: the columns `row`, `q` and `r`, whole numbers, `#` lines as comments. No position is worked into a hex there, and there is no floating point. An end must be a row of the place positions file; its hex is that row's line in the located file, and the report names it as it does elsewhere ("row 5100, midway, (31,-41)").
+- **The reader of the located file is in `sim-cli`, not `sim-data`.** It is the umpire's tool and reads `data/oob/place_positions.csv` the same way, three columns with the `csv` crate. `sim-data` has no reader of the file, and none was made for one tool. The brief left the place open.
+- **`crates/sim-cli/tests/passages_about_a_centre.rs`, `tests/integration.rs`.** Tests under the architect's doc comment, which is not changed by a word or a number (the diff of the file only adds lines). The file is declared in `integration.rs`.
+- **`viewer/index.html`.** `frameCase(frame)` says which case a frame is: `one factor` (a finite factor and no kind, or the kind "one factor"), `about a centre` (that kind and a finite scale), or `none` (no frame). A frame that is there and is neither throws an error that begins "the map's frame cannot be read", with the frame. `plane(lat, lon, frame)` is the table's `plane` in the three cases, the longitude brought into the frame's run first; no frame is the cosine of 12 degrees for longitude and 60 miles a degree of latitude. `placeLabels` finds the hex nearest in the plane. `buildModel` calls `frameCase` first, so an unreadable frame stops the build and the page shows "Could not build the replay from FILE: the map's frame cannot be read (...)". `labelFactor`, which fell back silently, is gone; `plane`, `frameCase` and `MILES_RADIAN` are exported to `check.js`. Hexes are laid from (q, r) as they were.
+- **`viewer/check.js`.** `map.frame` is valid if it is of one factor as it was, or has `kind` "about a centre", a finite scale above 0 and not above 1, the centre and the extent as numbers, and no factor. The label check recomputes the nearest hex in the plane for a map about a centre and as it did for the others. A new function, `checkPlane`, holds the viewer's `plane` to every one of the 222 points of `table/chart/plane_fixture.json` (to 0.01 nm; the worst is 0.0005) and the hex nearest each plane point (the viewer's `pointToHex`, with north up the page) to the file's hex; it also holds that frames that cannot be read are refused. The synthetic checks hold that a replay with such a frame fails to build.
+- **`.github/workflows/ci.yml`.** After the loop of the step "Export every scenario and check the viewer reads it", one export of `data/scenarios/wide-map/placeholder_the_wide_sea.toml` with a comment line on why. The `node viewer/check.js viewer/replays/*.json` line that followed already reads every file in the folder, so it reads this one. Nothing else under `.github` is changed.
+- **`crates/sim-cli/tests/export.rs`.** `a_map_about_a_centre_carries_its_kind_and_scale`: the wide sea's export has `kind` "about a centre", `scale` 0.964, centre 4 and 174.5, west 142, east 207, and no `factor` (in the parsed frame and in the text).
+- **`docs/commands.md`, `viewer/README.md`.** The check of passages on such a map, the export of its frame, the CI step, and the viewer's three cases.
+
+### The script that lays placeholder starts off flat in a frame
+
+`scripts/table-boats/make_files.py` is not in the repository. Decision 0234, step D (commit `525d2d4a`), retired it with the two other generators of the table's files; its files are built on others now. Searched: `git ls-files` for `make_files`, `table-boats` and `table_boats`; the text of every tracked file outside `data`, `docs` and `crates` for "factor", "cos(", "radians" and "make_files.py"; the history of `scripts/table-boats`. The only script that works with a projection is `scripts/wide-map/projection_error.py`, the architect's own. So there was nothing to make refuse a map about a centre, and nothing was changed. The line of rule 16's table on it is met by there being no such script.
+
+### The clipping script
+
+`table/chart/clip_coast.py` was read. With `--map` it takes the extent's four edges (`west`, `east`, and the north and south from `read_frame_and_edges`), pads each by 3 degrees and clips to that box; its one other use of the frame is whether `east` is above 180 and a ring lies wholly west of `west`. It uses no factor, no scale and no projection formula. No formula was added.
+
+### The proof that the present maps' labels are placed as before
+
+Taken before any change to the viewer: the viewer's `index.html` of the branch's start was copied to a scratch file, and a small node script (outside the worktree) ran that page's own `<script id="core">` in a sandbox, as `check.js` does, and wrote the output of `placeLabels(hexes, labels, frame)` as JSON. The same script was run on the changed page afterwards, and the two files compared with `cmp`.
+
+The replays were exported from `data/scenarios/05_eastern_solomons.toml` (south-west Pacific; 7 labels, `--labels data/map/south_pacific_anchors.csv`) and `data/scenarios/midway/01a_midway.toml` (Midway; 5 labels, `--labels data/map/midway_labels.csv`). For each, placements were taken for: its real labels with its frame; its real labels with no frame (the cosine of 12 degrees); 20,534 and 20,473 synthetic labels (a fixed sequence of 20,000 pseudo-random positions inside the box of the hexes' latitudes and longitudes, and every third hex's position moved by 0.2 and 0.3 degree), with the frame; and the same with no frame. The two outputs (7,546,431 bytes each) are identical.
+
+What the proof does not cover, found on the way: a label at exactly the midpoint between two hexes is a tie, and which hex it goes to is decided by rounding noise. The first stress set had such points (the midpoints of neighbouring hexes' positions) and 163 to 510 of about 2,000 of them differed on the south-west Pacific map, and 210 to 296 of about 1,900 on the Midway map. The old formula multiplies the difference of longitude by the factor, and the plane takes each longitude's own product. No real label is such a point (a real position's decimals do not fall on an exact tie), so those points were left out of the proof and are named here.
+
+The wide sea's export (a map about a centre, 10,395 hexes) was also tried: the four places of the architect's table, Midway, Wake, Rabaul and Truk, placed through `placeLabels` with the replay's frame, fall in (31,-41), (2,-26), (-39,14) and (-29,-7), the hexes of the hand calculation of `about_a_centre.rs`.
+
+### The proof for the check of passages on the present map
+
+`validate --passages data/validation/passages.toml --label baseline` was run before the change and after, to a scratch file each time. The two reports are byte for byte the same (`cmp`). On the map from Papua to Midway, with a passages file of one passage in a scratch folder (Midway, row 5100, to Wake, row 5107, at 15 knots), the report gives "row 5100, midway, (31,-41)", "row 5107, wake, (2,-26)", 1005 for the straight line, 1005 charged and 1005 counted: the hand calculation's hexes and miles.
+
+### What the hand calculation gave, and mismatches
+
+None. The check gave the two hexes and 1,005 miles the doc comment of `passages_about_a_centre.rs` gives. The straight line column is `air_distance_nm`, which is 1005 on this pair as the charged miles are (the way is clear).
+
+### Settled here, not in the brief
+
+1. **The reader of the located file is in `sim-cli`** (above).
+2. **The wording of the three stops.** For a bare position: "passage ID: from: on a map about a centre an end is a row of the place positions file, since only the map tool works a position into a hex there". For a row not in the located file: "passage ID: from: row N is not in the file of located positions PATH". For no located file: "MAP: this map is about a centre, so its ends are read from its file of located positions, PATH, which is wanted beside it and is not readable (ERROR)". The doc comment fixes the meanings, not the words.
+3. **A row must still be a row of the place positions file** on a map about a centre, since the report names the place from it and `from_place` is checked against it. The located file is then asked for its hex.
+4. **No frame in the viewer is the cosine of 12 degrees from latitude 0 and longitude 0** in the plane, so a replay with no frame places as it did.
+5. **The kind "one factor" is read by the viewer** as a frame of one factor, as the map tool's frame file reads it, though the export writes no kind for it. Any other kind is an error.
+6. **`labelFactor` is removed** (its fall back was the thing to end), and `plane`, `frameCase` and `MILES_RADIAN` are exported in its place.
+7. **CI is given the export only.** The `node` line that follows the loop globs the whole folder, so it checks the wide sea with the rest; it is not repeated.
+
+### Tests added
+
+- `crates/sim-cli/tests/passages_about_a_centre.rs` (under the doc comment): Midway to Wake gives the two hexes and 1,005 miles; a bare latitude and longitude is refused naming the passage and the end; a row not in the located file is refused naming the row and the located file; a map about a centre with no located file beside it (a copy of the map in a scratch folder) is refused naming the file wanted; a map of one factor reads no located file and reports as before.
+- `crates/sim-cli/tests/export.rs`: `a_map_about_a_centre_carries_its_kind_and_scale`.
+- `viewer/check.js`: the plane against the 222 points of the shared file, frames that cannot be read, a replay with such a frame fails to build.
+- The existing tests of the check of passages and of the export are unchanged.
+
+### Checks run
+
+- `cargo fmt --all -- --check`: passes. `cargo clippy --workspace --all-targets -- -D warnings`: passes.
+- `cargo test --workspace --no-fail-fast`: 5,936 passed and 1 failed: scenario 40's `a_game_saved_in_the_middle_replays_and_the_staff_checks`, the known failure of a whole run. Run alone with `--exact` it passes. Every test of `sim-cli`, `sim-data` and `map-tool` passed, the new ones among them.
+- The viewer's check as CI runs it, with a debug build: every `data/scenarios/*.toml` (127) and the wide sea exported to a scratch folder, and `node viewer/check.js` on all 128: "All checks passed", 222 points of the plane's fixture, worst 0.0005 nm.
+- The check of passages on the present map: the report is byte for byte the one made before the change. On the map from Papua to Midway with a passages file of one passage: the hexes and miles above.
+- `python3.12 table/check_screen.py`, with `sim-cli` built in release: "all held (1468 checks)".
+- `sh scripts/regenerate.sh --check`: "every generated file is what the engine gives".
+- Not run: the web build (`wasm-bindgen-cli` is not installed here), and CI itself, so the new step of the workflow has not run as a step.
