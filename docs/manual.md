@@ -75,7 +75,7 @@ An **intent** is the outcome you ask the staff to bring about or maintain. Click
 | Objective | What you are asking of the staff |
 | --- | --- |
 | **Hold** a friendly base | Keep the place in your hands. The staff can form tasks for its defense and support. |
-| **Keep it supplied, 30 days** | Try to maintain the stated supply floor. The staff needs a source, available shipping, and time to deliver. |
+| **Keep it supplied** | Try to maintain the supply floor you state, in days of supply; the paper says how many days the place holds now. The order waits until you give the days, a ship and a source. The staff needs shipping and time to deliver. |
 | **Cover it from the air** | Assign air protection to a place using suitable groups in reach. |
 | **Capture** or **Seize and hold** | Take a particular place, or conduct the wider operation for a named island. A wider order can already include tasks for individual places. |
 | **Neutralise** an enemy base | Suppress the base’s ability to operate. |
