@@ -605,6 +605,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
           <label class="notice"><input type="checkbox" id="stop-force_not_found"> an order against a force ended</label>
           <label class="arr"><input type="checkbox" id="stop-arrive"> reinforcements arriving</label>
           <label class="eve"><input type="checkbox" id="stop-evening"> each evening</label>
+          <label class="arr"><input type="checkbox" id="stop-directive"> a directive from above</label>
         </fieldset>
         <fieldset id="stops-staff" hidden><legend>THE STAFF STOPS IT WHEN</legend></fieldset>
       </div>
@@ -937,7 +938,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
 
   // ---- what the side knows, as the tools gave it ----
-  var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [], lastNotices = [], stopArrive = '', stopEvening = false, since = { from: '', phases: [] }, versusWaited = false;
+  var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [], lastNotices = [], stopArrive = '', stopEvening = false, stopDirective = null, directivesNew = [], since = { from: '', phases: [] }, versusWaited = false;
   var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], boats: [], subReports: [], suspected: [], subEstimate: null, state: null, over: false, result: null, asking: [] };
   var lastRun = null, draft = null;
   function baseByNumber(n) { var all = M.bases.concat(M.enemyBases), i; for (i = 0; i < all.length; i++) if (num(all[i].base.handle) === n) return all[i]; return null; }
@@ -1434,7 +1435,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     }).catch(function () {});
   }
   // The clock starts from a stop: what was told and what was reported are cleared, and shown again from the data at the next stop.
-  function startRun() { setDrawer(false); stopNote = ''; lastTold = []; lastNotices = []; lastRun = null; stopArrive = ''; stopEvening = false; forgetWhy(); countSaid = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
+  function startRun() { setDrawer(false); stopNote = ''; lastTold = []; lastNotices = []; lastRun = null; stopArrive = ''; stopEvening = false; stopDirective = null; directivesNew = []; forgetWhy(); countSaid = ''; since = { from: sinceFrom(), phases: [] }; showSince(); showWhy(); }
 
   // ---- the signals tray ----
   // A standing paper the commander may read at any time: a button in the
@@ -1617,11 +1618,11 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
           if (own.length) { var told = limitsLine('written_landing', limFromBodies(own)); if (told !== STAFF_ALL) text(' · ' + told); }
           break;
         }
-        text('Order: ' + sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind, contact: c.contact, distance: c.distance, search_only: c.search_only, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {}).replace(/^./, function (x) { return x; }));
+        text('Order: ' + sayIntent({ number: 'signed ' + c.intent, kind: c.intent_kind || 'keep_supplied', contact: c.contact, distance: c.distance, search_only: c.search_only, island: c.island, hex: c.hex, base: c.base != null ? at(c.base) : null, target: c.target != null ? at(c.target) : null }, {}).replace(/^./, function (x) { return x; }));
         // The limits signed with it (the engine's `goes_with`) are said in the same line, the order's own and no landing's, and then the
         // landings he wrote under it.
         var lims = signedOwnLimits(e, (M.queue && M.queue.entries) || []);
-        if (lims.length) { var said = limitsLine(c.intent_kind, limFromBodies(lims)); if (said !== STAFF_ALL) text(' · ' + said); }
+        if (lims.length) { var said = limitsLine(c.intent_kind || 'keep_supplied', limFromBodies(lims)); if (said !== STAFF_ALL) text(' · ' + said); }
         var yours = signedPlanWords(e, (M.queue && M.queue.entries) || []); if (yours) text(' · ' + yours);
         break;
       }
@@ -1843,7 +1844,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // cannot keep them plays as it did. The staff's standing interrupts are the engine's: `command_state` lists the kinds switched off and
   // `set_interrupt` switches one. A switch given inside a day takes hold at 1800, which the tick says. The leave to launch is not here:
   // it is a line of YOUR ORDERS, and a plan that waits for leave is under FOR YOUR DECISION whether or not its stop is ticked.
-  var TICK_DEFAULT = { contact: true, attack: true, submarine: true, loss: true, strike: false, landing: false, arrive: false, evening: false, follows_other_sort: true, contact_lost: true, force_not_found: true };
+  var TICK_DEFAULT = { contact: true, attack: true, submarine: true, loss: true, strike: false, landing: false, arrive: false, evening: false, follows_other_sort: true, contact_lost: true, force_not_found: true, directive: true };
   var ticks = {}; Object.keys(TICK_DEFAULT).forEach(function (k) { ticks[k] = TICK_DEFAULT[k]; });
   var STAFF_STOP = { cannot_meet: 'it cannot meet an order', waits_for_leave: 'a plan waits for my leave', ship_lost: 'a ship of ours is lost', cannot_bring_enough: 'it cannot bring the men a landing needs', lift_turned_back: 'it turns a landing’s lift back', asks_leave_to_pursue: 'a force asks my leave to pursue' };
   function keptKey(name) { return 'flagplot-' + name + KEPT_ROOT.slice('flagplot-directives'.length); }
@@ -1879,7 +1880,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // clock moves it is dropped.
   function keepWhy() {
     try {
-      localStorage.setItem(whyKey(), JSON.stringify({ day: clock.day, at: clock.at, told: lastTold, notices: lastNotices, run: lastRun ? { fired: lastRun.fired || [], summary: lastRun.summary, stopped: lastRun.stopped } : null, arrive: stopArrive, evening: stopEvening, note: stopNote,
+      localStorage.setItem(whyKey(), JSON.stringify({ day: clock.day, at: clock.at, told: lastTold, notices: lastNotices, run: lastRun ? { fired: lastRun.fired || [], summary: lastRun.summary, stopped: lastRun.stopped } : null, arrive: stopArrive, evening: stopEvening, directive: stopDirective ? { number: stopDirective.number, from: stopDirective.from, subject: stopDirective.subject } : null, note: stopNote,
         asking: (M.asking || []).map(function (a) { var o = {}; Object.keys(a).forEach(function (x) { if (x !== 'pts') o[x] = a[x]; }); return o; }) }));
     } catch (e) {}
   }
@@ -1888,7 +1889,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     try {
       var k = JSON.parse(localStorage.getItem(whyKey()) || 'null'); if (!k) return;
       if (k.day !== clock.day || k.at !== clock.at) { forgetWhy(); return; }
-      lastTold = k.told || []; lastNotices = k.notices || []; lastRun = k.run || null; stopArrive = k.arrive || ''; stopEvening = !!k.evening; stopNote = k.note || ''; takeAsking(k.asking || []); showSignals(); showWhy();
+      lastTold = k.told || []; lastNotices = k.notices || []; lastRun = k.run || null; stopArrive = k.arrive || ''; stopEvening = !!k.evening; stopDirective = k.directive || null; stopNote = k.note || ''; takeAsking(k.asking || []); showSignals(); showWhy();
     } catch (e) {}
   }
   // WHY THE CLOCK STOPPED: each reason of this stop, one slip for each kind of reason. It is not shown while the clock runs, nor where
@@ -1919,6 +1920,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     });
     if (lastRun && lastRun.fired && lastRun.fired.some(function (f) { return f.standing === 'waits_for_leave'; })) slip('FROM STAFF', null, 'A plan waits for your leave.', null, false, box);
     if (stopEvening) slip('FROM THE PLOT \u00b7 1800', null, 'It is evening.', null, false, box);
+    if (stopDirective) slip('FROM ' + String(stopDirective.from).toUpperCase(), null, 'Directive ' + stopDirective.number + ': ' + stopDirective.subject, null, false, box);
     if (stopArrive) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopArrive.replace(/^./, function (c) { return c.toUpperCase(); }), null, false, box);
     if (stopNote && WATCH && !M.over) slip('FROM THE PLOT \u00b7 ' + (clock.at === 'dusk' ? '1800' : clock.at), null, stopNote, null, false, box);
     if (lastRun && lastRun.stopped === 'asks_leave' && M.asking.length) slip('FROM STAFF', null, 'We ask your leave.', null, false, box);
@@ -4467,12 +4469,19 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // The verdict of a game that sets a mission (decision 0237): the lines the mission's measure gives from each day's events, day 1 first, or
   // nothing for a day not answered. It draws nothing and asks nothing. The measure is `every_night_fed`: an event of kind men_fed in the
   // night pulse, at a hex of the mission's places, with men unfed, is a night unfed there. What cannot be read whole is not judged.
-  function missionLines(mission, days) {
-    var places = mission.places || [], nights = places.map(function () { return {}; }), d, i, j, joined = function (a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; };
+  function missionLines(mission, days, bases) {
+    var held = mission.measure === 'held_and_fed' ? mission.held : null, taken = null, places = mission.places || [], nights = places.map(function () { return {}; }), d, i, j, joined = function (a) { return a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1]; };
     for (d = 1; d <= mission.last_day; d++) {
       var list = days[d - 1];
       if (!list) return ['The mission could not be judged.', 'Day ' + d + ' could not be read.'];
       for (j = 0; j < list.length; j++) {
+        if (held && list[j].event_kind === 'base_changed_side') {
+          var b = /^base:(\d+)(?!\d)/.exec(list[j].text || '');
+          if (!b) return ['The mission could not be judged.', 'A report of a base changing sides on day ' + d + ' could not be read.'];
+          if (parseInt(b[1], 10) !== held.base) continue;
+          if (!/^base:\d+ at \(-?\d+,-?\d+\) changed from the \w+ side to the \w+ side: /.test(list[j].text)) return ['The mission could not be judged.', 'A report of a base changing sides on day ' + d + ' could not be read.'];
+          taken = d; continue;
+        }
         if (list[j].event_kind !== 'men_fed') continue;
         var m = /^\w+ men ashore at \((-?\d+),(-?\d+)\): (?:\d+ of \d+ fed from [^,]+|no base of the side, none of \d+ fed), (\d+) unfed$/.exec(list[j].text || '');
         if (!m) return ['The mission could not be judged.', 'A report of the men fed on day ' + d + ' could not be read.'];
@@ -4480,12 +4489,18 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
         for (i = 0; i < places.length; i++) if (places[i].q === parseInt(m[1], 10) && places[i].r === parseInt(m[2], 10)) nights[i][d] = (nights[i][d] || 0) + parseInt(m[3], 10);
       }
     }
+    if (held && !bases) return ['The mission could not be judged.', 'The list of our bases could not be read.'];
+    var isHeld = !!held && bases.indexOf(held.base) >= 0;
+    if (held && isHeld && taken == null) return ['The mission could not be judged.', 'The day ' + held.name + ' was taken could not be read.'];
     var lines = [];
+    if (held && !isHeld) lines.push(held.name + ' was not ours at the end of day ' + mission.last_day + '.');
+    else if (held && taken > held.by_day) lines.push(held.name + ' was taken on day ' + taken + ', after the end of day ' + held.by_day + '.');
     places.forEach(function (pl, k) {
       var counts = [], by = {};
       for (d = 1; d <= mission.last_day; d++) if (nights[k][d]) { if (!by[nights[k][d]]) { by[nights[k][d]] = []; counts.push(nights[k][d]); } by[nights[k][d]].push(d); }
       counts.forEach(function (n) { var ds = by[n]; lines.push(commas(n) + (n === 1 ? ' man' : ' men') + ' at ' + pl.name + ' went unfed on the night' + (ds.length > 1 ? 's' : '') + ' of day' + (ds.length > 1 ? 's' : '') + ' ' + joined(ds) + '.'); });
     });
+    if (!lines.length && held) return ['Mission met.', held.name + ' was taken on day ' + taken + ' and held to the end of day ' + mission.last_day + '.', 'No man ashore there went a night unfed.'];
     if (!lines.length) return ['Mission met.', 'Every man was fed every night to the end of day ' + mission.last_day + ', at ' + (places.length === 2 ? places[0].name + ' and at ' + places[1].name : joined(places.map(function (pl) { return pl.name; }))) + '.'];
     return ['Mission not met.'].concat(lines);
   }
@@ -4497,9 +4512,11 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
       doc.textContent = ''; doc.appendChild(el('p', '', 'Reading the nights.'));
       sheetAs('HOW IT ENDED'); doc.hidden = false; $('sheet-text').hidden = true; $('sheet').hidden = false; $('sheet-close').focus();
       for (d = 1; d <= mission.last_day; d++) asks.push(dayEvents(d).catch(function () { return null; }));
+      // A mission that asks whether a place is held reads the seat's own list of its bases, once, and no other call.
+      asks.push(mission.measure === 'held_and_fed' ? api('list_bases').then(function (a) { return (a.bases || []).map(function (b) { return num(b.base.handle); }); }).catch(function () { return null; }) : Promise.resolve(null));
       Promise.all(asks).then(function (days) {
         if (mine !== endSeq) return;
-        var lines = missionLines(mission, days), met = lines[0] === 'Mission met.', judged = met || lines[0] === 'Mission not met.', box = el('div', 'est');
+        var bases = days.pop(), lines = missionLines(mission, days, bases), met = lines[0] === 'Mission met.', judged = met || lines[0] === 'Mission not met.', box = el('div', 'est');
         doc.textContent = '';
         if (judged) box.appendChild(el('div', 'stamp ' + (met ? 'win' : 'loss'), met ? 'MISSION MET' : 'MISSION NOT MET')); else box.appendChild(el('p', '', lines[0]));
         lines.slice(1).forEach(function (l) { box.appendChild(el(judged ? 'div' : 'p', judged ? 'work' : '', l)); });
@@ -4566,7 +4583,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   }
   function showDirectives() {
     recall(); var list = config.directives || [], fresh = null, got = [], unread = 0;
-    list.forEach(function (d) { if (received[d.number] == null && directiveDue(d)) { received[d.number] = M.day; fresh = d; } });
+    list.forEach(function (d) { if (received[d.number] == null && directiveDue(d)) { received[d.number] = M.day; fresh = d; directivesNew.push(d); } });
     list.slice().reverse().forEach(function (d) {
       if (received[d.number] == null) return;
       var isNew = !readOnes[d.number]; got.push(d); if (!isNew) return; unread += 1;
@@ -5001,6 +5018,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   function noticeStops() { return NOTICE_STOPS.filter(function (k) { return ticks[k]; }); }
   // The table's own stop at each evening: off unless ticked, so that Carry on runs to the next thing that is ticked.
   function eveningStop() { return clock.at === 'dusk' && ticks.evening; }
+  // The table's own stop for a directive received since the clock was last started (a word from above: Emberholt is ours): on until cleared.
+  function directiveStop() { return ticks.directive && directivesNew.length ? directivesNew[0] : null; }
   // Where the scenario lets a seat stop between pulses, time is advanced a pulse at a time and each pulse is
   // plotted as it is fought. Elsewhere a day is fought whole and then plotted.
   function go(until) {
@@ -5031,9 +5050,9 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
             var subT = submarineTold(subEv); lastTold = lastTold.concat(subT);
             clock = { at: r.clock.at, day: r.clock.day }; await refresh();
             if (r.clock.at === '0600') lastNotices = lastNotices.concat(await duskRefusals(r.clock.day));
-            var arrive = arrivalsStop(), evening = eveningStop();
-            if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive || evening || subT.length || lastNotices.length) {
-              stopArrive = arrive; stopEvening = evening;
+            var arrive = arrivalsStop(), evening = eveningStop(), word = directiveStop();
+            if (!until || !playing || r.game_over || r.stopped !== 'pulses' || arrive || word || evening || subT.length || lastNotices.length) {
+              stopArrive = arrive; stopEvening = evening; stopDirective = word;
               return rest('');
             }
           } else {
@@ -5045,8 +5064,8 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
             var dayEv = await eventsOf(day), subT = submarineTold(dayEv); lastTold = subT;
             await plotDay(day, dayEv); await refresh();
             lastNotices = lastNotices.concat(await duskRefusals(M.day));
-            var fired = (d.fired && d.fired.length) || lastNotices.length, arrive = arrivalsStop(), evening = eveningStop();
-            if (!until || !playing || d.game_over || fired || arrive || evening || subT.length) { stopArrive = arrive; stopEvening = evening; return rest(''); }
+            var fired = (d.fired && d.fired.length) || lastNotices.length, arrive = arrivalsStop(), evening = eveningStop(), word = directiveStop();
+            if (!until || !playing || d.game_over || fired || arrive || word || evening || subT.length) { stopArrive = arrive; stopEvening = evening; stopDirective = word; return rest(''); }
           }
         }
       } catch (e) { rest('Refused: ' + e.message, 'refused'); }
@@ -5101,9 +5120,9 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
           clock = { at: s.clock.at, day: s.clock.day }; await refresh();
           // What the side watched was told of its orders against a force: from the report, as the seat itself would read it.
           try { lastNotices = noticesOfReport(await api('report'), day).filter(function (n) { var k = n.thing + ':' + n.day + ':' + n.words, fresh = !noticeSeen[k]; noticeSeen[k] = true; return fresh && ticks[n.thing]; }); } catch (e) { lastNotices = []; }
-          var arrive = arrivalsStop(), evening = eveningStop();
-          if (!until || !playing || s.game_over || lastTold.length || lastNotices.length || arrive || evening) {
-            stopArrive = arrive; stopEvening = evening;
+          var arrive = arrivalsStop(), evening = eveningStop(), word = directiveStop();
+          if (!until || !playing || s.game_over || lastTold.length || lastNotices.length || arrive || word || evening) {
+            stopArrive = arrive; stopEvening = evening; stopDirective = word;
             return rest('');
           }
         }
@@ -5169,7 +5188,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     if (!WATCH || side === WATCH.side) return; if (playing) { say('refused', 'Stop the clock first.', $('sp-seats')); return; }
     WATCH.side = side; config.seat = side; config.directives = WATCH.directives[side] || [];
     KEPT = KEPT_ROOT + '-' + side; received = {}; readOnes = {}; recalled = false;
-    dayCache = {}; lastTold = []; lastNotices = []; lastRun = null; stopArrive = ''; stopEvening = false; seatSeen = ''; since = { from: '', phases: [] }; showSince();
+    dayCache = {}; lastTold = []; lastNotices = []; lastRun = null; stopArrive = ''; stopEvening = false; stopDirective = null; directivesNew = []; seatSeen = ''; since = { from: '', phases: [] }; showSince();
     $('sheet').hidden = true; $('card').hidden = true; clearPlan(); headSeat(); sideButtons();
     watchTools().then(refresh).then(pollSeats).catch(function (e) { say('failed', e.message, $('sp-seats')); });
   }
@@ -6433,7 +6452,7 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
   // A game with a mission (a rung of the ladder) opens looking at the mission's own places, leant in so that they
   // fill the view: the middle of them, not the middle of the map. Sat right back, the whole table, as in every game.
   function openOnMission() {
-    var ps = ((config.mission && config.mission.places) || []).map(function (p) { return placeOf({ q: p.q, r: p.r }); }).filter(Boolean); if (!ps.length) return;
+    var ps = ((config.mission && (config.mission.look || config.mission.places)) || []).map(function (p) { return placeOf({ q: p.q, r: p.r }); }).filter(Boolean); if (!ps.length) return;
     var x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; ps.forEach(function (v) { x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); z0 = Math.min(z0, v.z); z1 = Math.max(z1, v.z); });
     goal.x = (x0 + x1) / 2; goal.z = (z0 + z1) / 2; goal.zoom = 0.3; clampGoal(); cur.x = goal.x; cur.z = goal.z; cur.zoom = goal.zoom;
   }

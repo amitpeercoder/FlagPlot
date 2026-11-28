@@ -34,7 +34,7 @@
 // at 1200, an order that acts only at dusk given at 0600, and a dry run of an
 // order to the staff at the smallest size. Every answer and the saved game
 // are the native build's.
-// 10. Each of the eleven offered files, the person's seat ending each day and
+// 10. Each of the twelve offered files, the person's seat ending each day and
 // giving nothing: every answer and the saved game are the native build's.
 // 11. A game file of statement 7 cut at day 20 and continued natively, and one
 // cut natively and continued in the module, each end in the saved game of
@@ -69,6 +69,19 @@
 // `run` to the end with whatever stops it answered by `run` again, then
 // `events` of each day from 1 to 14 as the verdict asks them. Every answer and
 // the saved game are the native door's, byte for byte.
+//
+// And, from decision 0237 (rung 3 on the table), written by the architect in
+// the same record and copied word for word:
+//
+// 18. Rung 3, the Allied seat: the reads of a page's load, then the order to
+// take base 2 with task force 1, land unit 1 and base 1 as its forces and the
+// risk press, previewed and then signed, leave to launch given, then `run`
+// until twelve days are resolved, then the supply order for base 2 at a floor
+// of 2 days and an interval of 5, with ship 4 and base 1 as its forces,
+// previewed and then signed, then `run` to the end with whatever stops it
+// answered by `run` again, then `events` of each day from 1 to 21 and
+// `list_bases` as the verdict asks them. Every answer and the saved game are
+// the native door's, byte for byte.
 //
 // Statement 15 is held here, on the files of the site the build assembled
 // (`target/web/site/`). Statements 14 and 16 are not held by CI: 14 is the
@@ -663,6 +676,7 @@ for (const name of ordered) {
     'orders-midway-submarines': '8',
     'orders-midway-pulses': '9',
     'orders-ladder-one-ship': '17',
+    'orders-ladder-men-then-food': '18',
   }[name] ?? '10';
   ok(`statement ${statement}: ${name}: ${runs[name].calls.length} calls and the saved game (${runs[name].saved.length} characters) are the native door's, byte for byte (${((Date.now() - began) / 1000).toFixed(1)} s)`);
 }

@@ -33,6 +33,41 @@
       ]
     },
     {
+      "id": "ladder-3-men-then-food",
+      "map": "data/map/placeholder_ladder.toml",
+      "name": "Rung 3: Men, then food",
+      "dates": "An invented sea",
+      "days": 21,
+      "placeholder": true,
+      "lines": [
+        "A new task, Commander: a place to take, and then to feed.",
+        "Emberholt, about 200 miles away, is reported empty.",
+        "A placeholder game: everything in it is invented."
+      ],
+      "sides": {
+        "allied": "Seize Emberholt and keep its men fed."
+      },
+      "islands": [],
+      "directives": {
+        "allied": "table/directives/ladder_3_allied.json"
+      },
+      "mission": {
+        "measure": "held_and_fed",
+        "last_day": 21,
+        "places": [
+          {"q": 3, "r": 3, "name": "Emberholt"}
+        ],
+        "held": {"base": 2, "name": "Emberholt", "by_day": 14},
+        "look": [
+          {"q": 0, "r": 0},
+          {"q": 3, "r": 3}
+        ]
+      },
+      "pairings": [
+        {"allied": "person", "japanese": "engine", "engine": "absent", "file": "data/scenarios/ladder/140_men_then_food.toml"}
+      ]
+    },
+    {
       "id": "eastern-solomons",
       "map": "data/map/south_pacific.csv",
       "name": "The Eastern Solomons",
