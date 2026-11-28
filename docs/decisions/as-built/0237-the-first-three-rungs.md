@@ -255,7 +255,7 @@ The manager asked whether rung 3 may be built before rung 2, since it does not w
 ### What is written
 
 - `data/scenarios/ladder/140_men_then_food.toml`, placeholder data by the architect, on the ladder's map. Its things are named under decision 0241: Saltmere and Merrowdale as in rung 1; Emberholt, the empty place E; the transports Farrowby, Gadwell and Hestercombe; the Saltmere battalion. None is a name in `data/oob`.
-- `tests/scenario_140_men_then_food.rs`: the hand calculation, seven cases and eleven statements, each an ignored test that fails; declared in `tests/all.rs`. On the live figures, by question 8.
+- `tests/scenario_140_men_then_food.rs`: the hand calculation, seven cases and eleven statements, filled by a developer to the brief below and read by the architect on Nov 28, 2026 (pull request 787): eleven tests pass, and the last day's hash of each of the seven games is pinned as `scenario_140_a` to `scenario_140_g`. No number, statement or case was changed. It is declared in `tests/all.rs`. On the live figures, by question 8.
 
 **The figures settled,** beyond the record's: the source holds 200 t of supply and no fuel; each transport holds 200 t of fuel and the supply ship 300 t (a round trip to E burns 52 t in a ship), so fuel decides nothing on this rung; the unit has the standard experience, so it needs no training.
 

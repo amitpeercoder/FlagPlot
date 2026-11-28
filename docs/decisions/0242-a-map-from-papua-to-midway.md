@@ -1,10 +1,10 @@
 # 0242: A map from Papua to Midway
 
-Status: a plan by the architect, written on Nov 28, 2026 at the designer's asking ("Start the map plan"), for the first stage of `docs/design/one-map-1942.md`. Read on Nov 28 by a reviewer who had not seen it written, against the code, and rewritten to that reading ("Amended on review", at the end, says what changed). Nothing of it is built.
+Status: a plan by the architect, written on Nov 28, 2026 at the designer's asking ("Start the map plan"), for the first stage of `docs/design/one-map-1942.md`. Read on Nov 28 by a reviewer who had not seen it written, against the code, and rewritten to that reading ("Amended on review", at the end, says what changed). Approved by the designer on Nov 28, 2026 ("Approved", with the three questions at its end before him: the second kind of projection, the extent, and one clock for the whole map). It is built in the order it gives; what is built is recorded in `docs/decisions/as-built/`.
 
 Summary: The game has two maps, each of one sea, and each flat with one factor for longitude. A game of 1942 from Papua to Midway needs one map of both seas and what lies between, about 10,400 hexes. Measured, the present way of flattening would put the carrier battle off Midway 8 to 10 in 100 out east to west and the Solomons 5 to 7. This plans a third map with a second kind of projection, about the map's own centre, which holds every named place within 4 in 100; says what every reader of a map must learn for it; and leaves the two present maps, and every game on them, as they are.
 
-Standing: Planned by the architect on Nov 28, 2026 and amended on review; waits for the designer's word
+Standing: Planned by the architect and amended on review; approved by the designer on Nov 28, 2026; step 1 of five is being built
 
 ## Why
 
