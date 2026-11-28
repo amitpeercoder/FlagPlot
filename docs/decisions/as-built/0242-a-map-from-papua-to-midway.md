@@ -60,3 +60,83 @@ Made on Nov 28, 2026 on reading the build.
 4. **The rulebook's page on where a map lies** (chapter 2) is rewritten for two kinds of frame, by the architect, in the same pull request.
 5. **Left for the steps that follow, as planned:** the map and its file of located positions; the table, the viewer and the scripts, none of which has learned the second kind; the check of passages, which stops on a map about a centre.
 
+
+## Step 2: the map and its file of located positions (Nov 28, 2026)
+
+What step 2 makes. The map from Papua to Midway, its anchors file, a new map tool command that writes a map's file of located positions, and that file for this map. No rule of the simulation changes and nothing in `sim-core`, `sim-data`, the table, the viewer or the scripts. The two present maps are not touched.
+
+### The command lines used
+
+The map was made from a scratch folder outside the worktree, `/private/tmp/claude-501/wide-map-step-2/gen`, holding copies of `data/map/frames/papua_to_midway.toml` and `data/map/papua_to_midway_anchors.csv` at those relative paths and `references/natural-earth/ne_10m_land` and `ne_10m_minor_islands` as symbolic links to the two shapefile folders, so that the command the header records is run as written. The tool was built `--release` from this branch.
+
+```
+map-tool generate --land references/natural-earth/ne_10m_land/ne_10m_land.shp --minor-islands references/natural-earth/ne_10m_minor_islands/ne_10m_minor_islands.shp --frame data/map/frames/papua_to_midway.toml --out data/map/papua_to_midway.csv --anchors data/map/papua_to_midway_anchors.csv
+```
+
+The file was copied into the worktree. It took 24 seconds. The file of located positions was made from the repository root:
+
+```
+map-tool locate-rows --map data/map/papua_to_midway.csv --positions data/oob/place_positions.csv --out data/map/papua_to_midway_located.csv
+```
+
+### The map's counts
+
+- 10,395 hexes in rows -60 to 58: 344 land, 365 coast, 9,686 deep sea. These are the numbers of the hand calculation.
+- 84 hexes have more than one body of water: 48 with two, 17 with three, 13 with four, two each with five and six, one each with seven and eight.
+- 77 closed sides between two hexes that are both not land, each pair counted once.
+- 97 hexes are made coast by a land point at 0 percent. The two marks are not among them, so the map has 99 coast hexes of land percentage 0.
+
+### The marks
+
+Midway, row 5100, is hex (31,-41) and Wake, row 5107, is hex (2,-26). Each is coast, land percentage 0, one body of water, and named in the header's "Marked land" line. They are the two marks the architect's frame file names; none was added.
+
+### The file of located positions
+
+113 lines, one for each row of `data/oob/place_positions.csv`; every row is inside the extent. Every line is at the hex the hand calculation gives. By the map's kinds the 113 are in 107 coast hexes, 2 land hexes and 4 deep sea hexes.
+
+- In land hexes: row 44, Lae (hex (-49,18), land 87 percent), and row 98, Townsville (hex (-59,40), land 95 percent). Rule 9 leaves these as they are.
+- In deep sea hexes: row 99, Point ZED (a reference point at sea), and three Hawaiian islets, row 5110 French Frigate Shoals (hex (43,-34)), row 5112 Lisianski (hex (34,-37)) and row 5113 Point Luck (hex (39,-47)). The sampling found no land in these three hexes. They are not marked: the frame file, which the architect owns, marks two places. Rule 7 says the build finds its own list; this is the list of places whose rows sit in a deep sea hex, for the architect to rule on.
+
+### The anchorages
+
+The anchors file is the south-west Pacific map's seven anchorages in the same columns, with a new comment header; no anchorage was added. On this map: Rabaul (-39,14), Buka (-37,16), Tulagi and Lunga Point (both (-32,22)) and Noumea (-33,44) stand for the main body of water they were already in, with no change. Milne Bay, hex (-47,24), changed its hex's main body of water, from 65 points to 11. Espiritu Santo, hex (-27,33), was ignored: its body of water has 1 point, fewer than 5, and the main body stays at 249.
+
+### File sizes
+
+`data/map/papua_to_midway.csv` 403,983 bytes; `papua_to_midway_located.csv` 5,052 bytes; `papua_to_midway_anchors.csv` 1,829 bytes.
+
+### What changed, by file
+
+- `crates/map-tool/src/located.rs` (new) and `lib.rs`: `locate_rows` and `located_text`. A row is inside the extent when its latitude is from the south to the north edge and its longitude, brought into the frame's run, from the west to the east edge. Its hex is `Projection::hex_of`. The module's doc comment says the map tool may read `data/oob/place_positions.csv` for this and nothing else under `data/oob`. The `csv` reader the tool already uses reads the file, so a quoted comma works.
+- `crates/map-tool/src/main.rs`: the command `locate-rows --map --positions --out`, in the usage text.
+- `crates/map-tool/tests/papua_to_midway.rs`: tests below the hand calculation, which is not changed.
+- `crates/map-tool/tests/committed_map.rs`: the check that the generated maps found include `papua_to_midway.csv` is widened to name it, as it names the other two.
+- `docs/commands.md`: the command and the map.
+- Data: `data/map/papua_to_midway.csv`, `papua_to_midway_anchors.csv` and `papua_to_midway_located.csv`.
+
+### Tests added
+
+In `crates/map-tool/tests/papua_to_midway.rs`: the header's lines, the title, the frame file's lines, the anchors line and the command; the 10,395 hexes and rows, in order and as `extent_hexes` gives them; the two marks (coast, 0 percent, one body of water, named in "Marked land", and 99 coast hexes of 0 percent against the header's 97); the counts by kind; the anchors file's rows equal to the present map's, and one header line for each; every one of the 113 located rows against the hex of the hand calculation, with the row's own text for latitude and longitude; the committed located file byte for byte what the command gives; and a row outside the extent has no line, the order is the ids' and a quoted comma in the positions file reads.
+
+### Settled here, not in the brief
+
+- The located file's header has no date, so the file is the same whenever it is made. It says it is generated and never edited by hand, and gives the command.
+- Its header carries no line that begins "Projection:" or "Extent:", so that `sim-data` finds no frame in it and `committed_map.rs`'s walk takes it for no map.
+- A row inside the extent whose nearest hex is not on the map is an error, not a skipped line. None is.
+- A place with a comma or a quote in it cannot be written in the file and is an error. None is.
+- The anchors file's comment header names this map and says it began as a copy; its rows are byte for byte the copy's.
+- The test for the anchors file reads the present anchors file, so a change to that file would fail it, as it should while the two are to be the same list.
+
+### What walks `data/map/` and takes the new files
+
+Looked at and found to take none of the three new `.csv` files for something they are not: `crates/map-tool/tests/committed_map.rs` (the one walk of the folder; it takes each `.csv` whose header gives a frame, and the anchors and located files have none); `crates/sim-cli/tests/export.rs`, `crates/sim-staff/tests/holds.rs`, `crates/sim-cli/src/export/measure_fixture.rs`, `crates/sim-cli/src/validate/passages.rs` and the scenario tests under `tests/` (each names one map file); `table/serve.py` and `table/scenarios.json` (a scenario's map is named in the entry), `table/check_screen.py` (names two folders by path), `scripts/orders-inside-proof/run.sh` (copies the folder whole), `scripts/regenerate.sh`, `scripts/web/site.py` and `.github` (no walk of the folder). Every other `read_dir`, `glob`, `listdir` and `os.walk` in `crates`, `tests`, `table`, `scripts` and `viewer` is on another folder.
+
+### Checks run
+
+- `cargo fmt --all -- --check`: passes.
+- `cargo clippy --workspace --all-targets -- -D warnings`: passes.
+- `cargo test -p map-tool -p sim-data`: passes, with the eight new tests.
+- `cargo test --workspace`: the scenario tests ran 3,112 passed and 5 failed. Run alone, each of the five passed: scenario 36's, scenario 40's and scenario 41's "saves and the staff checks" tests and scenario 42's two named. Every other test of the workspace passed (2,800, none failed) in a second run that left the scenario tests out.
+- `cargo run -p sim-cli -- export data/scenarios/04a_night_action.toml`: ran.
+- `sh scripts/regenerate.sh --check`: "every generated file is what the engine gives".
+- `data/map/south_pacific.csv` and `data/map/midway.csv` are not changed.
