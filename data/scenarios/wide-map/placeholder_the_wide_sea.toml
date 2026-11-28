@@ -1,0 +1,157 @@
+# The wide sea: a game to open the map from Papua to Midway with (decision
+# 0242, step 3, and rule 22).
+#
+# Four bases on data/map/papua_to_midway.csv and one small task force at each,
+# for three days, with no orders and no objectives: a game for looking at the
+# map on the table, and no battle's. Allied: Midway at hex (31,-41) and Lunga
+# Point at (-32,22). Japanese: Wake at (2,-26) and Rabaul at (-39,14). The
+# hexes are those of data/map/papua_to_midway_located.csv, rows 5100, 6, 5107
+# and 1; each is a coast hex of the map. At each base lies a force of one
+# placeholder cruiser and one placeholder destroyer (classes 1 and 2 of
+# data/reference/ship_classes.csv), in no mission but its own, and with no
+# order in force. The test in tests/scenario_the_wide_sea.rs loads the file,
+# holds each base and force to a coast hex, and runs the three days with no
+# order from either side.
+#
+# In a folder of its own, so that no loop over data/scenarios/*.toml reads it
+# (decision 0072 and decision 0242, rule 22).
+#
+# PLACEHOLDER DATA. The bases, the ships and their places are invented: no
+# base, force or ship here is historical, and nothing here is a figure of the
+# war. The bases take the names of the places they stand at only to say where
+# they lie.
+
+name = "Placeholder: the wide sea"
+placeholder = true
+seed = 1942
+days = 3
+map = "../../map/papua_to_midway.csv"
+ship_classes = "../../reference/ship_classes.csv"
+port_sizes = "../../reference/port_sizes.csv"
+aircraft_types = "../../reference/aircraft_types.csv"
+search = "../../reference/search.toml"
+surface_combat = "../../reference/surface_combat.toml"
+
+[[base]]
+id = 1
+name = "Placeholder base at Midway"
+side = "allied"
+q = 31
+r = -41
+
+[[base]]
+id = 2
+name = "Placeholder base at Lunga Point"
+side = "allied"
+q = -32
+r = 22
+
+[[base]]
+id = 3
+name = "Placeholder base at Wake"
+side = "japanese"
+q = 2
+r = -26
+
+[[base]]
+id = 4
+name = "Placeholder base at Rabaul"
+side = "japanese"
+q = -39
+r = 14
+
+[[task_force]]
+id = 1
+name = "Placeholder force at Midway"
+side = "allied"
+q = 31
+r = -41
+mission = "surface_combat"
+
+[[task_force]]
+id = 2
+name = "Placeholder force at Lunga Point"
+side = "allied"
+q = -32
+r = 22
+mission = "surface_combat"
+
+[[task_force]]
+id = 3
+name = "Placeholder force at Wake"
+side = "japanese"
+q = 2
+r = -26
+mission = "surface_combat"
+
+[[task_force]]
+id = 4
+name = "Placeholder force at Rabaul"
+side = "japanese"
+q = -39
+r = 14
+mission = "surface_combat"
+
+[[ship]]
+id = 1
+name = "Placeholder cruiser at Midway"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 1
+
+[[ship]]
+id = 2
+name = "Placeholder destroyer at Midway"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 1
+
+[[ship]]
+id = 3
+name = "Placeholder cruiser at Lunga Point"
+class = 1
+side = "allied"
+fuel_t = 2000
+task_force = 2
+
+[[ship]]
+id = 4
+name = "Placeholder destroyer at Lunga Point"
+class = 2
+side = "allied"
+fuel_t = 500
+task_force = 2
+
+[[ship]]
+id = 5
+name = "Placeholder cruiser at Wake"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 3
+
+[[ship]]
+id = 6
+name = "Placeholder destroyer at Wake"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 3
+
+[[ship]]
+id = 7
+name = "Placeholder cruiser at Rabaul"
+class = 1
+side = "japanese"
+fuel_t = 2000
+task_force = 4
+
+[[ship]]
+id = 8
+name = "Placeholder destroyer at Rabaul"
+class = 2
+side = "japanese"
+fuel_t = 500
+task_force = 4
