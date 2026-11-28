@@ -12,6 +12,7 @@
 pub mod frame;
 pub mod generate;
 pub mod land;
+pub mod located;
 pub mod projection;
 pub mod render;
 pub mod shp;
