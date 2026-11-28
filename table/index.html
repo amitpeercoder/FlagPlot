@@ -937,6 +937,15 @@ body.papered #prompt { right: calc(min(400px, 100% - var(--sp-w) - 48px) + 32px)
     lamp.shadow.mapSize.set(2048, 2048); lamp.shadow.camera.near = 2; lamp.shadow.camera.far = 18; lamp.shadow.bias = -0.0006; scene.add(lamp); scene.add(lamp.target);
   }
 
+  // Two hooks for the architect's proof that a change of layout leaves a chart as it was (decision 0242, step 3):
+  // a hash of the base chart as drawn with the board's size, and the layout's own numbers. Read-only; nothing here is drawn.
+  window.flagplotChartHash = function () {
+    var text = baseCanvas.toDataURL() + '|' + TW.toFixed(6) + '|' + TD.toFixed(6) + '|' + HEXR.toFixed(6), h = 0x811c9dc5;
+    for (var i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return ('00000000' + h.toString(16)).slice(-8);
+  };
+  window.flagplotLayout = function () { return { TW: TW, TD: TD, K: K, HEXR: HEXR, hexes: hexes.length }; };
+
   // ---- what the side knows, as the tools gave it ----
   var OFFERED = {}, clock = { at: 'dusk', day: 1 }, lastTold = [], lastNotices = [], stopArrive = '', stopEvening = false, stopDirective = null, directivesNew = [], since = { from: '', phases: [] }, versusWaited = false;
   var M = { air: [], names: {}, hexNames: {}, day: 1, lastDay: 0, forces: [], units: [], bases: [], enemyBases: [], contacts: [], estimates: [], boats: [], subReports: [], suspected: [], subEstimate: null, state: null, over: false, result: null, asking: [] };
