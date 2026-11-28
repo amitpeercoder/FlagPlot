@@ -654,7 +654,39 @@ def the_readings_mends():
     The look.
     M5. The style sheet has a rule `#paper select` with `background: transparent`, `border: 0` and a `border-bottom`: a list in the
         paper is drawn as a blank, as a number is (stage A, A16)."""
-    raise NotImplementedError("the developer writes this check to the statements above")
+    import re
+    print("-- the reading's mends: a new force, a force formed, the note under a reading, a change that brings no order, the select", flush=True)
+    text = page_text()
+    model = text[text.index("  var LIMITS_OFFERED"):text.index("  // ---- end of the limits model ----")]
+    code = "".join(cut_function(text, f"  function {h}(") + "\n" for h in ["cleanName", "num", "hexDist", "hexWords", "readingUnit", "planOrderLine", "readingTop"]) + model + r"""
+function dateOf() { return ''; } const hexes = [];
+function main() {
+  M.names['base:1'] = 'Saltmere'; M.names['task_force:17'] = 'Task Force 17'; M.names['ship:1'] = 'Merrowdale';
+  const out = {};
+  out.unit = ['base:1', 'task_force:17', 'task_force:1', 'ship:9', 'air_group:4'].map(readingUnit);
+  out.form = [planOrderLine({ kind: 'form_task_force', ships: [1] }), planOrderLine({ kind: 'form_task_force', ships: [1, 2, 3] })];
+  out.note = [limitsNote('keep_supplied', [{ key: 'ships' }]), limitsNote('keep_supplied', [{ key: 'source' }]), limitsNote('keep_supplied', [{ key: 'ships' }, { key: 'risk' }]),
+              limitsNote('hold', [{ key: 'ships' }]), limitsNote('patrol', [{ key: 'submarines' }]), limitsNote('hold', [])];
+  const bare = () => ({ kids: [], units: [] }), one = { kids: [], units: [{}] };
+  out.top = [readingTop(bare(), 'hold', false), readingTop(bare(), 'hold'), readingTop(bare(), 'hold', true), readingTop(one, 'hold', true), readingTop(one, 'hold', false), readingTop(one, 'hold')];
+  return out;
+}
+"""
+    r = run_in_node(code, None)
+    check(r["unit"] == ["base:1", "task_force:17", "The new force", "ship:9", "air_group:4"], f"M1: a force the side does not have is \"The new force\"; every other handle is left for the links ({r['unit']})")
+    units = cut_function(text, "  function unitsView(items) {")
+    check("paperLine('punit', readingUnit(u) + ' \u00b7 ' + ph)" in units.replace("' · '", "' \u00b7 '"), "M1: unitsView builds each line from readingUnit(u) and the phrase")
+    check(r["form"] == ["Form a force of 1 ship", "Form a force of 3 ships"], f"M2: a force the order forms is said as \"Form a force of N ships\" ({r['form']})")
+    sentence = "This reading is worked with the limits you set."
+    check(r["note"] == ["", "", sentence, sentence, "", ""], f"M3: the note under a reading speaks only where a limit outside the face is set ({r['note']})")
+    ask = cut_function(text, "  function askPreview() {")
+    check(text.count(sentence) == 1 and "limitsNote(kind, sent)" in ask and "function limitsNote(" in model, "M3: askPreview says the note from limitsNote(kind, sent) and the sentence is in the page's text once")
+    nothing = "Nothing can serve this order yet."
+    check(r["top"][0] == {"text": nothing, "bad": True} and r["top"][1] == {"text": nothing, "bad": True} and r["top"][2] == {"text": "The staff would give no new order under it now."}
+          and all(t == {"text": "The staff would give these orders:"} for t in r["top"][3:]), f"M4: a bare reading of a change brings no new order, a bare reading of an order serves nothing yet ({r['top']})")
+    check("readingTop(root, top.kind, !!own)" in cut_function(text, "  function readingView(out, p, e, own) {"), "M4: readingView passes !!own")
+    css = re.search(r"#paper select \{([^}]*)\}", text)
+    check(css is not None and "background: transparent" in css.group(1) and "border: 0" in css.group(1) and "border-bottom:" in css.group(1), "M5: a list in the paper is drawn as a blank: transparent, no border but one beneath")
 
 
 def the_empty_floor():
@@ -2085,7 +2117,7 @@ def the_staffs_reading(bridge):
           "the page no longer words the engine's paragraph: no \"It cannot yet\", no count of orders and commands of its own")
     check("readingView(out, p, e);" in ask and "proposedTree(top, {}, pr)" in text and "paperNode(root, true)" in text,
           "the reading is drawn by readingView from proposedTree and paperNode, the plan paper's own functions")
-    check("This reading is worked with the limits you set." in ask and "args.limits" in ask and "limit: 'risk', risk: risk" in text and "Played at balanced risk" not in text and "worked at balanced risk" not in text,
+    check("This reading is worked with the limits you set." in text and "limitsNote(kind, sent)" in ask and "args.limits" in ask and "limit: 'risk', risk: risk" in text and "Played at balanced risk" not in text and "worked at balanced risk" not in text,
           "the reading is worked with the limits and the risk chosen, and says so where any is sent; nothing says it is worked at balanced risk")
     check("'THE STAFF\\'S WORKING IN FULL'" in text[text.index("  function readingView"):text.index("  function askPreview() {")], "the staff's working in full is the reading's last fold")
     heads = ["commas", "cleanName", "orderWords", "plainCounts", "plainWords", "nameText", "intentWords", "reasonWords", "tidyWorked", "paperPre", "shareWords", "tiredBit",
@@ -4685,6 +4717,7 @@ def main():
     one_order_paper()
     the_paper_reads_as_the_order()
     the_face_and_the_fold()
+    the_readings_mends()
     stops_speak_as_the_staff()
     cards_show_no_handle()
     the_trail_holds_no_duplicate()

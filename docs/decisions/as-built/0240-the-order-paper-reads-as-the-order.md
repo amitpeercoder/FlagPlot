@@ -39,3 +39,14 @@ On a local table, on rung 1, by the architect: the supply order at Thornwick ope
 
 Seen and not mended in this stage: the reading names a force by its handle ("Task_force:1 · load 30 t of supply"), which is older than this work; "This reading is worked with the limits you set." still follows the reading of a supply order whose only limits are its ships and its source; and the list for "From" is still drawn as a dark box. On the change-of-limits paper the reading says "Nothing can serve this order yet." on an evening when the staff has no new order to give under the order, before and after the risk is changed; stage B did not touch that reading, and the words are wrong for that paper.
 
+
+## The reading's mends (Nov 28, 2026)
+
+Four mends to the reading and one to the look, asked for by the designer after stages A and B were tried by hand. They change what the table says and no rule; what any order sends is as it was. The statements are M1 to M5 in `the_readings_mends` in `table/check_screen.py`, written before the build.
+
+- **A force the order would form** is said "The new force" in the reading's lines, not by its handle: the new function `readingUnit(h)`, used by `unitsView`, answers so for a task force the side does not have. Any other handle is left for the page's links.
+- **A force formed** is said "Form a force of 1 ship" or "Form a force of 3 ships" by `planOrderLine`, which had no case for it.
+- **The note under a reading**, "This reading is worked with the limits you set.", is said by the new `limitsNote(kind, sent)` in the limits model, and only where a limit outside the kind's face is set. A supply order whose only limits are its ships and its source has no note. The sentence is held in one constant.
+- **A change of limits that brings no new order** reads "The staff would give no new order under it now." and not in the colour of a fault: `readingTop` takes a third argument, `own`, which `readingView` passes as `!!own`. A bare order still reads "Nothing can serve this order yet."
+- **A list in the paper** (`#paper select`) is drawn as a blank, as a number is: transparent, no border, a rule beneath.
+- **One check restated:** `the_staffs_reading`'s quoted line for the note (it names the sentence in the page and `limitsNote(kind, sent)` in `askPreview`, not the sentence in `askPreview`). Nothing was loosened or removed.
