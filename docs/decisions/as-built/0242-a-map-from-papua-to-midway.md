@@ -49,3 +49,14 @@ Also tried, in the scratch folder only and not kept: the frame of rule 3 (kind a
 - `cargo test --workspace`: passes, 5,909 tests, none failed, 24 ignored (all ignored before this change). `crates/sim-cli/tests/timing.rs` took about 20 minutes in the debug build on a busy machine; it does not touch a map's frame.
 - `cargo run -p sim-cli -- export data/scenarios/04a_night_action.toml --out <scratch>/04a.json`: ran; the export pinned by hash is unchanged (the tests above hold it).
 - `sh scripts/regenerate.sh --check`: "every generated file is what the engine gives".
+
+## The architect's reading of step 1
+
+Made on Nov 28, 2026 on reading the build.
+
+1. **The hand calculation holds as written.** No number or word of the doc comment changed, and the five tests check every part of it.
+2. **The angle from the centre is taken from its sine and cosine,** not from the cosine alone as the doc comment's formula has it. It is the same angle and is exact near the centre. Confirmed.
+3. **One guard added by the architect.** The map tool's projection keeps a map's scale in the field that holds a factor, with a mark for which it is. Its one helper that means a factor only, the miles in a degree of longitude, now stops if it is asked of a map about a centre; its one caller already took the other way for such a map.
+4. **The rulebook's page on where a map lies** (chapter 2) is rewritten for two kinds of frame, by the architect, in the same pull request.
+5. **Left for the steps that follow, as planned:** the map and its file of located positions; the table, the viewer and the scripts, none of which has learned the second kind; the check of passages, which stops on a map about a centre.
+

@@ -45,8 +45,14 @@ pub fn south_pacific() -> Projection {
 }
 
 impl Projection {
-    /// Nautical miles in a degree of longitude, at the centre's latitude.
+    /// Nautical miles in a degree of longitude, at the centre's latitude, for
+    /// a map of one factor. It is not to be asked of a map about a centre.
     pub fn nm_per_deg_lon(&self) -> f64 {
+        // A map about a centre has no such number: its meridians bow.
+        assert!(
+            !self.about_centre,
+            "a map about a centre has no miles to a degree of longitude"
+        );
         NM_PER_DEG_LAT * self.factor
     }
 
