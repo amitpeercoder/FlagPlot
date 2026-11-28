@@ -596,3 +596,65 @@ Rung 3 on the table as built, read at commit d102463f, with main's step D of dec
 - **The two things the developer noted** stand: the days read from `days_resolved.last`, as `orders-guadalcanal-staff.mjs` reads them, and `word` before `evening` in the three conditions.
 - **Three statements were filled short of their words,** and the fill is mended before the merge; no expected value moves. X5's days 19 to 21 are said "from base:3", as the statement has them. X11 calls `missionLines` with two arguments as well as with a null third, on W1's days and on W2's. P7 reads the first entry of `queued` itself.
 - **Found, and not this pull request's: SIGNED names a ship in port as "ship".** With the mend, SIGNED reads "Order: Keep Emberholt supplied · Ships and forces: ship · Supplied from: Saltmere" where the page has not yet learned Merrowdale's name: `limitsLine` names a ship by `nm`, which knows a ship only once a card that lists her has been read. It is older than the ladder and holds of any order whose limits name a ship in port. A mend of its own, class 2.
+
+## SIGNED and THE ORDERS name a ship in port (Nov 28, 2026)
+
+A mend of its own, planned by the architect on Amit's word, for the defect his reading of pull request 790 found. It is recorded here because the ladder is where it shows: on rungs 1 and 3 every supply order names a ship that lies in port. It is older than the ladder and holds of any order in any game whose limits name a ship in port in no force.
+
+### The class
+
+**Class 2.** It changes what the table says, with the rules as they are: no rule, state, event, order or tool, nothing a seat may know, no scenario and no figure. It touches `table/index.html` beyond wording, `table/check_screen.py` and `table/README.md`, and nothing under `crates/`, `data/` or `tests/`. No independent review and no confirmation by Amit; the architect reads the pull request before it is merged.
+
+### The cause, as read in the page and tried through the bridge
+
+- `limitsLine` names a unit through `nm(h)`, which says `M.names[h]` and, where there is none, the kind of the handle: "ship".
+- `refresh` builds `M.names` again on every read: from `SHIP_NAMES`, which `learnShips` fills from `get_entity` of each task force, and from the lists of forces, land units, boats, air groups and bases. A ship in port in no force is in none of them.
+- The order paper learns such a ship from the base's `ships_in_port` (`limPortShips`) and writes her name into `M.names` only, so the paper's ticks read "Merrowdale, at Saltmere". Signing calls `signedRefresh`, which is `refresh`: the name is dropped, and SIGNED is drawn without it.
+- `queued` and `command_state` give a ship by her number alone (decision 0086: every unit in the side's numbers).
+- Tried on rung 1 through the bridge on Nov 28, 2026: `list_forces` has no task force before day 1 and after it; `get_entity` of `ship:1` gives her name, "Merrowdale", with `task_force` null; the signed limit is `{intent 1, kind "set_limit", limit "forces", ships [1], source 1, task_forces []}`; after day 1 the order in force has `limits.forces.ships` `[1]`. The page's own `signedLine`, run in node on those answers, reads "Order: Keep Thornwick supplied · Ships and forces: ship · Supplied from: Saltmere", and with her name in `M.names` reads "… Ships and forces: Merrowdale …".
+- So it is not SIGNED alone. The order in force reads the same in THE ORDERS, opened from YOUR ORDERS, and in "Set by us" on a plan's paper for as long as the ship lies in port, and a page loaded again never learns her at all.
+
+### What is built
+
+Two functions beside `learnShips`, and one call. The statements are N1 to N8 of `a_ship_in_port_is_named` in `table/check_screen.py`, written before the code.
+
+1. **`shipsNamed(state, queue)`,** pure: the handles of the ships that a limit names in the command state and in what is queued (N1).
+2. **`learnNamed(state, queue)`:** asks `get_entity` for each of those that `SHIP_NAMES` does not hold and keeps her name there, for the game, as `learnShips` keeps a force's ships (N2). A read that fails keeps nothing and stops nothing.
+3. **`refresh` waits for it** before it builds `M.names` again (N4).
+
+**It reads the seat's own tools and nothing else:** `get_entity` of a ship of the side's own, by the handle the side's own order gave. No answer of the umpire's, no file, and no new call of the bridge.
+
+**Weighed and not chosen.** Keeping in `SHIP_NAMES` what the paper learned: it mends the evening the order is signed and not a page loaded again, nor an order signed by another hand. Asking every base of the side for its `ships_in_port` on each read: more calls on every read in every game, for names most games never say. Changing what `nm` says of a ship it cannot name: that is a change of wording across the table, and the mend is that the name can be read.
+
+### What must not change
+
+- `nm`, `limitsLine`, `limFromBodies`, `limFromState`, `signedLine` and every word any of them says. What the page sends for any order.
+- `PAGE_LOAD_CALLS` and `web/check.mjs`: a page with no ship named in a limit asks nothing more than it did.
+- Every statement and expected value of `check_screen.py` and `check_watch.py`. The one line `run_in_node` writes after the code may be changed to wait for a promise, as the function's doc comment says, with every standing check giving what it gave.
+- Nothing under `crates/`, `data/`, `tests/` or `docs/rules/`.
+
+### What the architect is shown
+
+The pull request's diff; the output of `python3 table/check_screen.py`, with the lines of N1 to N8 and "all held"; `git diff --stat` against `main`; and from the page in a browser, as text or a picture, rung 1 on the first evening: SIGNED after the supply order (2 and 5, Merrowdale, Saltmere) is signed, the same after the page is loaded again, and THE ORDERS on the evening after day 1.
+
+### The brief (class 2)
+
+For one developer. Work in a worktree on the branch `claude/signed-ship-name`, which holds this section and the statements; one pull request, "a ship in port named under SIGNED".
+
+- **Read first:** `docs/engineering/roles-and-tests.md`; this section; `a_ship_in_port_is_named` in `table/check_screen.py`, and `the_orders_of_rung_three` above it, whose P6 is the model for running `signedLine` in node; in `table/index.html`, `learnShips`, `refresh`, `nm` and `limitsLine`.
+- **Add the two functions and the one call,** as "What is built" has them, and nothing else in the page.
+- **Fill `a_ship_in_port_is_named`,** asserting N1 to N8 exactly, and call it from `main()` after `rung_three_played_five_ways`.
+- **`table/README.md`:** one sentence where it speaks of an order's limits under SIGNED, that a ship a limit names is said by her name wherever she lies, read from `get_entity`.
+- **Try it on the page in a browser** before the pull request, as "What the architect is shown" lists; where there is no browser, say so in the pull request.
+- **Not to be changed:** everything under "What must not change"; any statement, expected value or quoted word.
+- **If a statement cannot be met,** stop and send the architect the statement, what the build gave and why. Do not change the statement to pass.
+- **Before the commit:** `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`, and `python3 table/check_screen.py` with `sim-cli` built for release (CI runs it too, as "The table's screen check").
+- **The pull request's description** says: class 2, given by the architect; what he asked to be shown; this section as its record.
+
+### Built, and the architect's reading of pull request 794 (Nov 28, 2026)
+
+Built as planned, read at commit cc43426a: `shipsNamed` and `learnNamed` beside `learnShips`, and `refresh` waiting for `learnNamed` of the command state and the queue before it builds `M.names`. `a_ship_in_port_is_named` is filled to N1 to N8 with no statement changed and is called from `main()` after `rung_three_played_five_ways`; the one line `run_in_node` writes now waits for what `main` gives. `table/README.md` gains one sentence. Nothing else changed.
+
+- **Reported by the developer:** `python3 table/check_screen.py` ends "all held (1454 checks)".
+- **Seen on the page, in pictures, on rung 1:** SIGNED after the supply order is signed, and again on a page loaded fresh, reads "Order: Keep Thornwick supplied · Ships and forces: Merrowdale · Supplied from: Saltmere"; THE ORDERS on the evening after day 1 reads "Ships and forces: Merrowdale · Supplied from: Saltmere".
+- **Not tried:** rung 3's supply order on the page, and a protected ship.
