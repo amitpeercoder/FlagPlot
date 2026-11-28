@@ -650,3 +650,11 @@ For one developer. Work in a worktree on the branch `claude/signed-ship-name`, w
 - **If a statement cannot be met,** stop and send the architect the statement, what the build gave and why. Do not change the statement to pass.
 - **Before the commit:** `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`, and `python3 table/check_screen.py` with `sim-cli` built for release (CI runs it too, as "The table's screen check").
 - **The pull request's description** says: class 2, given by the architect; what he asked to be shown; this section as its record.
+
+### Built, and the architect's reading of pull request 794 (Nov 28, 2026)
+
+Built as planned, read at commit cc43426a: `shipsNamed` and `learnNamed` beside `learnShips`, and `refresh` waiting for `learnNamed` of the command state and the queue before it builds `M.names`. `a_ship_in_port_is_named` is filled to N1 to N8 with no statement changed and is called from `main()` after `rung_three_played_five_ways`; the one line `run_in_node` writes now waits for what `main` gives. `table/README.md` gains one sentence. Nothing else changed.
+
+- **Reported by the developer:** `python3 table/check_screen.py` ends "all held (1454 checks)".
+- **Seen on the page, in pictures, on rung 1:** SIGNED after the supply order is signed, and again on a page loaded fresh, reads "Order: Keep Thornwick supplied · Ships and forces: Merrowdale · Supplied from: Saltmere"; THE ORDERS on the evening after day 1 reads "Ships and forces: Merrowdale · Supplied from: Saltmere".
+- **Not tried:** rung 3's supply order on the page, and a protected ship.
