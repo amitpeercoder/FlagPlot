@@ -2397,10 +2397,12 @@ def reason_limits_as_links(bridge):
     text = page_text()
     words = text[text.index("  var LIMIT_LINK ="):text.index("  function limitLinkWords(")] + cut_function(text, "  function limitLinkWords(") + "\n" + cut_function(text, "  function limitInState(")
     blocks = [cut_function(text, h) for h in ("  function limitLinks(", "  function openLimit(", "  function limitSetOn(")]
-    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT))" in cut_function(text, "  function whyView("),
-          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY")
-    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null)" in cut_function(text, "  function reasonView("),
-          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block")
+    check("function limitLinkWords(" in text and "function openLimit(" in text and "'YOUR LIMITS'" in text and "block('YOUR LIMITS', limitLinks(t.reasons, PAPER_ROOT, t.n))" in cut_function(text, "  function whyView("),
+          "the page has limitLinkWords, openLimit and a YOUR LIMITS block in WHY, which gives limitLinks the task's own number")
+    check("'YOUR LIMITS'" in cut_function(text, "  function reasonView(") and "limitLinks([r], null, null)" in cut_function(text, "  function reasonView("),
+          "a reason laid out for an interrupt or the war diary has the same YOUR LIMITS block, under no task's line")
+    check("  function limitLinks(reasons, intoRoot, own) {" in text and "WHY_OWN" not in text,
+          "limitLinks is given the number of the line it is drawn under as its third argument: the page keeps no variable for it")
     check(not any(re.search(r"\.exec\(|\.test\(|\.match\(|\.replace\(", b) for b in blocks) and all("worked" not in b and "binding" not in b and "would_change" not in b for b in blocks),
           "the code that makes the links reads the engine's `limits` list: no pattern is run on a reason's words")
     check("readPlan(found.root, found.task !== found.root ? found.task : null, { kind: l.kind })" in blocks[1] and "readOrders({ n: l.intent" in blocks[1] and "see(" in blocks[1]
