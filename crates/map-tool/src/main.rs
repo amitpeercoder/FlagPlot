@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use map_tool::fixture::{fixture_text, read_maps};
 use map_tool::frame::Frame;
 use map_tool::generate::{csv_text, generate_with_anchors, into_run, parse_anchors, Kind};
 use map_tool::located::located_text;
@@ -18,6 +19,7 @@ const USAGE: &str = "usage:
   map-tool generate --land <shp> --minor-islands <shp> --out <csv> [--anchors <csv>] [--frame <toml>]
   map-tool render [--map <csv>] [--mark q,r=X ...]
   map-tool locate-rows --map <csv> --positions <csv> --out <csv>
+  map-tool plane-fixture --out <json> [--positions <csv>]
   map-tool locate --lat <deg> --lon <deg> [--map <csv>]
   map-tool path --from q,r --to q,r [--map <csv>]
   map-tool sides --hex q,r [--map <csv>]
@@ -34,6 +36,11 @@ locate-rows writes a map's file of located positions (decision 0242, rule 15):
 the hex of each row of the positions file (data/oob/place_positions.csv, the
 one file of data/oob the map tool reads) whose position is inside the map's
 extent, by the map's own projection.
+
+plane-fixture writes the shared file of checked positions (decision 0242, rule 18),
+table/chart/plane_fixture.json: for each of the three generated maps, its frame and its
+positions in the map's plane with the hex of each. It reads the three maps' headers, the
+positions file and the located file of the map about a centre.
 
 render marks coast hexes with a closed side toward water as % (+ otherwise).
 Each row is labelled with its r and the q of its first hex.";
@@ -238,6 +245,24 @@ fn run_locate_rows(flags: &Flags, command_line: &str) -> Result<(), String> {
     Ok(())
 }
 
+fn run_plane_fixture(flags: &Flags) -> Result<(), String> {
+    flags.check_known(&["--out", "--positions"])?;
+    let positions_file = flags
+        .get("--positions")
+        .unwrap_or("data/oob/place_positions.csv");
+    let positions =
+        std::fs::read_to_string(positions_file).map_err(|e| format!("{positions_file}: {e}"))?;
+    let maps = read_maps(Path::new("."))?;
+    let out = flags.require("--out")?;
+    let text = fixture_text(&maps, &positions)?;
+    std::fs::write(out, &text).map_err(|e| format!("{out}: {e}"))?;
+    println!(
+        "wrote {out}: {} points",
+        text.lines().filter(|l| l.contains("\"row\"")).count()
+    );
+    Ok(())
+}
+
 fn load(flags: &Flags) -> Result<Map, String> {
     sim_data::load_map(&flags.map_path()).map_err(|e| e.to_string())
 }
@@ -396,6 +421,7 @@ fn run(args: &[String]) -> Result<(), String> {
         "render" => run_render(&flags),
         "locate" => run_locate(&flags),
         "locate-rows" => run_locate_rows(&flags, &args.join(" ")),
+        "plane-fixture" => run_plane_fixture(&flags),
         "path" => run_path(&flags),
         "sides" => run_sides(&flags),
         "water" => run_water(&flags),
