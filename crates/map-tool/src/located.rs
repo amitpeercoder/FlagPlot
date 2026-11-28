@@ -31,10 +31,26 @@ pub struct Located {
     pub r: i32,
 }
 
-/// The located lines of a positions file on the map of `frame`: every row
-/// whose position is inside the frame's extent, in the order of the rows'
-/// ids. A row outside the extent has no line.
-pub fn locate_rows(frame: &Frame, positions: &str) -> Result<Vec<Located>, String> {
+/// A row of the positions file whose position is inside a map's extent.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RowInside {
+    /// The line of the positions file the row is on.
+    pub line: u64,
+    /// The row's id as a number, and as the file gives it.
+    pub number: u32,
+    pub row: String,
+    pub place: String,
+    /// The row's latitude and longitude, the same text, and their values; the
+    /// longitude value is in the frame's run.
+    pub lat_text: String,
+    pub lon_text: String,
+    pub lat: f64,
+    pub lon_run: f64,
+}
+
+/// Every row of a positions file whose position is inside the frame's extent,
+/// in the order of the rows' ids. A row outside the extent is left out.
+pub fn rows_inside(frame: &Frame, positions: &str) -> Result<Vec<RowInside>, String> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .comment(Some(b'#'))
@@ -56,9 +72,7 @@ pub fn locate_rows(frame: &Frame, positions: &str) -> Result<Vec<Located>, Strin
         column("lat")?,
         column("lon")?,
     );
-    let projection = frame.projection();
-    let on_the_map: BTreeSet<(i32, i32)> = extent_hexes(frame).into_iter().collect();
-    let mut found: Vec<(u32, Located)> = Vec::new();
+    let mut found: Vec<RowInside> = Vec::new();
     for record in records {
         let record = record.map_err(|e| e.to_string())?;
         let line = record.position().map_or(0, |p| p.line());
@@ -94,29 +108,49 @@ pub fn locate_rows(frame: &Frame, positions: &str) -> Result<Vec<Located>, Strin
         if !inside {
             continue;
         }
-        let (q, r) = projection.hex_of(lat_value, run);
-        if !on_the_map.contains(&(q, r)) {
-            return Err(format!(
-                "positions file line {line}: row {row} is inside the extent but its nearest hex ({q},{r}) is not on the map"
-            ));
-        }
-        found.push((
+        found.push(RowInside {
+            line,
             number,
-            Located {
-                row: row.to_string(),
-                place: name.to_string(),
-                lat: lat_text.to_string(),
-                lon: lon_text.to_string(),
-                q,
-                r,
-            },
-        ));
+            row: row.to_string(),
+            place: name.to_string(),
+            lat_text: lat_text.to_string(),
+            lon_text: lon_text.to_string(),
+            lat: lat_value,
+            lon_run: run,
+        });
     }
-    found.sort_by_key(|(number, _)| *number);
-    if found.windows(2).any(|w| w[0].0 == w[1].0) {
+    found.sort_by_key(|row| row.number);
+    if found.windows(2).any(|w| w[0].number == w[1].number) {
         return Err("the positions file has a row id twice".to_string());
     }
-    Ok(found.into_iter().map(|(_, located)| located).collect())
+    Ok(found)
+}
+
+/// The located lines of a positions file on the map of `frame`: every row
+/// whose position is inside the frame's extent, in the order of the rows'
+/// ids. A row outside the extent has no line.
+pub fn locate_rows(frame: &Frame, positions: &str) -> Result<Vec<Located>, String> {
+    let projection = frame.projection();
+    let on_the_map: BTreeSet<(i32, i32)> = extent_hexes(frame).into_iter().collect();
+    let mut located = Vec::new();
+    for found in rows_inside(frame, positions)? {
+        let (q, r) = projection.hex_of(found.lat, found.lon_run);
+        if !on_the_map.contains(&(q, r)) {
+            return Err(format!(
+                "positions file line {}: row {} is inside the extent but its nearest hex ({q},{r}) is not on the map",
+                found.line, found.row
+            ));
+        }
+        located.push(Located {
+            row: found.row,
+            place: found.place,
+            lat: found.lat_text,
+            lon: found.lon_text,
+            q,
+            r,
+        });
+    }
+    Ok(located)
 }
 
 /// The text of a located file: its comment header, the column line and one

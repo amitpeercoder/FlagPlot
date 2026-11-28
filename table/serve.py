@@ -394,17 +394,23 @@ def read_toml_map(path):
 
 
 def read_frame(path):
-    """A map's place on the earth, from the lines of its header (decision 0199):
-    the centre of hex (0,0), the factor for longitude and the extent, every
-    longitude in the run (above 180 where the map crosses the date line), as
-    the export's map.frame has it. None for a map with no such lines."""
+    """A map's place on the earth, from the lines of its header (decisions 0199 and 0242):
+    the centre of hex (0,0), the extent and, by the kind of frame, the factor for longitude
+    (a frame of one factor: decision 0017) or the scale (a frame about a centre: decision 0242,
+    rule 3), every longitude in the run (above 180 where the map crosses the date line), as
+    the export's map.frame has it. A frame of one factor has no `kind` key, as the export's has
+    none and as a frame file with none is of one factor; a frame about a centre has `kind`
+    "about a centre" and `scale` in place of `factor`. None for a map with no projection lines;
+    a map that has them and cannot be read is an error that names it."""
     both = read_frame_and_edges(path)
     return both[0] if both else None
 
 
 def read_frame_and_edges(path):
     """The frame of read_frame and the extent's north and south edges in
-    degrees (the clipping script wants them), or None."""
+    degrees (the clipping script wants them), or None for a map with no
+    projection lines. A map whose header has projection lines that cannot be
+    read as one of the two kinds is a ValueError that names the map."""
     head = []
     with open(path) as handle:
         for line in handle:
@@ -412,14 +418,20 @@ def read_frame_and_edges(path):
                 break
             head.append(line)
     text = "".join(head)
-    centre = re.search(r"hex \(0,0\) is centred at ([\d.]+) ([NS]), ([\d.]+) ([EW])", text)
-    factor = re.search(r"east_nm\s*=\s*\(lon - [\d.]+\) \* 60 \* ([\d.]+)", text)
+    if not re.search(r"Projection:|east_nm\s*=|Extent: every hex", text):
+        return None
+    wide = "Projection: about a centre." in text
+    centre = re.search(r"[Hh]ex \(0,0\) is centred at ([\d.]+) ([NS]), ([\d.]+) ([EW])", text)
+    if wide:
+        number = re.search(r"angle from the centre in radians \* 3437\.746771 \* ([\d.]+)", text)
+    else:
+        number = re.search(r"east_nm\s*=\s*\(lon - [\d.]+\) \* 60 \* ([\d.]+)", text)
     extent = re.search(
         r"Extent: every hex whose centre lies from ([\d.]+) ([NS]) to ([\d.]+) ([NS]) and from ([\d.]+) ([EW]) to ([\d.]+) ([EW])",
         text,
     )
-    if not (centre and factor and extent):
-        return None
+    if not (centre and number and extent):
+        raise ValueError(f"the map {path} has projection lines in its header that cannot be read as either kind of frame")
 
     def signed(value, letter):
         return -float(value) if letter in "SW" else float(value)
@@ -431,13 +443,14 @@ def read_frame_and_edges(path):
         east += 360
         if centre_lon < west:
             centre_lon += 360
-    frame = {
-        "centre_lat": signed(centre.group(1), centre.group(2)),
-        "centre_lon": centre_lon,
-        "factor": float(factor.group(1)),
-        "west": west,
-        "east": east,
-    }
+    frame = {"centre_lat": signed(centre.group(1), centre.group(2)), "centre_lon": centre_lon}
+    if wide:
+        frame["kind"] = "about a centre"
+        frame["scale"] = float(number.group(1))
+    else:
+        frame["factor"] = float(number.group(1))
+    frame["west"] = west
+    frame["east"] = east
     return frame, signed(extent.group(1), extent.group(2)), signed(extent.group(3), extent.group(4))
 
 

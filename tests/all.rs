@@ -373,6 +373,8 @@ mod scenario_97_a_seats_trial;
 mod scenario_98_the_type_claimed_on_the_ground;
 #[path = "scenario_99_a_groups_tally_of_claims.rs"]
 mod scenario_99_a_groups_tally_of_claims;
+#[path = "scenario_the_wide_sea.rs"]
+mod scenario_the_wide_sea;
 #[path = "scenarios_built_on_another.rs"]
 mod scenarios_built_on_another;
 #[path = "table_rear_bases_files.rs"]
