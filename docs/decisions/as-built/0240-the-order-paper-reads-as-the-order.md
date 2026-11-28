@@ -64,3 +64,8 @@ What the pull request "order paper, stage C" makes. It changes what the table gi
 - **Checks restated.** `the_supply_orders_two_numbers`'s O1 to O4 (the box's value, the empty floor, the untouched paper's arguments, the reset in `openDraft`), and stage B's B5, B11 and the B10 render's stand-in for `supplyFloor` (B10 draws `needLine`, which now passes `supplyFloor()` to `missing`; the stand-in answers 30 and the statement is unchanged). Nothing was loosened or removed.
 
 Not tried by hand in a browser.
+
+### The mends and stage C, tried by hand
+
+On a local table, on rung 1, by the architect on Nov 28, 2026. The supply order at Thornwick opens with "Thornwick holds 5 days of supply.", the days blank empty with the focus in it, a sentence beside each of the three empty blanks, no reading and SIGN AND SEND disabled. With 2 and 5, Merrowdale and Saltmere, the reading is "No run is needed yet. The first, of 25 t, would load on day 3 and be due on day 4." in plain ink, then "It would wait for your leave to launch.", and no note about limits. With a floor of 30 it is "The staff would give these orders:", "Saltmere · form a force of 1 ship" and "The new force · load 30 t of supply". Emptying the days blank again clears the reading and disables SIGN AND SEND. The list for "From" is drawn as a blank. Not tried by hand: the mend to the change-of-limits reading (M4), and the 39 days.
+
