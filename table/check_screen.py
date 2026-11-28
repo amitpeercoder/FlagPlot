@@ -651,6 +651,18 @@ def the_readings_mends():
         under it now."} and `bad` is not set. With one unit in `root.units` it is "The staff would give these orders:" whatever
         `own` is. `readingView` passes `!!own`.
 
+    A supply order that needs no run yet is not said as an order nothing can serve.
+    M6. `runsLine(w, dayWords)`, a new pure function, where `w` is the reading's `with_change` and `dayWords(n)` says a day of the
+        game: with w.next_run = {days: {load: 3, sail: 4, arrive: 4, free: 7}, load_t: '25', ships: [1]} and dayWords giving "day
+        3" and "day 4" it is "No run is needed yet. The first, of 25 t, would load on day 3 and be due on day 4."; with load_t
+        '1250' the weight is said "1,250 t"; with no `next_run` it is "". Found on Nov 28, 2026, when stage C was tried by hand:
+        rung 1's right answer (2 and 5, Merrowdale, Saltmere) read "Nothing can serve this order yet." in the warning ink, since
+        the staff gives no order on day 1 for a place that holds five days against a floor of two.
+    M7. `readingView`, for a draft (not a change of limits): where the tree has no task and no unit and `runsLine` of the reading is
+        not empty, the head line is that sentence, in the paper's plain ink and not bold-red (`bad` not set); "Nothing can serve
+        this order yet." is kept for a reading with no task, no unit and no next run. The page passes as `dayWords` the words it
+        uses for a day elsewhere on the paper (a date where the game has dates, else "day N").
+
     The look.
     M5. The style sheet has a rule `#paper select` with `background: transparent`, `border: 0` and a `border-bottom`: a list in the
         paper is drawn as a blank, as a number is (stage A, A16)."""
