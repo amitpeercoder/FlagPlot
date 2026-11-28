@@ -1,0 +1,337 @@
+{
+  "asked": {
+    "beside": null,
+    "compare": false,
+    "course": [],
+    "dates": null,
+    "days": 14,
+    "for_day": 1,
+    "in_force": false,
+    "inside_day": null,
+    "intent": 1,
+    "orders_not_tried": 0,
+    "preview": null,
+    "second_trial": false,
+    "size": "standard",
+    "standing": [
+      "set intent 1: take the place at (4,0)",
+      "limit intent 1's forces to task_force:1 \"Placeholder transport force 1\", land_unit:1 \"Placeholder First\", from base:1 \"Placeholder base A\"",
+      "give leave to launch"
+    ],
+    "tried_intent": 1,
+    "worlds": 16
+  },
+  "assumed": [
+    {
+      "from": {
+        "kind": "map"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy's base:2 \"Placeholder airfield B\" at (4,0), holding 200 t of supply and 0 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "base": {
+          "handle": "base:2",
+          "name": "Placeholder airfield B"
+        },
+        "fuel_t": "0",
+        "kind": "enemy_base",
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        },
+        "supply_t": "200"
+      }
+    },
+    {
+      "from": {
+        "kind": "estimate"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "200 men at (4,0), from your estimate of the place, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "men",
+        "men": 200,
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        }
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy given nothing he could know of you: no contact, no claim and no estimate, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "no_belief"
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy given no intent: he holds what he holds, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16)",
+      "thing": {
+        "kind": "no_intent"
+      }
+    }
+  ],
+  "beside": null,
+  "cost": {
+    "aircraft_lost": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 100,
+      "lowest": 20,
+      "middle": 60
+    },
+    "men_lost_unfed": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_out_of_action": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "could_not_be_played": [],
+  "enemy_lost": {
+    "aircraft_lost": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 200,
+      "lowest": 60,
+      "middle": 200
+    },
+    "men_lost_unfed": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_out_of_action": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "estimate": 1,
+  "first_day": 1,
+  "format": "flagplot-agent",
+  "has_end": true,
+  "how_it_went": {
+    "met_and_kept": [
+      2,
+      3,
+      6,
+      7,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "met_and_lost_again": [],
+    "met_days": {
+      "earliest": 5,
+      "latest": 7,
+      "middle": 6
+    },
+    "not_met": [
+      1,
+      4,
+      5,
+      8,
+      9,
+      15,
+      16
+    ],
+    "worlds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ]
+  },
+  "kind": "trial",
+  "last_day": 14,
+  "leaves_given_to_the_side": [],
+  "needs": {
+    "at_the_end_of_day": 1,
+    "count": {
+      "asked": "count",
+      "held": {
+        "came_from": "told",
+        "day": 0,
+        "men": 200
+      },
+      "met": false,
+      "place": {
+        "lat": null,
+        "lon": null,
+        "name": null,
+        "q": 4,
+        "r": 0
+      }
+    },
+    "differs_in": [],
+    "expected_ashore": 4,
+    "men": {
+      "to_hand": 600,
+      "wanted": 400
+    },
+    "tasks": [
+      {
+        "bases": [],
+        "day": null,
+        "force": {
+          "formed": false,
+          "task_force": {
+            "handle": "task_force:1",
+            "name": "Placeholder transport force 1"
+          }
+        },
+        "kind": "ready_landing",
+        "phase": "prepare",
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        },
+        "text": "ready a landing at (4,0) by task_force:1 \"Placeholder transport force 1\""
+      }
+    ],
+    "waits_for": [],
+    "world": 1
+  },
+  "other_plans": null,
+  "partings": [],
+  "text": [
+    "Tried: intent 1, take the place at (4,0), as it would go from the morning of day 1, with what you have handed in for that morning, in 16 worlds of 14 days each (the size standard).",
+    "Taken in on that morning as you have it: set intent 1: take the place at (4,0); limit intent 1's forces to task_force:1 \"Placeholder transport force 1\", land_unit:1 \"Placeholder First\", from base:1 \"Placeholder base A\"; give leave to launch.",
+    "How it went, over 16 worlds played: met and kept in 9 of 16 worlds (worlds 2, 3, 6, 7, 10, 11, 12, 13 and 14), the earliest day 5, the middle day 6 and the latest day 7; met and lost again in none of the 16 worlds; not met by day 14 in 7 of 16 worlds (worlds 1, 4, 5, 8, 9, 15 and 16).",
+    "What it cost your side, the lowest, the middle and the highest over the worlds: men lost to the enemy 20, 60, 100; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "What the trial's enemy lost, by the trial's own reckoning of an enemy it made from your beliefs, not a claim or a report: men lost to the enemy 60, 200, 200; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "What it needs and has, as your staff worked it in world 1 at the end of day 1: men wanted 400, to hand 600; it waits for nothing; the day expected ashore is day 4; a count of the enemy at (4,0) is asked for, and the one held is 200 men, told on day 0, which does not meet it. Its tasks: ready a landing at (4,0) by task_force:1 \"Placeholder transport force 1\".",
+    "Your side has no other plan to weigh: no second trial was played.",
+    "What was assumed: the enemy's base:2 \"Placeholder airfield B\" at (4,0), holding 200 t of supply and 0 t of fuel, from your map, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); 200 men at (4,0), from your estimate of the place, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy given nothing he could know of you: no contact, no claim and no estimate, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16); the enemy given no intent: he holds what he holds, in 16 of 16 worlds (worlds 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 and 16).",
+    "No leave was given by the trial: what it needed you had given, or have queued."
+  ],
+  "uneven": false,
+  "version": 57
+}

@@ -1,0 +1,549 @@
+{
+  "asked": {
+    "beside": "without_it",
+    "compare": true,
+    "course": [],
+    "dates": null,
+    "days": 5,
+    "for_day": 1,
+    "in_force": false,
+    "inside_day": null,
+    "intent": 1,
+    "orders_not_tried": 0,
+    "preview": null,
+    "second_trial": true,
+    "size": "standard",
+    "standing": [
+      "set intent 1: take the place at (4,0)",
+      "limit intent 1's forces to task_force:1 \"Placeholder transport force 1\", land_unit:1 \"Placeholder First\", land_unit:2 \"Placeholder Second\", from base:1 \"Placeholder base A\"",
+      "give leave to launch"
+    ],
+    "tried_intent": 1,
+    "worlds": 8
+  },
+  "assumed": [
+    {
+      "from": {
+        "kind": "map"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy's base:2 \"Placeholder airfield B\" at (4,0), holding 200 t of supply and 0 t of fuel, from your map, in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8)",
+      "thing": {
+        "base": {
+          "handle": "base:2",
+          "name": "Placeholder airfield B"
+        },
+        "fuel_t": "0",
+        "kind": "enemy_base",
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        },
+        "supply_t": "200"
+      }
+    },
+    {
+      "from": {
+        "kind": "believed",
+        "name": "Garrison believed at B",
+        "standing": "present"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "200 men at (4,0), believed present (\"Garrison believed at B\"), in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8)",
+      "thing": {
+        "kind": "men",
+        "men": 200,
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        }
+      }
+    },
+    {
+      "from": {
+        "kind": "believed",
+        "name": "More believed at B",
+        "standing": "unknown"
+      },
+      "made_in": [
+        2,
+        4,
+        6,
+        8
+      ],
+      "not_in": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "notes": [],
+      "text": "200 men at (4,0), believed, standing unknown (\"More believed at B\"), in 4 of 8 worlds (worlds 2, 4, 6 and 8) and not in 4 of 8 worlds (worlds 1, 3, 5 and 7)",
+      "thing": {
+        "kind": "men",
+        "men": 200,
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        }
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy given nothing he could know of you: no contact, no claim and no estimate, in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8)",
+      "thing": {
+        "kind": "no_belief"
+      }
+    },
+    {
+      "from": {
+        "kind": "trial"
+      },
+      "made_in": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "not_in": [],
+      "notes": [],
+      "text": "the enemy given no intent: he holds what he holds, in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8)",
+      "thing": {
+        "kind": "no_intent"
+      }
+    }
+  ],
+  "beside": {
+    "cost": {
+      "aircraft_lost": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_to_the_enemy": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_unfed": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_out_of_action": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_sunk": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      }
+    },
+    "could_not_be_played": [],
+    "enemy_lost": {
+      "aircraft_lost": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_to_the_enemy": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "men_lost_unfed": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_out_of_action": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      },
+      "ships_sunk": {
+        "highest": 0,
+        "lowest": 0,
+        "middle": 0
+      }
+    },
+    "how_it_went": null,
+    "last_day": 5,
+    "of": "without_it",
+    "world_for_world": null
+  },
+  "cost": {
+    "aircraft_lost": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 200,
+      "lowest": 100,
+      "middle": 100
+    },
+    "men_lost_unfed": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_out_of_action": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "could_not_be_played": [],
+  "enemy_lost": {
+    "aircraft_lost": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "men_lost_to_the_enemy": {
+      "highest": 254,
+      "lowest": 200,
+      "middle": 200
+    },
+    "men_lost_unfed": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_out_of_action": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    },
+    "ships_sunk": {
+      "highest": 0,
+      "lowest": 0,
+      "middle": 0
+    }
+  },
+  "estimate": 1,
+  "first_day": 1,
+  "format": "flagplot-agent",
+  "has_end": true,
+  "how_it_went": {
+    "met_and_kept": [
+      1,
+      3,
+      5,
+      7
+    ],
+    "met_and_lost_again": [],
+    "met_days": {
+      "earliest": 4,
+      "latest": 4,
+      "middle": 4
+    },
+    "not_met": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "worlds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  "kind": "trial",
+  "last_day": 5,
+  "leaves_given_to_the_side": [],
+  "needs": {
+    "at_the_end_of_day": 1,
+    "count": {
+      "asked": "count",
+      "held": null,
+      "met": false,
+      "place": {
+        "lat": null,
+        "lon": null,
+        "name": null,
+        "q": 4,
+        "r": 0
+      }
+    },
+    "differs_in": [],
+    "expected_ashore": 4,
+    "men": null,
+    "tasks": [
+      {
+        "bases": [],
+        "day": null,
+        "force": {
+          "formed": false,
+          "task_force": {
+            "handle": "task_force:1",
+            "name": "Placeholder transport force 1"
+          }
+        },
+        "kind": "ready_landing",
+        "phase": "prepare",
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        },
+        "text": "ready a landing at (4,0) by task_force:1 \"Placeholder transport force 1\""
+      }
+    ],
+    "waits_for": [],
+    "world": 1
+  },
+  "other_plans": [],
+  "partings": [
+    {
+      "by": {
+        "kind": "men",
+        "men": 200,
+        "place": {
+          "lat": null,
+          "lon": null,
+          "name": null,
+          "q": 4,
+          "r": 0
+        }
+      },
+      "from": {
+        "kind": "believed",
+        "name": "More believed at B",
+        "standing": "unknown"
+      },
+      "with": {
+        "cost": {
+          "aircraft_lost": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 200,
+            "lowest": 200,
+            "middle": 200
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "enemy_lost": {
+          "aircraft_lost": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 254,
+            "lowest": 254,
+            "middle": 254
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "how_it_went": {
+          "met_and_kept": [],
+          "met_and_lost_again": [],
+          "met_days": null,
+          "not_met": [
+            2,
+            4,
+            6,
+            8
+          ],
+          "worlds": [
+            2,
+            4,
+            6,
+            8
+          ]
+        }
+      },
+      "without": {
+        "cost": {
+          "aircraft_lost": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 100,
+            "lowest": 100,
+            "middle": 100
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "enemy_lost": {
+          "aircraft_lost": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "men_lost_to_the_enemy": {
+            "highest": 200,
+            "lowest": 200,
+            "middle": 200
+          },
+          "men_lost_unfed": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_out_of_action": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          },
+          "ships_sunk": {
+            "highest": 0,
+            "lowest": 0,
+            "middle": 0
+          }
+        },
+        "how_it_went": {
+          "met_and_kept": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "met_and_lost_again": [],
+          "met_days": {
+            "earliest": 4,
+            "latest": 4,
+            "middle": 4
+          },
+          "not_met": [],
+          "worlds": [
+            1,
+            3,
+            5,
+            7
+          ]
+        }
+      }
+    }
+  ],
+  "text": [
+    "Tried: intent 1, take the place at (4,0), as it would go from the morning of day 1, with what you have handed in for that morning, in 8 worlds of 5 days each (the size standard).",
+    "Taken in on that morning as you have it: set intent 1: take the place at (4,0); limit intent 1's forces to task_force:1 \"Placeholder transport force 1\", land_unit:1 \"Placeholder First\", land_unit:2 \"Placeholder Second\", from base:1 \"Placeholder base A\"; give leave to launch.",
+    "How it went, over 8 worlds played: met and kept in 4 of 8 worlds (worlds 1, 3, 5 and 7), the earliest day 4, the middle day 4 and the latest day 4; met and lost again in none of the 8 worlds; not met by day 5 in 4 of 8 worlds (worlds 2, 4, 6 and 8).",
+    "What it cost your side, the lowest, the middle and the highest over the worlds: men lost to the enemy 100, 100, 200; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "What the trial's enemy lost, by the trial's own reckoning of an enemy it made from your beliefs, not a claim or a report: men lost to the enemy 200, 200, 254; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "What it needs and has, as your staff worked it in world 1 at the end of day 1: it waits for nothing; the day expected ashore is day 4; a count of the enemy at (4,0) is asked for, and none is held, which does not meet it. Its tasks: ready a landing at (4,0) by task_force:1 \"Placeholder transport force 1\".",
+    "Beside it, your side without the order, in the same worlds: the order is not there to have gone, so only what it cost is given.",
+    "Beside it, what it cost your side, the lowest, the middle and the highest over the worlds: men lost to the enemy 0, 0, 0; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "Beside it, what the trial's enemy lost, by the trial's own reckoning: men lost to the enemy 0, 0, 0; men lost unfed 0, 0, 0; ships sunk 0, 0, 0; ships out of action at the end 0, 0, 0; aircraft lost 0, 0, 0.",
+    "Your side has no other plan with an end to weigh.",
+    "What was assumed: the enemy's base:2 \"Placeholder airfield B\" at (4,0), holding 200 t of supply and 0 t of fuel, from your map, in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8); 200 men at (4,0), believed present (\"Garrison believed at B\"), in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8); 200 men at (4,0), believed, standing unknown (\"More believed at B\"), in 4 of 8 worlds (worlds 2, 4, 6 and 8) and not in 4 of 8 worlds (worlds 1, 3, 5 and 7); the enemy given nothing he could know of you: no contact, no claim and no estimate, in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8); the enemy given no intent: he holds what he holds, in 8 of 8 worlds (worlds 1, 2, 3, 4, 5, 6, 7 and 8).",
+    "No leave was given by the trial: what it needed you had given, or have queued.",
+    "Where the worlds part, by 200 men at (4,0), believed, standing unknown (\"More believed at B\"). With them, 4 worlds (worlds 2, 4, 6 and 8): met and kept in none, your side's men lost to the enemy 200, 200, 200, the trial's enemy's men lost to the enemy 254, 254, 254. Without them, 4 worlds (worlds 1, 3, 5 and 7): met and kept in 4 on day 4, your side's men lost to the enemy 100, 100, 100, the trial's enemy's men lost to the enemy 200, 200, 200."
+  ],
+  "uneven": false,
+  "version": 57
+}
