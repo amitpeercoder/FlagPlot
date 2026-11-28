@@ -4,8 +4,8 @@
 //! (decision 0234, step D) its source, which was copied by the script
 //! `scripts/table-boats/make_files.py` until then: of the table's copies of
 //! files b, c and d (`data/scenarios/table-hunger/`), the three copies being
-//! what the table plays, and of file a on the table's ground figures, kept for the
-//! measure of decision 0227, stage 3, and not offered. Each has its boats on
+//! what the table plays, and of file a on the table's ground figures, kept for
+//! the measure of decision 0227, stage 3, and not offered. Each has its boats on
 //! station, each from a row by the rules of the decision ("The rules of
 //! placing"; for Midway, decision 0225's amended rules 2 and 3 too). The
 //! hexes are worked by hand in the decision ("The hexes, worked by hand").
